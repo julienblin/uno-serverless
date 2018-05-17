@@ -28,6 +28,7 @@
   },
   "homepage": "https://github.com/julienblin/nv-aws-lambda#readme",
   "devDependencies": {
+    "@types/node": "^10.1.1",
     "clean-webpack-plugin": "^0.1.19",
     "ts-loader": "^4.3.0",
     "tslint": "^5.10.0",

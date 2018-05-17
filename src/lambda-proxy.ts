@@ -1,10 +1,18 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import * as lambda from "aws-lambda";
+import { parse as parseQS } from "querystring";
 import { InternalServerError } from "./errors";
 import { isAPIGatewayProxyResultProvider, OKResult } from "./results";
 
+export interface LambdaProxyExecutionArgs {
+  context: lambda.Context;
+  event: lambda.APIGatewayEvent;
+  formBody<T>(): T | undefined;
+  jsonBody<T>(): T | undefined;
+}
+
 export type LambdaProxyExecution =
-  (args: { context: lambda.Context; event: lambda.APIGatewayEvent }) => Promise<object | undefined>;
+  (args: LambdaProxyExecutionArgs) => Promise<object | undefined>;
 
 export interface LambdaProxyOptions {
   /**
@@ -30,6 +38,14 @@ export const lambdaProxy =
         const funcResult = await func({
           context,
           event,
+          formBody: <T>() =>
+            event.body
+              ? parseQS<T>(event.body)
+              : undefined,
+          jsonBody: <T>() =>
+            event.body
+              ? JSON.parse(event.body) as T
+              : undefined,
         });
 
         proxyResult = funcResult && isAPIGatewayProxyResultProvider(funcResult)
