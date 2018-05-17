@@ -1,0 +1,9 @@
+{
+  "extends": "tslint:all",
+  "rules": {
+    "interface-name": false,
+    "no-parameter-properties": false,
+    "strict-boolean-expressions": false,
+    "typedef": false
+  }
+}
