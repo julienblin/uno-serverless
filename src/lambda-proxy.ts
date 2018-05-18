@@ -48,38 +48,6 @@ export interface LambdaProxyOptions {
   errorLogger?(lambdaProxyError: LambdaProxyError): void | Promise<void>;
 }
 
-const defaultErrorLogger = async (lambdaProxyError: LambdaProxyError) => {
-
-  let parsedBody;
-
-  if (lambdaProxyError.event.body) {
-    try {
-      parsedBody = JSON.parse(lambdaProxyError.event.body);
-    } catch (parseError) {
-      try {
-        parsedBody = parseQS(lambdaProxyError.event.body);
-      } catch (parseError) {
-        console.error(parseError);
-      }
-    }
-  }
-
-  const payload = {
-    error: lambdaProxyError.error.toString(),
-    errorStackTrace: lambdaProxyError.error.stack,
-    headers: lambdaProxyError.event.headers,
-    httpMethod: lambdaProxyError.event.httpMethod,
-    parsedBody,
-    path: lambdaProxyError.event.path,
-    requestContext: lambdaProxyError.event.requestContext,
-    response: lambdaProxyError.result,
-  };
-
-  const JSON_STRINGIFY_SPACE = 2;
-
-  console.error(JSON.stringify(payload, defaultConfidentialityReplacer, JSON_STRINGIFY_SPACE));
-};
-
 /**
  * Parses the body of a request. Form or JSON.
  */
@@ -127,6 +95,34 @@ const parseBody = <T>(event: lambda.APIGatewayProxyEvent): T | undefined => {
     default:
       throw new BadRequestError(`Unrecognized content-type: ${contentType}.`);
   }
+};
+
+const defaultErrorLogger = async (lambdaProxyError: LambdaProxyError) => {
+
+  let parsedBody;
+
+  if (lambdaProxyError.event.body) {
+    try {
+      parsedBody = parseBody(lambdaProxyError.event);
+    } catch (parseError) {
+      parsedBody = parseError.stack;
+    }
+  }
+
+  const payload = {
+    error: lambdaProxyError.error.toString(),
+    errorStackTrace: lambdaProxyError.error.stack,
+    headers: lambdaProxyError.event.headers,
+    httpMethod: lambdaProxyError.event.httpMethod,
+    parsedBody,
+    path: lambdaProxyError.event.path,
+    requestContext: lambdaProxyError.event.requestContext,
+    response: lambdaProxyError.result,
+  };
+
+  const JSON_STRINGIFY_SPACE = 2;
+
+  console.error(JSON.stringify(payload, defaultConfidentialityReplacer, JSON_STRINGIFY_SPACE));
 };
 
 const ajv = new Ajv({
