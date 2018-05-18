@@ -2,7 +2,10 @@
 import { APIGatewayProxyResult } from "aws-lambda";
 import * as HttpStatusCodes from "http-status-codes";
 import { APIGatewayProxyResultProvider } from "./results";
-import { convertHrtimeToMs } from "./utils";
+import { convertHrtimeToMs, defaultConfidentialityReplacer } from "./utils";
+
+// tslint:disable:no-any - because of errors objects
+// tslint:disable:no-unsafe-any - because of errors objects
 
 /** Possible statuses for health check results. */
 export enum HealthCheckStatus {
@@ -16,21 +19,50 @@ export enum HealthCheckStatus {
 export class HealthCheckResult implements APIGatewayProxyResultProvider {
 
   public constructor(
-    public readonly name: string,
-    public target: string | undefined,
-    public readonly elapsed: number,
-    public readonly status: HealthCheckStatus = HealthCheckStatus.Inconclusive,
-    public readonly error?: {},
-    public readonly children?: HealthCheckResult[]) {
-    if (this.children && this.children.length > 0) {
-      this.status = this.evaluateChildrenStatuses();
+    private readonly value: {
+      children?: HealthCheckResult[];
+      elapsed?: number;
+      error?: any;
+      name: string;
+      status?: HealthCheckStatus;
+      target?: string;
+    },
+    private readonly confidentialityReplacer = defaultConfidentialityReplacer) {
+
+    if (!this.value.status) {
+      this.value.status = HealthCheckStatus.Inconclusive;
+    }
+
+    if (this.value.children && this.value.children.length > 0) {
+      this.value.status = this.evaluateChildrenStatuses();
     }
   }
+
+  /** Gets the name */
+  public get name() { return this.value.name; }
+
+  /** Gets the target */
+  public get target() { return this.value.target; }
+
+  /** Sets the target */
+  public set target(value) { this.value.target = value; }
+
+  /** Gets the status */
+  public get status() { return this.value.status; }
+
+  /** Gets the elapsed time */
+  public get elapsed() { return this.value.elapsed; }
+
+  /** Gets the children */
+  public get children() { return this.value.children; }
+
+  /** Gets the error */
+  public get error() { return this.value.error; }
 
   public getAPIGatewayProxyResult(): APIGatewayProxyResult {
     let statusCode: number;
 
-    switch (this.status) {
+    switch (this.value.status) {
       case HealthCheckStatus.Error:
         statusCode = HttpStatusCodes.INTERNAL_SERVER_ERROR;
         break;
@@ -42,26 +74,26 @@ export class HealthCheckResult implements APIGatewayProxyResultProvider {
     }
 
     return {
-      body: JSON.stringify(this),
+      body: JSON.stringify(this.value, this.confidentialityReplacer),
       statusCode,
     };
   }
 
   /** Evaluate status based on children statuses. */
   private evaluateChildrenStatuses(): HealthCheckStatus {
-    if (!this.children) {
+    if (!this.value.children) {
       return HealthCheckStatus.Inconclusive;
     }
 
-    if (this.children.some((x) => x.status === HealthCheckStatus.Error)) {
+    if (this.value.children.some((x) => x.value.status === HealthCheckStatus.Error)) {
       return HealthCheckStatus.Error;
     }
 
-    if (this.children.some((x) => x.status === HealthCheckStatus.Warning)) {
+    if (this.value.children.some((x) => x.value.status === HealthCheckStatus.Warning)) {
       return HealthCheckStatus.Warning;
     }
 
-    if (this.children.some((x) => x.status === HealthCheckStatus.Inconclusive)) {
+    if (this.value.children.some((x) => x.value.status === HealthCheckStatus.Inconclusive)) {
       return HealthCheckStatus.Inconclusive;
     }
 
@@ -84,20 +116,20 @@ export const checkHealth = async (
   try {
     await check();
 
-    return new HealthCheckResult(
+    return new HealthCheckResult({
+      elapsed: convertHrtimeToMs(process.hrtime(start)),
       name,
+      status: HealthCheckStatus.Ok,
       target,
-      convertHrtimeToMs(process.hrtime(start)),
-      HealthCheckStatus.Ok);
+    });
   } catch (error) {
-    // tslint:disable:no-unsafe-any
-    return new HealthCheckResult(
+    return new HealthCheckResult({
+      elapsed: convertHrtimeToMs(process.hrtime(start)),
+      error,
       name,
+      status: HealthCheckStatus.Error,
       target,
-      convertHrtimeToMs(process.hrtime(start)),
-      HealthCheckStatus.Error,
-      error);
-    // tslint:enable:no-unsafe-any
+    });
   }
 };
 
@@ -105,6 +137,7 @@ export const checkHealth = async (
 export interface IHealthServiceOptions {
   includeTargets: boolean;
   name: string;
+  confidentialityReplacer?(key: string, value: any): any;
 }
 
 /** Performs and aggregates checks for a set of ICheckHealth. */
@@ -114,34 +147,39 @@ export class HealthChecker implements ICheckHealth {
   public constructor(
     private readonly options: IHealthServiceOptions,
     private readonly checks: ICheckHealth[]) {
+      if (!options.confidentialityReplacer) {
+        options.confidentialityReplacer = defaultConfidentialityReplacer;
+      }
   }
 
   /** Performs health checks. */
   public async checkHealth(): Promise<HealthCheckResult> {
-    const start = new Date().getTime();
+    const start = process.hrtime();
     try {
       const children = await Promise.all(this.checks.map(async (x) => x.checkHealth()));
 
       if (!this.options.includeTargets) {
-        children.forEach((child) => { delete child.target; });
+        children.forEach((child) => { child.target = undefined; });
       }
 
       return new HealthCheckResult(
-        this.options.name,
-        undefined,
-        new Date().getTime() - start,
-        undefined,
-        undefined,
-        children);
+        {
+          children,
+          elapsed: convertHrtimeToMs(process.hrtime(start)),
+          name: this.options.name,
+        },
+        // tslint:disable-next-line:no-non-null-assertion
+        (key, value) => this.options.confidentialityReplacer!(key, value));
     } catch (error) {
       return new HealthCheckResult(
-        // tslint:disable:no-unsafe-any
-        this.options.name,
-        undefined,
-        new Date().getTime() - start,
-        HealthCheckStatus.Error,
-        error);
-        // tslint:enable:no-unsafe-any
+        {
+          elapsed: convertHrtimeToMs(process.hrtime(start)),
+          error,
+          name: this.options.name,
+          status: HealthCheckStatus.Error,
+        },
+        // tslint:disable-next-line:no-non-null-assertion
+        (key, value) => this.options.confidentialityReplacer!(key, value));
     }
   }
 }

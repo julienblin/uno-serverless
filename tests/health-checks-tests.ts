@@ -40,8 +40,8 @@ describe("HealthChecker", () => {
   it("should run all health checks", async () => {
 
     const healthChecks = [
-      new MockCheckHealth(new HealthCheckResult("mock1", undefined, 0, HealthCheckStatus.Ok)),
-      new MockCheckHealth(new HealthCheckResult("mock2", undefined, 0, HealthCheckStatus.Ok)),
+      new MockCheckHealth(new HealthCheckResult({ name: "mock1", status: HealthCheckStatus.Ok })),
+      new MockCheckHealth(new HealthCheckResult({ name: "mock2", status: HealthCheckStatus.Ok })),
     ];
 
     const checker = new HealthChecker({ name: HEALTH_CHECKER_NAME, includeTargets: true }, healthChecks);
@@ -56,10 +56,10 @@ describe("HealthChecker", () => {
   it("should aggregate status based on priority", async () => {
 
     const healthChecks = [
-      new MockCheckHealth(new HealthCheckResult("mock1", undefined, 0, HealthCheckStatus.Ok)),
-      new MockCheckHealth(new HealthCheckResult("mock2", undefined, 0, HealthCheckStatus.Error)),
-      new MockCheckHealth(new HealthCheckResult("mock3", undefined, 0, HealthCheckStatus.Warning)),
-      new MockCheckHealth(new HealthCheckResult("mock4", undefined, 0, HealthCheckStatus.Inconclusive)),
+      new MockCheckHealth(new HealthCheckResult({ name: "mock1", status: HealthCheckStatus.Ok})),
+      new MockCheckHealth(new HealthCheckResult({ name: "mock2", status: HealthCheckStatus.Error})),
+      new MockCheckHealth(new HealthCheckResult({ name: "mock3", status: HealthCheckStatus.Warning})),
+      new MockCheckHealth(new HealthCheckResult({ name: "mock4", status: HealthCheckStatus.Inconclusive})),
     ];
 
     let checker = new HealthChecker({ name: HEALTH_CHECKER_NAME, includeTargets: true }, healthChecks);
@@ -89,7 +89,7 @@ describe("HealthChecker", () => {
   it("should filter targets", async () => {
 
     const healthChecks = [
-      new MockCheckHealth(new HealthCheckResult("mock1", "target", 0, HealthCheckStatus.Ok)),
+      new MockCheckHealth(new HealthCheckResult({ name: "mock1", target: "target", status: HealthCheckStatus.Ok})),
     ];
 
     let checker = new HealthChecker({ name: HEALTH_CHECKER_NAME, includeTargets: true }, healthChecks);
@@ -106,7 +106,7 @@ describe("HealthChecker", () => {
   it("should return APIGateway compatible responses", async () => {
 
     const healthChecks = [
-      new MockCheckHealth(new HealthCheckResult("mock1", "target", 0, HealthCheckStatus.Ok)),
+      new MockCheckHealth(new HealthCheckResult({ name: "mock1", target: "target", status: HealthCheckStatus.Ok})),
     ];
 
     const checker = new HealthChecker({ name: HEALTH_CHECKER_NAME, includeTargets: true }, healthChecks);
