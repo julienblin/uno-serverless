@@ -1,7 +1,8 @@
+import * as Ajv from "ajv";
 // tslint:disable-next-line:no-implicit-dependencies
 import * as lambda from "aws-lambda";
 import { parse as parseQS } from "querystring";
-import { BadRequestError, InternalServerError, NotFoundError } from "./errors";
+import { BadRequestError, InternalServerError, NotFoundError, ValidationDiagnostic, ValidationError } from "./errors";
 import { isAPIGatewayProxyResultProvider, OKResult } from "./results";
 import { defaultConfidentialityReplacer } from "./utils";
 
@@ -21,12 +22,24 @@ export interface LambdaProxyError {
   result?: lambda.APIGatewayProxyResult;
 }
 
+export interface LambdaProxyValidationOptions {
+  /**
+   * Will validate the body based on the schema.
+   */
+  bodySchema?: {};
+}
+
 export interface LambdaProxyOptions {
   /**
    * If true, adds Access-Control-Allow-Origin: * to the response headers
    * If a string, set the Access-Control-Allow-Origin to the string value.
    */
   cors?: boolean | string;
+
+  /**
+   * Validation options. Will run before the function.
+   */
+  validation?: LambdaProxyValidationOptions;
 
   /**
    * The custom error logger to use.
@@ -116,6 +129,40 @@ const parseBody = <T>(event: lambda.APIGatewayProxyEvent): T | undefined => {
   }
 };
 
+const ajv = new Ajv({
+  allErrors: true,
+});
+
+const validate = (event: lambda.APIGatewayProxyEvent, validationOptions?: LambdaProxyValidationOptions) => {
+  if (!validationOptions) {
+    return;
+  }
+
+  const validationErrors: ValidationDiagnostic[] = [];
+
+  if (validationOptions.bodySchema) {
+    const bodyAsObject = parseBody(event);
+
+    if (!bodyAsObject) {
+      validationErrors.push({ code: "required", message: "Missing body", target: "body" });
+    }
+
+    if (!ajv.validate(validationOptions.bodySchema, bodyAsObject) && ajv.errors) {
+      ajv.errors.forEach((e) => {
+        validationErrors.push({
+          code: e.keyword,
+          message: e.message ? e.message : "unknown error",
+          target: e.dataPath.startsWith(".") ? e.dataPath.substring(1) : e.dataPath,
+        });
+      });
+    }
+  }
+
+  if (validationErrors.length > 0) {
+    throw new ValidationError(validationErrors);
+  }
+};
+
 /**
  * Creates a wrapper for a Lambda function bound to API Gateway using PROXY.
  * @param func - The function to wrap.
@@ -129,6 +176,9 @@ export const lambdaProxy =
       let proxyResult: lambda.APIGatewayProxyResult | undefined;
 
       try {
+
+        validate(event, options.validation);
+
         const funcResult = await func({
           context,
           event,

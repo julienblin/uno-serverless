@@ -88,3 +88,33 @@ export class BadRequestError extends Error implements APIGatewayProxyResultProvi
     };
   }
 }
+
+export interface ValidationDiagnostic {
+  code: string;
+  message: string;
+  target?: string;
+}
+
+/** Validation errors - Bad request. */
+export class ValidationError extends Error implements APIGatewayProxyResultProvider {
+  public constructor(public errors: ValidationDiagnostic[], message?: string) {
+    super(message ? message : "Validation failed");
+    Object.defineProperty(this, "name", { value: this.constructor.name });
+    Object.setPrototypeOf(this, ValidationError.prototype);
+  }
+
+  public getAPIGatewayProxyResult() {
+    const errorResponse: ErrorResponse = {
+      error: {
+        code: "badRequest",
+        details: this.errors.map((e) => ({ code: e.code, message: e.message, target: e.target })),
+        message: this.message,
+      },
+    };
+
+    return {
+      body: JSON.stringify(errorResponse),
+      statusCode: HttpStatusCodes.BAD_REQUEST,
+    };
+  }
+}

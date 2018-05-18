@@ -247,4 +247,64 @@ describe("lambdaProxy", () => {
     expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.NOT_FOUND);
   });
 
+  it("should validate Body - correct", async () => {
+    const body = { foo: 3, bar: "mandatory" };
+    const lambda = lambdaProxy(
+      async ({ parseBody }) => (parseBody<{}>()),
+      {
+        validation: {
+          bodySchema: {
+            additionalProperties: false,
+            properties: {
+              bar: {
+                type: "string",
+              },
+              foo: {
+                type: "number",
+              },
+            },
+            required: [ "bar" ],
+          },
+        },
+      });
+
+    const lambdaResult = await lambda(
+      createAPIGatewayProxyEvent({ body, method: "POST" }),
+      createLambdaContext(),
+      (e, r) => {}) as APIGatewayProxyResult;
+
+    expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.OK);
+  });
+
+  it("should validate Body - incorrect", async () => {
+    const body = { foo: "foo" };
+    const lambda = lambdaProxy(
+      async ({ parseBody }) => (parseBody<{}>()),
+      {
+        validation: {
+          bodySchema: {
+            additionalProperties: false,
+            properties: {
+              bar: {
+                type: "string",
+              },
+              foo: {
+                type: "number",
+              },
+            },
+            required: [ "bar" ],
+          },
+        },
+
+        errorLogger: (lambdaError) => { },
+      });
+
+    const lambdaResult = await lambda(
+      createAPIGatewayProxyEvent({ body, method: "POST" }),
+      createLambdaContext(),
+      (e, r) => {}) as APIGatewayProxyResult;
+
+    expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.BAD_REQUEST);
+  });
+
 });
