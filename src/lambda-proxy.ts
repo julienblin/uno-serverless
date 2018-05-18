@@ -4,15 +4,15 @@ import { parse as parseQS } from "querystring";
 import { InternalServerError } from "./errors";
 import { isAPIGatewayProxyResultProvider, OKResult } from "./results";
 
-export interface LambdaProxyExecutionArgs {
+export interface LambdaProxyFunctionArgs {
   context: lambda.Context;
   event: lambda.APIGatewayEvent;
   formBody<T>(): T | undefined;
   jsonBody<T>(): T | undefined;
 }
 
-export type LambdaProxyExecution =
-  (args: LambdaProxyExecutionArgs) => Promise<object | undefined>;
+export type LambdaProxyFunction =
+  (args: LambdaProxyFunctionArgs) => Promise<object | undefined>;
 
 export interface LambdaProxyOptions {
   /**
@@ -28,7 +28,7 @@ export interface LambdaProxyOptions {
  * @param options - various options.
  */
 export const lambdaProxy =
-  (func: LambdaProxyExecution, options: LambdaProxyOptions = {}): lambda.APIGatewayProxyHandler =>
+  (func: LambdaProxyFunction, options: LambdaProxyOptions = {}): lambda.APIGatewayProxyHandler =>
     async (event: lambda.APIGatewayEvent, context: lambda.Context, callback: lambda.ProxyCallback)
       : Promise<lambda.APIGatewayProxyResult> => {
 

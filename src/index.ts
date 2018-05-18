@@ -1,6 +1,9 @@
 export { OKResult, APIGatewayProxyResultProvider } from "./results";
 export { ErrorResponse, ErrorResponseDetail, InternalServerError, NotFoundError } from "./errors";
-export { lambdaProxy, LambdaProxyExecution, LambdaProxyOptions } from "./lambda-proxy";
+export {
+  lambdaAuthorizerBearer, LambdaAuthorizerBearerFunction,
+  LambdaAuthorizerBearerFunctionArgs } from "./lambda-authorizer";
+export { lambdaProxy, LambdaProxyFunction, LambdaProxyFunctionArgs, LambdaProxyOptions } from "./lambda-proxy";
 export {
   checkHealth, IHealthServiceOptions, HealthChecker,
   HealthCheckResult, HealthCheckStatus, ICheckHealth,
