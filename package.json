@@ -52,10 +52,14 @@
     "extension": [
       ".ts"
     ],
+    "include": [
+      "src/**/*.ts"
+    ],
     "reporter": [
       "text",
       "cobertura",
       "html"
-    ]
+    ],
+    "all": true
   }
 }
