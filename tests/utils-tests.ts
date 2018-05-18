@@ -6,7 +6,6 @@ import { convertHrtimeToMs, createConfidentialityReplacer, DEFAULT_CONFIDENTIALI
 // tslint:disable:no-unused-expression
 // tslint:disable:no-magic-numbers
 // tslint:disable:no-non-null-assertion
-// tslint:disable:no-unsafe-any
 
 describe("convertHrtimeToMs", () => {
 

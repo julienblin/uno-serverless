@@ -1,7 +1,7 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import * as lambda from "aws-lambda";
 import { parse as parseQS } from "querystring";
-import { InternalServerError, NotFoundError, BadRequestError } from "./errors";
+import { BadRequestError, InternalServerError, NotFoundError } from "./errors";
 import { isAPIGatewayProxyResultProvider, OKResult } from "./results";
 import { defaultConfidentialityReplacer } from "./utils";
 
@@ -16,7 +16,6 @@ export type LambdaProxyFunction =
 
 export interface LambdaProxyError {
   context: lambda.Context;
-  // tslint:disable-next-line:no-any
   error: any;
   event: lambda.APIGatewayEvent;
   result?: lambda.APIGatewayProxyResult;
@@ -145,11 +144,9 @@ export const lambdaProxy =
         }
 
       } catch (error) {
-        // tslint:disable:no-unsafe-any
         proxyResult = isAPIGatewayProxyResultProvider(error)
           ? error.getAPIGatewayProxyResult()
           : new InternalServerError(error.message ? error.message : error.toString()).getAPIGatewayProxyResult();
-        // tslint:enable:no-unsafe-any
 
         if (!options.errorLogger) {
           options.errorLogger = defaultErrorLogger;

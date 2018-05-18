@@ -4,9 +4,6 @@ import * as HttpStatusCodes from "http-status-codes";
 import { APIGatewayProxyResultProvider } from "./results";
 import { convertHrtimeToMs, defaultConfidentialityReplacer } from "./utils";
 
-// tslint:disable:no-any - because of errors objects
-// tslint:disable:no-unsafe-any - because of errors objects
-
 /** Possible statuses for health check results. */
 export enum HealthCheckStatus {
   Inconclusive = "Inconclusive",
