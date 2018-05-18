@@ -280,7 +280,7 @@ describe("lambdaProxy", () => {
       async ({ parseBody }) => (parseBody<{}>()),
       {
         validation: {
-          bodySchema: {
+          body: {
             additionalProperties: false,
             properties: {
               bar: {
@@ -309,7 +309,7 @@ describe("lambdaProxy", () => {
       async ({ parseBody }) => (parseBody<{}>()),
       {
         validation: {
-          bodySchema: {
+          body: {
             additionalProperties: false,
             properties: {
               bar: {
@@ -328,6 +328,61 @@ describe("lambdaProxy", () => {
 
     const lambdaResult = await lambda(
       createAPIGatewayProxyEvent({ body, method: "POST" }),
+      createLambdaContext(),
+      (e, r) => {}) as APIGatewayProxyResult;
+
+    expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.BAD_REQUEST);
+  });
+
+  it("should validate Parameters - correct", async () => {
+    const lambda = lambdaProxy(
+      async ({ parameters }) => (parameters<{}>()),
+      {
+        validation: {
+          parameters: {
+            additionalProperties: false,
+            properties: {
+              bar: {
+                type: "string",
+              },
+              id: {
+                type: "string",
+              },
+            },
+            required: [ "bar" ],
+          },
+        },
+      });
+
+    const lambdaResult = await lambda(
+      createAPIGatewayProxyEvent({ method: "GET", pathParameters: { bar: "foo" }, queryStringParameters: { id: "5" } }),
+      createLambdaContext(),
+      (e, r) => {}) as APIGatewayProxyResult;
+
+    expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.OK);
+  });
+
+  it("should validate Parameters - incorrect", async () => {
+    const lambda = lambdaProxy(
+      async ({ parameters }) => (parameters<{}>()),
+      {
+        validation: {
+          parameters: {
+            additionalProperties: false,
+            properties: {
+              bar: {
+                type: "string",
+              },
+            },
+            required: [ "bar" ],
+          },
+        },
+
+        errorLogger: (lambdaError) => { },
+      });
+
+    const lambdaResult = await lambda(
+      createAPIGatewayProxyEvent({ method: "GET", pathParameters: { bar: "foo" }, queryStringParameters: { id: "5" } }),
       createLambdaContext(),
       (e, r) => {}) as APIGatewayProxyResult;
 

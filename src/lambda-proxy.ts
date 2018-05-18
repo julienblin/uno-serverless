@@ -31,7 +31,12 @@ export interface LambdaProxyValidationOptions {
   /**
    * Will validate the body based on the schema.
    */
-  bodySchema?: {};
+  body?: {};
+
+  /**
+   * Will validate the parameters (both path & QS) as an object.
+   */
+  parameters?: {};
 }
 
 export interface LambdaProxyOptions {
@@ -163,19 +168,36 @@ const validate = (event: lambda.APIGatewayProxyEvent, validationOptions?: Lambda
 
   const validationErrors: ValidationDiagnostic[] = [];
 
-  if (validationOptions.bodySchema) {
+  if (validationOptions.parameters) {
+    const parametersAsObject = decodeParameters(event);
+    if (!ajv.validate(validationOptions.parameters, parametersAsObject) && ajv.errors) {
+      ajv.errors.forEach((e) => {
+        const target = e.dataPath.startsWith(".") ? e.dataPath.substring(1) : e.dataPath;
+        validationErrors.push({
+          code: e.keyword,
+          data: e.params,
+          message: e.message ? e.message : "unknown error",
+          target: target ? target : "parameters",
+        });
+      });
+    }
+  }
+
+  if (validationOptions.body) {
     const bodyAsObject = parseBody(event);
 
     if (!bodyAsObject) {
       validationErrors.push({ code: "required", message: "Missing body", target: "body" });
     }
 
-    if (!ajv.validate(validationOptions.bodySchema, bodyAsObject) && ajv.errors) {
+    if (!ajv.validate(validationOptions.body, bodyAsObject) && ajv.errors) {
       ajv.errors.forEach((e) => {
+        const target = e.dataPath.startsWith(".") ? e.dataPath.substring(1) : e.dataPath;
         validationErrors.push({
           code: e.keyword,
+          data: e.params,
           message: e.message ? e.message : "unknown error",
-          target: e.dataPath.startsWith(".") ? e.dataPath.substring(1) : e.dataPath,
+          target: target ? target : "body",
         });
       });
     }

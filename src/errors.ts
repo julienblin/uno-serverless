@@ -91,6 +91,7 @@ export class BadRequestError extends Error implements APIGatewayProxyResultProvi
 
 export interface ValidationDiagnostic {
   code: string;
+  data?: {};
   message: string;
   target?: string;
 }
@@ -107,7 +108,7 @@ export class ValidationError extends Error implements APIGatewayProxyResultProvi
     const errorResponse: ErrorResponse = {
       error: {
         code: "badRequest",
-        details: this.errors.map((e) => ({ code: e.code, message: e.message, target: e.target })),
+        details: this.errors.map((e) => ({ code: e.code, message: e.message, target: e.target, data: e.data })),
         message: this.message,
       },
     };
