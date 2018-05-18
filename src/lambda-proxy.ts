@@ -1,15 +1,14 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import * as lambda from "aws-lambda";
 import { parse as parseQS } from "querystring";
-import { InternalServerError, NotFoundError } from "./errors";
+import { InternalServerError, NotFoundError, BadRequestError } from "./errors";
 import { isAPIGatewayProxyResultProvider, OKResult } from "./results";
 import { defaultConfidentialityReplacer } from "./utils";
 
 export interface LambdaProxyFunctionArgs {
   context: lambda.Context;
   event: lambda.APIGatewayEvent;
-  formBody<T>(): T | undefined;
-  jsonBody<T>(): T | undefined;
+  parseBody<T>(): T | undefined;
 }
 
 export type LambdaProxyFunction =
@@ -70,13 +69,62 @@ const defaultErrorLogger = async (lambdaProxyError: LambdaProxyError) => {
 };
 
 /**
+ * Parses the body of a request. Form or JSON.
+ */
+const parseBody = <T>(event: lambda.APIGatewayProxyEvent): T | undefined => {
+  if (event.httpMethod === "GET") {
+    return undefined;
+  }
+
+  if (!event.body) {
+    return undefined;
+  }
+
+  let contentType: string | undefined;
+
+  if (event.headers) {
+    if (event.headers["Content-Type"]) {
+      contentType = event.headers["Content-Type"].toLowerCase();
+    } else {
+      if (event.headers["content-type"]) {
+        contentType = event.headers["content-type"].toLowerCase();
+      }
+    }
+  }
+
+  if (!contentType) {
+    contentType = "application/json";
+  }
+
+  switch (contentType) {
+    case "application/json":
+    case "text/json":
+      try {
+        return JSON.parse(event.body) as T;
+      } catch (jsonParseError) {
+        throw new BadRequestError(jsonParseError.message);
+      }
+
+    case "application/x-www-form-urlencoded":
+      try {
+        return parseQS<T>(event.body);
+      } catch (formParseError) {
+        throw new BadRequestError(formParseError.message);
+      }
+
+    default:
+      throw new BadRequestError(`Unrecognized content-type: ${contentType}.`);
+  }
+};
+
+/**
  * Creates a wrapper for a Lambda function bound to API Gateway using PROXY.
  * @param func - The function to wrap.
  * @param options - various options.
  */
 export const lambdaProxy =
   (func: LambdaProxyFunction, options: LambdaProxyOptions = {}): lambda.APIGatewayProxyHandler =>
-    async (event: lambda.APIGatewayEvent, context: lambda.Context, callback: lambda.ProxyCallback)
+    async (event: lambda.APIGatewayProxyEvent, context: lambda.Context, callback: lambda.ProxyCallback)
       : Promise<lambda.APIGatewayProxyResult> => {
 
       let proxyResult: lambda.APIGatewayProxyResult | undefined;
@@ -85,14 +133,7 @@ export const lambdaProxy =
         const funcResult = await func({
           context,
           event,
-          formBody: <T>() =>
-            event.body
-              ? parseQS<T>(event.body)
-              : undefined,
-          jsonBody: <T>() =>
-            event.body
-              ? JSON.parse(event.body) as T
-              : undefined,
+          parseBody: () => parseBody(event),
         });
 
         if (funcResult) {

@@ -63,3 +63,28 @@ export class NotFoundError extends Error implements APIGatewayProxyResultProvide
     };
   }
 }
+
+/** Bad request. */
+export class BadRequestError extends Error implements APIGatewayProxyResultProvider {
+
+  public constructor(message: string, public readonly error?: {}) {
+    super(message);
+    Object.defineProperty(this, "name", { value: this.constructor.name });
+    Object.setPrototypeOf(this, BadRequestError.prototype);
+  }
+
+  public getAPIGatewayProxyResult() {
+    const errorResponse: ErrorResponse = {
+      error: {
+        code: "badRequest",
+        data: this.error,
+        message: this.message,
+      },
+    };
+
+    return {
+      body: JSON.stringify(errorResponse),
+      statusCode: HttpStatusCodes.BAD_REQUEST,
+    };
+  }
+}

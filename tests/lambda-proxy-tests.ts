@@ -24,12 +24,13 @@ describe("lambdaProxy", () => {
     public getAPIGatewayProxyResult() { return this.proxyResult; }
   }
 
-  const createAPIGatewayProxyEvent = (args: { body?: {}}): APIGatewayProxyEvent => ({
+  const createAPIGatewayProxyEvent =
+    (args: { body?: {}; headers?: { [name: string]: string }; method?: string}): APIGatewayProxyEvent => ({
       body: args.body
         ? (typeof args.body === "string") ? args.body : JSON.stringify(args.body)
         : null,
-      headers: {},
-      httpMethod: "GET",
+      headers: args.headers ? args.headers : {},
+      httpMethod: args.method ? args.method : "GET",
       isBase64Encoded: false,
       path: "/unit-tests",
       pathParameters: {},
@@ -180,10 +181,10 @@ describe("lambdaProxy", () => {
 
   it("should parse JSON Body", async () => {
     const body = { foo: "bar" };
-    const lambda = lambdaProxy(async ({ jsonBody }) => (jsonBody<{}>()));
+    const lambda = lambdaProxy(async ({ parseBody }) => (parseBody<{}>()));
 
     const lambdaResult = await lambda(
-      createAPIGatewayProxyEvent({ body }),
+      createAPIGatewayProxyEvent({ body, method: "POST" }),
       createLambdaContext(),
       (e, r) => {}) as APIGatewayProxyResult;
 
@@ -192,21 +193,39 @@ describe("lambdaProxy", () => {
   });
 
   it("should parse JSON Body when empty", async () => {
-    const lambda = lambdaProxy(async ({ jsonBody }) => (jsonBody<{}>()));
+    const lambda = lambdaProxy(async ({ parseBody }) => (parseBody<{}>()));
 
     const lambdaResult = await lambda(
-      createAPIGatewayProxyEvent({ body: "" }),
+      createAPIGatewayProxyEvent({ body: "", method: "POST" }),
       createLambdaContext(),
       (e, r) => {}) as APIGatewayProxyResult;
 
     expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.NOT_FOUND);
   });
 
-  it("should parse FORM Body", async () => {
-    const lambda = lambdaProxy(async ({ formBody }) => (formBody<{}>()));
+  it("should return bad request on malformed JSON.", async () => {
+    const lambda = lambdaProxy(
+      async ({ parseBody }) => (parseBody<{}>()),
+      {
+        errorLogger: (lambdaError) => { },
+      });
 
     const lambdaResult = await lambda(
-      createAPIGatewayProxyEvent({ body: "foo=bar&hello=world" }),
+      createAPIGatewayProxyEvent({ body: "{ 'asd:", method: "POST" }),
+      createLambdaContext(),
+      (e, r) => {}) as APIGatewayProxyResult;
+
+    expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.BAD_REQUEST);
+  });
+
+  it("should parse FORM Body", async () => {
+    const lambda = lambdaProxy(async ({ parseBody }) => (parseBody<{}>()));
+
+    const lambdaResult = await lambda(
+      createAPIGatewayProxyEvent({
+        body: "foo=bar&hello=world",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        method: "POST" }),
       createLambdaContext(),
       (e, r) => {}) as APIGatewayProxyResult;
 
@@ -215,10 +234,13 @@ describe("lambdaProxy", () => {
   });
 
   it("should parse FORM Body when empty", async () => {
-    const lambda = lambdaProxy(async ({ formBody }) => (formBody<{}>()));
+    const lambda = lambdaProxy(async ({ parseBody }) => (parseBody<{}>()));
 
     const lambdaResult = await lambda(
-      createAPIGatewayProxyEvent({ body: "" }),
+      createAPIGatewayProxyEvent({
+        body: "",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        method: "POST" }),
       createLambdaContext(),
       (e, r) => {}) as APIGatewayProxyResult;
 
