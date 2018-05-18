@@ -25,7 +25,13 @@ describe("lambdaProxy", () => {
   }
 
   const createAPIGatewayProxyEvent =
-    (args: { body?: {}; headers?: { [name: string]: string }; method?: string}): APIGatewayProxyEvent => ({
+    (args: {
+      body?: {};
+      headers?:
+      { [name: string]: string };
+      method?: string;
+      pathParameters?: { [name: string]: string };
+      queryStringParameters?: { [name: string]: string }; }): APIGatewayProxyEvent => ({
       body: args.body
         ? (typeof args.body === "string") ? args.body : JSON.stringify(args.body)
         : null,
@@ -33,8 +39,8 @@ describe("lambdaProxy", () => {
       httpMethod: args.method ? args.method : "GET",
       isBase64Encoded: false,
       path: "/unit-tests",
-      pathParameters: {},
-      queryStringParameters: {},
+      pathParameters: args.pathParameters ? args.pathParameters : null,
+      queryStringParameters: args.queryStringParameters ? args.queryStringParameters : null,
       requestContext: {
         accountId: randomStr(),
         apiId: randomStr(),
@@ -245,6 +251,27 @@ describe("lambdaProxy", () => {
       (e, r) => {}) as APIGatewayProxyResult;
 
     expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.NOT_FOUND);
+  });
+
+  it("should get parameters", async () => {
+    const lambda = lambdaProxy(async ({ parameters }) => (parameters<{}>()));
+
+    const lambdaResult = await lambda(
+      createAPIGatewayProxyEvent({
+        body: "",
+        pathParameters: {
+          pathId: "foo",
+        },
+        queryStringParameters: {
+          qsId: "bar",
+        }}),
+      createLambdaContext(),
+      (e, r) => {}) as APIGatewayProxyResult;
+
+    expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.OK);
+    const bodyResult = JSON.parse(lambdaResult.body);
+    expect(bodyResult.pathId).to.equal("foo");
+    expect(bodyResult.qsId).to.equal("bar");
   });
 
   it("should validate Body - correct", async () => {

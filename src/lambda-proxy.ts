@@ -7,8 +7,13 @@ import { isAPIGatewayProxyResultProvider, OKResult } from "./results";
 import { defaultConfidentialityReplacer } from "./utils";
 
 export interface LambdaProxyFunctionArgs {
+  /** The Lambda Context */
   context: lambda.Context;
+  /** The Lambda Event */
   event: lambda.APIGatewayEvent;
+  /** The path & query string parameters, decoded. */
+  parameters<T>(): T;
+  /** The body parsed as an ojbect, either JSON or FORM. */
   parseBody<T>(): T | undefined;
 }
 
@@ -97,6 +102,28 @@ const parseBody = <T>(event: lambda.APIGatewayProxyEvent): T | undefined => {
   }
 };
 
+const decodeFromSource = (source: { [name: string]: string }, params: any) => {
+  for (const prop in source) {
+    if (source.hasOwnProperty(prop)) {
+      params[prop] = decodeURIComponent(source[prop]);
+    }
+  }
+};
+
+const decodeParameters = <T>(event: lambda.APIGatewayProxyEvent): T => {
+  const params: any = {};
+
+  if (event.pathParameters) {
+    decodeFromSource(event.pathParameters, params);
+  }
+
+  if (event.queryStringParameters) {
+    decodeFromSource(event.queryStringParameters, params);
+  }
+
+  return params as T;
+};
+
 const defaultErrorLogger = async (lambdaProxyError: LambdaProxyError) => {
 
   let parsedBody;
@@ -178,6 +205,7 @@ export const lambdaProxy =
         const funcResult = await func({
           context,
           event,
+          parameters: () => decodeParameters(event),
           parseBody: () => parseBody(event),
         });
 
