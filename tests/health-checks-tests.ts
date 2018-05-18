@@ -12,12 +12,15 @@ describe("HealthChecker", () => {
 
   const HEALTH_CHECKER_NAME = "TestHeathChecker";
 
+  /** Mock health check. */
   class MockCheckHealth implements ICheckHealth {
 
+    /** Has the health check ran? */
     public ran = false;
 
     public constructor(public readonly mockResult: HealthCheckResult) {}
 
+    /** Check the health */
     public async checkHealth(): Promise<HealthCheckResult> {
       this.ran = true;
 

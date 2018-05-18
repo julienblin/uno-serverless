@@ -1,7 +1,6 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import { CustomAuthorizerResult } from "aws-lambda";
 import { expect } from "chai";
-import * as HttpStatusCodes from "http-status-codes";
 import { describe, it } from "mocha";
 import { lambdaAuthorizerBearer } from "../src/lambda-authorizer";
 
