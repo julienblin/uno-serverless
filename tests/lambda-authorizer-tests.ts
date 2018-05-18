@@ -3,6 +3,7 @@ import { CustomAuthorizerResult } from "aws-lambda";
 import { expect } from "chai";
 import { describe, it } from "mocha";
 import { lambdaAuthorizerBearer } from "../src/lambda-authorizer";
+import { createLambdaContext, randomStr } from "./lambda-helper-tests";
 
 // tslint:disable:newline-per-chained-call
 // tslint:disable:no-unused-expression
@@ -28,23 +29,10 @@ describe("lambdaAuthorizerBearer", () => {
     const lambdaResult = await lambda(
       {
         authorizationToken: `bearer ${inputBearerToken}`,
-        methodArn: "methodArn",
-        type: "type",
+        methodArn: randomStr(),
+        type: randomStr(),
       },
-      {
-        awsRequestId: "awsRequestId",
-        callbackWaitsForEmptyEventLoop: true,
-        done: () => {},
-        fail: () => {},
-        functionName: "functionName",
-        functionVersion: "functionVersion",
-        getRemainingTimeInMillis: () => 10,
-        invokedFunctionArn: "invokedFunctionArn",
-        logGroupName: "logGroupName",
-        logStreamName: "logStreamName",
-        memoryLimitInMB: 512,
-        succeed: () => {},
-      },
+      createLambdaContext(),
       (e, r) => {}) as CustomAuthorizerResult;
 
     expect(lambdaResult.principalId).equal(inputBearerToken);

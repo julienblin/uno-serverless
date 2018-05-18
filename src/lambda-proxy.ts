@@ -1,9 +1,9 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import * as lambda from "aws-lambda";
 import { parse as parseQS } from "querystring";
-import { defaultConfidentialityReplacer } from "../dist/utils";
-import { InternalServerError } from "./errors";
+import { InternalServerError, NotFoundError } from "./errors";
 import { isAPIGatewayProxyResultProvider, OKResult } from "./results";
+import { defaultConfidentialityReplacer } from "./utils";
 
 export interface LambdaProxyFunctionArgs {
   context: lambda.Context;
@@ -32,7 +32,7 @@ export interface LambdaProxyOptions {
 
   /**
    * The custom error logger to use.
-   * If not provided, will use console.log.
+   * If not provided, will use console.error.
    */
   errorLogger?(lambdaProxyError: LambdaProxyError): void | Promise<void>;
 }
@@ -47,14 +47,15 @@ const defaultErrorLogger = async (lambdaProxyError: LambdaProxyError) => {
     } catch (parseError) {
       try {
         parsedBody = parseQS(lambdaProxyError.event.body);
-      } catch (error) {
-        console.error(error);
+      } catch (parseError) {
+        console.error(parseError);
       }
     }
   }
 
   const payload = {
-    error: lambdaProxyError.error,
+    error: lambdaProxyError.error.toString(),
+    errorStackTrace: lambdaProxyError.error.stack,
     headers: lambdaProxyError.event.headers,
     httpMethod: lambdaProxyError.event.httpMethod,
     parsedBody,
@@ -63,7 +64,9 @@ const defaultErrorLogger = async (lambdaProxyError: LambdaProxyError) => {
     response: lambdaProxyError.result,
   };
 
-  console.error(JSON.stringify(payload, defaultConfidentialityReplacer));
+  const JSON_STRINGIFY_SPACE = 2;
+
+  console.error(JSON.stringify(payload, defaultConfidentialityReplacer, JSON_STRINGIFY_SPACE));
 };
 
 /**
@@ -92,9 +95,13 @@ export const lambdaProxy =
               : undefined,
         });
 
-        proxyResult = funcResult && isAPIGatewayProxyResultProvider(funcResult)
+        if (funcResult) {
+          proxyResult = funcResult && isAPIGatewayProxyResultProvider(funcResult)
           ? funcResult.getAPIGatewayProxyResult()
           : new OKResult(funcResult).getAPIGatewayProxyResult();
+        } else {
+          proxyResult = new NotFoundError(event.path).getAPIGatewayProxyResult();
+        }
 
       } catch (error) {
         // tslint:disable:no-unsafe-any
