@@ -4,7 +4,7 @@
 /**
  * Converts the result of process.hrtime into milliseconds.
  */
-export const convertHrtimeToMs = (hrtime: [number, number]) => (((hrtime[0] * 1e9) + hrtime[1]) / 1e6);
+export const convertHrtimeToMs = (hrtime: [number, number]) => Math.ceil((((hrtime[0] * 1e9) + hrtime[1]) / 1e6));
 
 /** List of properties that are blacklisted in the confidentialityReplacer.  */
 export const DEFAULT_CONFIDENTIALITY_BLACKLIST = [

@@ -5,6 +5,9 @@
     "strict": true,
     "moduleResolution": "node",
     "sourceMap": true,
-    "declaration": true,
-  }
+    "declaration": true
+  },
+  "exclude": [
+    "./tests"
+  ]
 }

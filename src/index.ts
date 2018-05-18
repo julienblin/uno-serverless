@@ -1,3 +1,4 @@
+export { createConfidentialityReplacer, defaultConfidentialityReplacer, convertHrtimeToMs } from "./utils";
 export { OKResult, APIGatewayProxyResultProvider } from "./results";
 export { ErrorResponse, ErrorResponseDetail, InternalServerError, NotFoundError } from "./errors";
 export {
