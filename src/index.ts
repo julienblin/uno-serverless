@@ -4,7 +4,9 @@ export { ErrorResponse, ErrorResponseDetail, InternalServerError, NotFoundError 
 export {
   lambdaAuthorizerBearer, LambdaAuthorizerBearerFunction,
   LambdaAuthorizerBearerFunctionArgs } from "./lambda-authorizer";
-export { lambdaProxy, LambdaProxyFunction, LambdaProxyFunctionArgs, LambdaProxyOptions } from "./lambda-proxy";
+export {
+  lambdaProxy, LambdaProxyError, LambdaProxyFunction,
+  LambdaProxyFunctionArgs, LambdaProxyOptions } from "./lambda-proxy";
 export {
   checkHealth, IHealthServiceOptions, HealthChecker,
   HealthCheckResult, HealthCheckStatus, ICheckHealth,
