@@ -2,6 +2,15 @@
 import { APIGatewayProxyResult } from "aws-lambda";
 import * as HttpStatusCodes from "http-status-codes";
 import { APIGatewayProxyResultProvider } from "./results";
+import { convertHrtimeToMs } from "./utils";
+
+/** Possible statuses for health check results. */
+export enum HealthCheckStatus {
+  Inconclusive = "Inconclusive",
+  Ok = "Ok",
+  Warning = "Warning",
+  Error = "Error",
+}
 
 /** Result of a health check. */
 export class HealthCheckResult implements APIGatewayProxyResultProvider {
@@ -10,7 +19,7 @@ export class HealthCheckResult implements APIGatewayProxyResultProvider {
     public readonly name: string,
     public target: string | undefined,
     public readonly elapsed: number,
-    public readonly status: HealthCheckStatus = "Inconclusive",
+    public readonly status: HealthCheckStatus = HealthCheckStatus.Inconclusive,
     public readonly error?: {},
     public readonly children?: HealthCheckResult[]) {
     if (this.children && this.children.length > 0) {
@@ -22,10 +31,10 @@ export class HealthCheckResult implements APIGatewayProxyResultProvider {
     let statusCode: number;
 
     switch (this.status) {
-      case "Error":
+      case HealthCheckStatus.Error:
         statusCode = HttpStatusCodes.INTERNAL_SERVER_ERROR;
         break;
-      case "Warning":
+      case HealthCheckStatus.Warning:
         statusCode = HttpStatusCodes.BAD_REQUEST;
         break;
       default:
@@ -41,26 +50,24 @@ export class HealthCheckResult implements APIGatewayProxyResultProvider {
   /** Evaluate status based on children statuses. */
   private evaluateChildrenStatuses(): HealthCheckStatus {
     if (!this.children) {
-      return "Inconclusive";
+      return HealthCheckStatus.Inconclusive;
     }
 
-    if (this.children.some((x) => x.status === "Error")) {
-      return "Error";
+    if (this.children.some((x) => x.status === HealthCheckStatus.Error)) {
+      return HealthCheckStatus.Error;
     }
 
-    if (this.children.some((x) => x.status === "Warning")) {
-      return "Warning";
+    if (this.children.some((x) => x.status === HealthCheckStatus.Warning)) {
+      return HealthCheckStatus.Warning;
     }
 
-    if (this.children.some((x) => x.status === "Inconclusive")) {
-      return "Inconclusive";
+    if (this.children.some((x) => x.status === HealthCheckStatus.Inconclusive)) {
+      return HealthCheckStatus.Inconclusive;
     }
 
-    return "Ok";
+    return HealthCheckStatus.Ok;
   }
 }
-
-export type HealthCheckStatus = "Inconclusive" | "Ok" | "Warning" | "Error";
 
 /** Describes a component that can perform health checks. */
 export interface ICheckHealth {
@@ -73,22 +80,22 @@ export const checkHealth = async (
   target: string | undefined,
   check: () => Promise<{} | void | undefined>,
 ): Promise<HealthCheckResult> => {
-  const start = new Date().getTime();
+  const start = process.hrtime();
   try {
     await check();
 
     return new HealthCheckResult(
       name,
       target,
-      new Date().getTime() - start,
-      "Ok");
+      convertHrtimeToMs(process.hrtime(start)),
+      HealthCheckStatus.Ok);
   } catch (error) {
     // tslint:disable:no-unsafe-any
     return new HealthCheckResult(
       name,
       target,
-      new Date().getTime() - start,
-      "Error",
+      convertHrtimeToMs(process.hrtime(start)),
+      HealthCheckStatus.Error,
       error);
     // tslint:enable:no-unsafe-any
   }
@@ -132,7 +139,7 @@ export class HealthChecker implements ICheckHealth {
         this.options.name,
         undefined,
         new Date().getTime() - start,
-        "Error",
+        HealthCheckStatus.Error,
         error);
         // tslint:enable:no-unsafe-any
     }
