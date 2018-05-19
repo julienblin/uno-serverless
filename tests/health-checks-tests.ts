@@ -103,17 +103,28 @@ describe("HealthChecker", () => {
     expect(result.children![0].target).to.be.undefined;
   });
 
-  it("should return APIGateway compatible responses", async () => {
+  const statusMapping: Record<HealthCheckStatus, number> = {
+    [HealthCheckStatus.Ok]: HttpStatusCodes.OK,
+    [HealthCheckStatus.Warning]: HttpStatusCodes.BAD_REQUEST,
+    [HealthCheckStatus.Error]: HttpStatusCodes.INTERNAL_SERVER_ERROR,
+    [HealthCheckStatus.Inconclusive]: HttpStatusCodes.OK,
+  };
 
-    const healthChecks = [
-      new MockCheckHealth(new HealthCheckResult({ name: "mock1", target: "target", status: HealthCheckStatus.Ok})),
-    ];
+  for (const statusStr of Object.keys(statusMapping)) {
+    const status = statusStr as keyof typeof HealthCheckStatus;
 
-    const checker = new HealthChecker({ name: HEALTH_CHECKER_NAME, includeTargets: true }, healthChecks);
-    const result = (await checker.checkHealth()).getAPIGatewayProxyResult();
+    it(`should return APIGateway compatible responses - ${status}`, async () => {
+      const healthChecks = [
+        new MockCheckHealth(
+          new HealthCheckResult({ name: "mock1", target: "target", status: HealthCheckStatus[status] })),
+      ];
 
-    expect(result.statusCode).to.equal(HttpStatusCodes.OK);
-  });
+      const checker = new HealthChecker({ name: HEALTH_CHECKER_NAME, includeTargets: true }, healthChecks);
+      const result = (await checker.checkHealth()).getAPIGatewayProxyResult();
+
+      expect(result.statusCode).to.equal(statusMapping[status]);
+    });
+  }
 
 });
 
