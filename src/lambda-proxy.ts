@@ -225,10 +225,10 @@ export const lambdaProxy =
         validate(event, options.validation);
 
         const funcResult = await func({
+          body: () => parseBody(event),
           context,
           event,
           parameters: () => decodeParameters(event),
-          body: () => parseBody(event),
         });
 
         if (funcResult) {

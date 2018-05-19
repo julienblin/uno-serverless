@@ -1,5 +1,5 @@
 // tslint:disable-next-line:no-implicit-dependencies
-import { APIGatewayProxyEvent, APIGatewayProxyResult, CustomAuthorizerResult } from "aws-lambda";
+import { APIGatewayProxyEvent, APIGatewayProxyResult, CustomAuthorizerResult, ProxyCallback } from "aws-lambda";
 import { expect } from "chai";
 import * as HttpStatusCodes from "http-status-codes";
 import { describe, it } from "mocha";
@@ -31,7 +31,7 @@ describe("lambdaProxy", () => {
       { [name: string]: string };
       method?: string;
       pathParameters?: { [name: string]: string };
-      queryStringParameters?: { [name: string]: string }; }): APIGatewayProxyEvent => ({
+      queryStringParameters?: { [name: string]: string }; } = {}): APIGatewayProxyEvent => ({
       body: args.body
         ? (typeof args.body === "string") ? args.body : JSON.stringify(args.body)
         : null,
@@ -70,18 +70,20 @@ describe("lambdaProxy", () => {
       stageVariables: {},
     });
 
+  const nullCallback: ProxyCallback = (e, r) => {};
+
   it("should execute and process a APIGatewayProxyResultProvider", async () => {
     const lambda = lambdaProxy(
-      async ({}) =>
+      async () =>
         new MockAPIGatewayProxyResultProvider({
           body: "ok",
           statusCode: HttpStatusCodes.OK,
         }));
 
     const lambdaResult = await lambda(
-      createAPIGatewayProxyEvent({}),
+      createAPIGatewayProxyEvent(),
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      nullCallback) as APIGatewayProxyResult;
 
     expect(lambdaResult.body).to.equal("ok");
     expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.OK);
@@ -89,24 +91,24 @@ describe("lambdaProxy", () => {
 
   it("should execute and process an object", async () => {
     const obj = { foo: "bar" };
-    const lambda = lambdaProxy(async ({}) => (obj));
+    const lambda = lambdaProxy(async () => (obj));
 
     const lambdaResult = await lambda(
-      createAPIGatewayProxyEvent({}),
+      createAPIGatewayProxyEvent(),
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      nullCallback) as APIGatewayProxyResult;
 
     expect(lambdaResult.body).to.equal(JSON.stringify(obj));
     expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.OK);
   });
 
   it("should execute and process undefined", async () => {
-    const lambda = lambdaProxy(async ({}) => (undefined));
+    const lambda = lambdaProxy(async () => (undefined));
 
     const lambdaResult = await lambda(
-      createAPIGatewayProxyEvent({}),
+      createAPIGatewayProxyEvent(),
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      nullCallback) as APIGatewayProxyResult;
 
     expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.NOT_FOUND);
   });
@@ -117,15 +119,15 @@ describe("lambdaProxy", () => {
     let loggedLambdaError: LambdaProxyError | undefined;
 
     const lambda = lambdaProxy(
-      async ({}) => { throw new Error(errorMessage); },
+      async () => { throw new Error(errorMessage); },
       {
         errorLogger: (lambdaError) => { loggedLambdaError = lambdaError; },
       });
 
     const lambdaResult = await lambda(
-      createAPIGatewayProxyEvent({}),
+      createAPIGatewayProxyEvent(),
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      nullCallback) as APIGatewayProxyResult;
 
     expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.INTERNAL_SERVER_ERROR);
     expect(lambdaResult.body).to.contain(errorMessage);
@@ -139,7 +141,7 @@ describe("lambdaProxy", () => {
 
   it("should add cors headers *", async () => {
     const lambda = lambdaProxy(
-      async ({}) =>
+      async () =>
         new MockAPIGatewayProxyResultProvider({
           body: "",
           headers: {
@@ -152,9 +154,9 @@ describe("lambdaProxy", () => {
       });
 
     const lambdaResult = await lambda(
-      createAPIGatewayProxyEvent({}),
+      createAPIGatewayProxyEvent(),
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      nullCallback) as APIGatewayProxyResult;
 
     expect(lambdaResult.headers!["Access-Control-Allow-Origin"]).to.equal("*");
     expect(lambdaResult.headers!["X-Custom"]).to.equal("foo");
@@ -163,7 +165,7 @@ describe("lambdaProxy", () => {
 
   it("should add custom cors headers", async () => {
     const lambda = lambdaProxy(
-      async ({}) =>
+      async () =>
         new MockAPIGatewayProxyResultProvider({
           body: "",
           headers: {
@@ -176,9 +178,9 @@ describe("lambdaProxy", () => {
       });
 
     const lambdaResult = await lambda(
-      createAPIGatewayProxyEvent({}),
+      createAPIGatewayProxyEvent(),
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      nullCallback) as APIGatewayProxyResult;
 
     expect(lambdaResult.headers!["Access-Control-Allow-Origin"]).to.equal("www.example.org");
     expect(lambdaResult.headers!["X-Custom"]).to.equal("foo");
@@ -187,31 +189,31 @@ describe("lambdaProxy", () => {
 
   it("should parse JSON Body", async () => {
     const inputBody = { foo: "bar" };
-    const lambda = lambdaProxy(async ({ body }) => (body<{}>()));
+    const lambda = lambdaProxy(async ({ body }) => (body()));
 
     const lambdaResult = await lambda(
       createAPIGatewayProxyEvent({ body: inputBody, method: "POST" }),
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      nullCallback) as APIGatewayProxyResult;
 
     expect(lambdaResult.body).to.equal(JSON.stringify(inputBody));
     expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.OK);
   });
 
   it("should parse JSON Body when empty", async () => {
-    const lambda = lambdaProxy(async ({ body }) => (body<{}>()));
+    const lambda = lambdaProxy(async ({ body }) => (body()));
 
     const lambdaResult = await lambda(
       createAPIGatewayProxyEvent({ body: "", method: "POST" }),
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      nullCallback) as APIGatewayProxyResult;
 
     expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.NOT_FOUND);
   });
 
   it("should return bad request on malformed JSON.", async () => {
     const lambda = lambdaProxy(
-      async ({ body }) => (body<{}>()),
+      async ({ body }) => (body()),
       {
         errorLogger: (lambdaError) => { },
       });
@@ -219,13 +221,13 @@ describe("lambdaProxy", () => {
     const lambdaResult = await lambda(
       createAPIGatewayProxyEvent({ body: "{ 'asd:", method: "POST" }),
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      nullCallback) as APIGatewayProxyResult;
 
     expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.BAD_REQUEST);
   });
 
   it("should parse FORM Body", async () => {
-    const lambda = lambdaProxy(async ({ body }) => (body<{}>()));
+    const lambda = lambdaProxy(async ({ body }) => (body()));
 
     const lambdaResult = await lambda(
       createAPIGatewayProxyEvent({
@@ -233,14 +235,14 @@ describe("lambdaProxy", () => {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         method: "POST" }),
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      nullCallback) as APIGatewayProxyResult;
 
     expect(lambdaResult.body).to.equal(JSON.stringify({ foo: "bar", hello: "world" }));
     expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.OK);
   });
 
   it("should parse FORM Body when empty", async () => {
-    const lambda = lambdaProxy(async ({ body }) => (body<{}>()));
+    const lambda = lambdaProxy(async ({ body }) => (body()));
 
     const lambdaResult = await lambda(
       createAPIGatewayProxyEvent({
@@ -248,13 +250,13 @@ describe("lambdaProxy", () => {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         method: "POST" }),
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      nullCallback) as APIGatewayProxyResult;
 
     expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.NOT_FOUND);
   });
 
   it("should get parameters", async () => {
-    const lambda = lambdaProxy(async ({ parameters }) => (parameters<{}>()));
+    const lambda = lambdaProxy(async ({ parameters }) => (parameters()));
 
     const lambdaResult = await lambda(
       createAPIGatewayProxyEvent({
@@ -266,7 +268,7 @@ describe("lambdaProxy", () => {
           qsId: "bar",
         }}),
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      nullCallback) as APIGatewayProxyResult;
 
     expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.OK);
     const bodyResult = JSON.parse(lambdaResult.body);
@@ -277,7 +279,7 @@ describe("lambdaProxy", () => {
   it("should validate Body - correct", async () => {
     const inputBody = { foo: 3, bar: "mandatory" };
     const lambda = lambdaProxy(
-      async ({ body }) => (body<{}>()),
+      async ({ body }) => (body()),
       {
         validation: {
           body: {
@@ -298,7 +300,7 @@ describe("lambdaProxy", () => {
     const lambdaResult = await lambda(
       createAPIGatewayProxyEvent({ body: inputBody, method: "POST" }),
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      nullCallback) as APIGatewayProxyResult;
 
     expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.OK);
   });
@@ -306,7 +308,7 @@ describe("lambdaProxy", () => {
   it("should validate Body - incorrect", async () => {
     const inputBody = { foo: "foo" };
     const lambda = lambdaProxy(
-      async ({ body }) => (body<{}>()),
+      async ({ body }) => (body()),
       {
         validation: {
           body: {
@@ -329,14 +331,14 @@ describe("lambdaProxy", () => {
     const lambdaResult = await lambda(
       createAPIGatewayProxyEvent({ body: inputBody, method: "POST" }),
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      nullCallback) as APIGatewayProxyResult;
 
     expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.BAD_REQUEST);
   });
 
   it("should validate Parameters - correct", async () => {
     const lambda = lambdaProxy(
-      async ({ parameters }) => (parameters<{}>()),
+      async ({ parameters }) => (parameters()),
       {
         validation: {
           parameters: {
@@ -357,14 +359,14 @@ describe("lambdaProxy", () => {
     const lambdaResult = await lambda(
       createAPIGatewayProxyEvent({ method: "GET", pathParameters: { bar: "foo" }, queryStringParameters: { id: "5" } }),
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      nullCallback) as APIGatewayProxyResult;
 
     expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.OK);
   });
 
   it("should validate Parameters - incorrect", async () => {
     const lambda = lambdaProxy(
-      async ({ parameters }) => (parameters<{}>()),
+      async ({ parameters }) => (parameters()),
       {
         validation: {
           parameters: {
@@ -384,7 +386,7 @@ describe("lambdaProxy", () => {
     const lambdaResult = await lambda(
       createAPIGatewayProxyEvent({ method: "GET", pathParameters: { bar: "foo" }, queryStringParameters: { id: "5" } }),
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      nullCallback) as APIGatewayProxyResult;
 
     expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.BAD_REQUEST);
   });
