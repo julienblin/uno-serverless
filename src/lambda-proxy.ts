@@ -11,10 +11,10 @@ export interface LambdaProxyFunctionArgs {
   context: lambda.Context;
   /** The Lambda Event */
   event: lambda.APIGatewayEvent;
+  /** The body parsed as an object, either JSON or FORM. */
+  body<T>(): T | undefined;
   /** The path & query string parameters, decoded. */
   parameters<T>(): T;
-  /** The body parsed as an ojbect, either JSON or FORM. */
-  parseBody<T>(): T | undefined;
 }
 
 export type LambdaProxyFunction =
@@ -228,7 +228,7 @@ export const lambdaProxy =
           context,
           event,
           parameters: () => decodeParameters(event),
-          parseBody: () => parseBody(event),
+          body: () => parseBody(event),
         });
 
         if (funcResult) {
