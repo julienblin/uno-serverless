@@ -30,3 +30,16 @@ export const createConfidentialityReplacer =
 
 /** Singleton default confidentiality replacer. */
 export const defaultConfidentialityReplacer = createConfidentialityReplacer();
+
+/** Very simple memoization function. */
+export const memoize = <T>(func: () => T) => {
+  let cache: T | undefined;
+
+  return () => {
+    if (!cache) {
+      cache = func();
+    }
+
+    return cache;
+  };
+};

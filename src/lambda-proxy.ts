@@ -4,7 +4,7 @@ import * as lambda from "aws-lambda";
 import { parse as parseQS } from "querystring";
 import { BadRequestError, InternalServerError, NotFoundError, ValidationDiagnostic, ValidationError } from "./errors";
 import { isAPIGatewayProxyResultProvider, OKResult } from "./results";
-import { defaultConfidentialityReplacer } from "./utils";
+import { defaultConfidentialityReplacer, memoize } from "./utils";
 
 export interface LambdaProxyFunctionArgs {
   /** The Lambda Context */
@@ -161,7 +161,11 @@ const ajv = new Ajv({
   allErrors: true,
 });
 
-const validate = (event: lambda.APIGatewayProxyEvent, validationOptions?: LambdaProxyValidationOptions) => {
+const validate = (
+  body: <T>() => T | undefined,
+  parameters: <T>() => T,
+  validationOptions?: LambdaProxyValidationOptions) => {
+
   if (!validationOptions) {
     return;
   }
@@ -169,7 +173,7 @@ const validate = (event: lambda.APIGatewayProxyEvent, validationOptions?: Lambda
   const validationErrors: ValidationDiagnostic[] = [];
 
   if (validationOptions.parameters) {
-    const parametersAsObject = decodeParameters(event);
+    const parametersAsObject = parameters();
     if (!ajv.validate(validationOptions.parameters, parametersAsObject) && ajv.errors) {
       ajv.errors.forEach((e) => {
         const target = e.dataPath.startsWith(".") ? e.dataPath.substring(1) : e.dataPath;
@@ -184,7 +188,7 @@ const validate = (event: lambda.APIGatewayProxyEvent, validationOptions?: Lambda
   }
 
   if (validationOptions.body) {
-    const bodyAsObject = parseBody(event);
+    const bodyAsObject = body();
 
     if (!bodyAsObject) {
       validationErrors.push({ code: "required", message: "Missing body", target: "body" });
@@ -222,13 +226,16 @@ export const lambdaProxy =
 
       try {
 
-        validate(event, options.validation);
+        const memoizedParseBody = memoize(() => parseBody(event)) as <T>() => T | undefined;
+        const memoizedParameters = memoize(() => decodeParameters(event)) as <T>() => T;
+
+        validate(memoizedParseBody, memoizedParameters, options.validation);
 
         const funcResult = await func({
-          body: () => parseBody(event),
+          body: memoizedParseBody,
           context,
           event,
-          parameters: () => decodeParameters(event),
+          parameters: memoizedParameters,
         });
 
         if (funcResult) {

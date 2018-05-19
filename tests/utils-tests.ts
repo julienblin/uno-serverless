@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { convertHrtimeToMs, createConfidentialityReplacer, DEFAULT_CONFIDENTIALITY_REPLACEBY } from "../src/utils";
+import { convertHrtimeToMs, createConfidentialityReplacer, DEFAULT_CONFIDENTIALITY_REPLACEBY, memoize } from "../src/utils";
 
 // tslint:disable:newline-per-chained-call
 // tslint:disable:no-unused-expression
@@ -33,6 +33,28 @@ describe("createConfidentialityReplacer", () => {
 
     expect(result.a).equal(obj.a);
     expect(result.password).equal(DEFAULT_CONFIDENTIALITY_REPLACEBY);
+  });
+
+});
+
+describe("memoize", () => {
+
+  it("should memoize calls", async () => {
+    let invocationCount = 0;
+
+    const memoizedFunc = memoize(() => {
+      invocationCount++;
+
+      return "foo";
+    });
+
+    let result = memoizedFunc();
+    expect(result).to.equal("foo");
+    expect(invocationCount).to.equal(1);
+
+    result = memoizedFunc();
+    expect(result).to.equal("foo");
+    expect(invocationCount).to.equal(1);
   });
 
 });
