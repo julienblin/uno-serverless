@@ -1,6 +1,8 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { convertHrtimeToMs, createConfidentialityReplacer, DEFAULT_CONFIDENTIALITY_REPLACEBY, memoize } from "../src/utils";
+import {
+  convertHrtimeToMs, createConfidentialityReplacer,
+  DEFAULT_CONFIDENTIALITY_REPLACE_BY, memoize } from "../src/utils";
 
 // tslint:disable:newline-per-chained-call
 // tslint:disable:no-unused-expression
@@ -32,7 +34,7 @@ describe("createConfidentialityReplacer", () => {
     const result = JSON.parse(JSON.stringify(obj, createConfidentialityReplacer()));
 
     expect(result.a).equal(obj.a);
-    expect(result.password).equal(DEFAULT_CONFIDENTIALITY_REPLACEBY);
+    expect(result.password).equal(DEFAULT_CONFIDENTIALITY_REPLACE_BY);
   });
 
 });

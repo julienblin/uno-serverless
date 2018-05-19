@@ -7,13 +7,15 @@
 export const convertHrtimeToMs = (hrtime: [number, number]) => Math.ceil((((hrtime[0] * 1e9) + hrtime[1]) / 1e6));
 
 /** List of properties that are blacklisted in the confidentialityReplacer.  */
-export const DEFAULT_CONFIDENTIALITY_BLACKLIST = [
+export const DEFAULT_CONFIDENTIALITY_BLACKLIST = new Set([
   "authorization",
+  "key",
   "password",
-];
+  "secret",
+]);
 
 /** The default value for createConfidentialityReplace.replaceBy */
-export const DEFAULT_CONFIDENTIALITY_REPLACEBY = "******";
+export const DEFAULT_CONFIDENTIALITY_REPLACE_BY = "******";
 
 /**
  * Creates a JSON.stringify replacer function to mask specific property values
@@ -22,11 +24,8 @@ export const DEFAULT_CONFIDENTIALITY_REPLACEBY = "******";
  * @param replaceBy - The value to replace it with.
  */
 export const createConfidentialityReplacer =
-  (blacklist: string[] = DEFAULT_CONFIDENTIALITY_BLACKLIST, replaceBy: any = DEFAULT_CONFIDENTIALITY_REPLACEBY) =>
-    (key: string, value: {}) =>
-    blacklist.indexOf(key.toLowerCase()) !== -1
-      ? replaceBy
-      : value;
+  (blacklist: Set<string> = DEFAULT_CONFIDENTIALITY_BLACKLIST, replaceBy: any = DEFAULT_CONFIDENTIALITY_REPLACE_BY) =>
+    (key: string, value: {}) => blacklist.has(key.toLowerCase()) ? replaceBy : value;
 
 /** Singleton default confidentiality replacer. */
 export const defaultConfidentialityReplacer = createConfidentialityReplacer();
