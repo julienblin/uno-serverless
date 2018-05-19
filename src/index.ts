@@ -2,6 +2,9 @@ export { createConfidentialityReplacer, defaultConfidentialityReplacer, convertH
 export { OKResult, APIGatewayProxyResultProvider } from "./results";
 export { ErrorResponse, ErrorResponseDetail, InternalServerError, NotFoundError } from "./errors";
 export {
+  lambda, LambdaFunction,
+  LambdaFunctionArgs } from "./lambda";
+export {
   lambdaAuthorizerBearer, LambdaAuthorizerBearerFunction,
   LambdaAuthorizerBearerFunctionArgs } from "./lambda-authorizer";
 export {
