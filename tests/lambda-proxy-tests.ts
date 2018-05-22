@@ -380,7 +380,7 @@ describe("lambdaProxy", () => {
           },
         },
 
-        errorLogger: (lambdaError) => { },
+        /*errorLogger: (lambdaError) => { },*/
       });
 
     const lambdaResult = await lambda(

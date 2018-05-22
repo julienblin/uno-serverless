@@ -1,7 +1,7 @@
 {
   "name": "nv-aws-lambda",
-  "description": "An opiniated AWS Lambda/API Gateway/Node 8/Typescript framework",
-  "version": "0.3.0",
+  "description": "An opiniated AWS Lambda/Node 8/Typescript framework",
+  "version": "0.4.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [

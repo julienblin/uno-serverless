@@ -1,121 +1,63 @@
 import * as HttpStatusCodes from "http-status-codes";
 import { APIGatewayProxyResultProvider } from "./results";
 
-// tslint:disable:max-classes-per-file
-
-export interface ErrorResponse {
-  error: ErrorResponseDetail;
-}
-
-export interface ErrorResponseDetail {
+export interface ErrorData {
   code: string;
   data?: object;
-  details?: ErrorResponseDetail[];
+  details?: ErrorData[];
   message: string;
   target?: string;
 }
 
-/** Internal Server Error. */
-export class InternalServerError extends Error implements APIGatewayProxyResultProvider {
+export const buildError = (
+  errorData: ErrorData,
+  httpStatusCode: number): Error & ErrorData & APIGatewayProxyResultProvider => {
 
-  public constructor(message: string) {
-    super(message);
-    Object.defineProperty(this, "name", { value: this.constructor.name });
-    Object.setPrototypeOf(this, InternalServerError.prototype);
-  }
+  const error: any = new Error(errorData.message);
+  error.code = errorData.code;
+  error.data = errorData.data;
+  error.details = errorData.details;
+  error.target = errorData.target;
+  error.getAPIGatewayProxyResult = () => ({
+    body: JSON.stringify({ error: errorData }),
+    statusCode: httpStatusCode,
+  });
+  Object.freeze(error);
 
-  public getAPIGatewayProxyResult() {
-    const errorResponse: ErrorResponse = {
-      error: {
-        code: "internalServerError",
-        message: this.message,
-      },
-    };
+  return error;
+};
 
-    return {
-      body: JSON.stringify(errorResponse),
-      statusCode: HttpStatusCodes.INTERNAL_SERVER_ERROR,
-    };
-  }
-}
+export const internalServerError = (message: string) =>
+  buildError(
+    {
+      code: "internalServerError",
+      message,
+    },
+    HttpStatusCodes.INTERNAL_SERVER_ERROR);
 
-/** Target not found. */
-export class NotFoundError extends Error implements APIGatewayProxyResultProvider {
-
-  public constructor(public readonly target: string, message?: string) {
-    super(message ? message : `The target ${target} could not be found.`);
-    Object.defineProperty(this, "name", { value: this.constructor.name });
-    Object.setPrototypeOf(this, NotFoundError.prototype);
-  }
-
-  public getAPIGatewayProxyResult() {
-    const errorResponse: ErrorResponse = {
-      error: {
+export const notFoundError = (target: string, message?: string) =>
+    buildError(
+      {
         code: "notFound",
-        message: this.message,
-        target: this.target,
+        message: message ? message : `The target ${target} could not be found.`,
+        target,
       },
-    };
+      HttpStatusCodes.NOT_FOUND);
 
-    return {
-      body: JSON.stringify(errorResponse),
-      statusCode: HttpStatusCodes.NOT_FOUND,
-    };
-  }
-}
+export const badRequestError = (message: string, data?: object) =>
+  buildError(
+    {
+      code: "badRequest",
+      data,
+      message,
+    },
+    HttpStatusCodes.BAD_REQUEST);
 
-/** Bad request. */
-export class BadRequestError extends Error implements APIGatewayProxyResultProvider {
-
-  public constructor(message: string, public readonly error?: {}) {
-    super(message);
-    Object.defineProperty(this, "name", { value: this.constructor.name });
-    Object.setPrototypeOf(this, BadRequestError.prototype);
-  }
-
-  public getAPIGatewayProxyResult() {
-    const errorResponse: ErrorResponse = {
-      error: {
-        code: "badRequest",
-        data: this.error,
-        message: this.message,
+export const validationError = (errors: ErrorData[], message?: string) =>
+    buildError(
+      {
+        code: "validationFailed",
+        details: errors.map((e) => ({ code: e.code, message: e.message, target: e.target, data: e.data })),
+        message: message ? message : "Validation failed",
       },
-    };
-
-    return {
-      body: JSON.stringify(errorResponse),
-      statusCode: HttpStatusCodes.BAD_REQUEST,
-    };
-  }
-}
-
-export interface ValidationDiagnostic {
-  code: string;
-  data?: {};
-  message: string;
-  target?: string;
-}
-
-/** Validation errors - Bad request. */
-export class ValidationError extends Error implements APIGatewayProxyResultProvider {
-  public constructor(public errors: ValidationDiagnostic[], message?: string) {
-    super(message ? message : "Validation failed");
-    Object.defineProperty(this, "name", { value: this.constructor.name });
-    Object.setPrototypeOf(this, ValidationError.prototype);
-  }
-
-  public getAPIGatewayProxyResult() {
-    const errorResponse: ErrorResponse = {
-      error: {
-        code: "badRequest",
-        details: this.errors.map((e) => ({ code: e.code, message: e.message, target: e.target, data: e.data })),
-        message: this.message,
-      },
-    };
-
-    return {
-      body: JSON.stringify(errorResponse),
-      statusCode: HttpStatusCodes.BAD_REQUEST,
-    };
-  }
-}
+      HttpStatusCodes.BAD_REQUEST);

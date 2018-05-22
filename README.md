@@ -1,3 +1,3 @@
 # nv-aws-lambda
 
-An opiniated AWS Lambda/API Gateway/Node 8/Typescript framework.
+An opiniated AWS Lambda/Node 8/Typescript framework.

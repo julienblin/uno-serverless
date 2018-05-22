@@ -2,7 +2,7 @@ import * as Ajv from "ajv";
 // tslint:disable-next-line:no-implicit-dependencies
 import * as lambda from "aws-lambda";
 import { parse as parseQS } from "querystring";
-import { BadRequestError, InternalServerError, NotFoundError, ValidationDiagnostic, ValidationError } from "./errors";
+import { badRequestError, ErrorData, internalServerError, notFoundError, validationError } from "./errors";
 import { isAPIGatewayProxyResultProvider, OKResult } from "./results";
 import { defaultConfidentialityReplacer, memoize } from "./utils";
 
@@ -92,18 +92,18 @@ const parseBody = <T>(event: lambda.APIGatewayProxyEvent): T | undefined => {
       try {
         return JSON.parse(event.body) as T;
       } catch (jsonParseError) {
-        throw new BadRequestError(jsonParseError.message);
+        throw badRequestError(jsonParseError.message);
       }
 
     case "application/x-www-form-urlencoded":
       try {
         return parseQS<T>(event.body);
       } catch (formParseError) {
-        throw new BadRequestError(formParseError.message);
+        throw badRequestError(formParseError.message);
       }
 
     default:
-      throw new BadRequestError(`Unrecognized content-type: ${contentType}.`);
+      throw badRequestError(`Unrecognized content-type: ${contentType}.`);
   }
 };
 
@@ -170,7 +170,7 @@ const validate = (
     return;
   }
 
-  const validationErrors: ValidationDiagnostic[] = [];
+  const validationErrors: ErrorData[] = [];
 
   if (validationOptions.parameters) {
     const parametersAsObject = parameters();
@@ -208,7 +208,7 @@ const validate = (
   }
 
   if (validationErrors.length > 0) {
-    throw new ValidationError(validationErrors);
+    throw validationError(validationErrors);
   }
 };
 
@@ -243,13 +243,15 @@ export const lambdaProxy =
           ? funcResult.getAPIGatewayProxyResult()
           : new OKResult(funcResult).getAPIGatewayProxyResult();
         } else {
-          proxyResult = new NotFoundError(event.path).getAPIGatewayProxyResult();
+          proxyResult = notFoundError(event.path)
+            .getAPIGatewayProxyResult();
         }
 
       } catch (error) {
         proxyResult = isAPIGatewayProxyResultProvider(error)
           ? error.getAPIGatewayProxyResult()
-          : new InternalServerError(error.message ? error.message : error.toString()).getAPIGatewayProxyResult();
+          : internalServerError(error.message ? error.message : error.toString())
+            .getAPIGatewayProxyResult();
 
         if (!options.errorLogger) {
           options.errorLogger = defaultErrorLogger;
