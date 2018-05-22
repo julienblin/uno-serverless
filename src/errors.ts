@@ -54,10 +54,48 @@ export const badRequestError = (message: string, data?: object) =>
     HttpStatusCodes.BAD_REQUEST);
 
 export const validationError = (errors: ErrorData[], message?: string) =>
-    buildError(
-      {
-        code: "validationFailed",
-        details: errors.map((e) => ({ code: e.code, message: e.message, target: e.target, data: e.data })),
-        message: message ? message : "Validation failed",
-      },
-      HttpStatusCodes.BAD_REQUEST);
+  buildError(
+    {
+      code: "validationFailed",
+      details: errors.map((e) => ({ code: e.code, message: e.message, target: e.target, data: e.data })),
+      message: message ? message : "Validation failed",
+    },
+    HttpStatusCodes.BAD_REQUEST);
+
+export const dependencyError = (target: string, error: Error, message?: string) =>
+  buildError(
+    {
+      code: "dependencyError",
+      details: [{ code: error.name, message: error.message, data: error}],
+      message: message ? message : error.toString(),
+      target,
+    },
+    HttpStatusCodes.BAD_GATEWAY);
+
+/** Creates a Proxy around target which traps all errors and encapsulate into dependencyErrors. */
+export const dependencyErrorProxy = <T extends object>(target: T, targetName: string) => {
+  const dependencyHandler: ProxyHandler<T> = {
+    get: (proxyTarget, name, receiver) => {
+      const prop = proxyTarget[name];
+      if (typeof(prop) !== "function") { return prop; }
+
+      return (...args) => {
+        try {
+          const result = Reflect
+            .get(proxyTarget, name, receiver)
+            .apply(proxyTarget, args);
+
+          if (result && (typeof result.catch === "function")) {
+            return result.catch((err) => { throw dependencyError(targetName, err); });
+          }
+
+          return result;
+        } catch (error) {
+          return dependencyError(targetName, error);
+        }
+      };
+    },
+  };
+
+  return new Proxy<T>(target, dependencyHandler);
+};
