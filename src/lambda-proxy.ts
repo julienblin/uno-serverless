@@ -46,7 +46,15 @@ export interface LambdaProxyValidationOptions {
   parameters?: {};
 }
 
+export type BodyParser =
+  <T>(event: lambda.APIGatewayProxyEvent, headers: () => Record<string, string>) => T | undefined;
+
 export interface LambdaProxyOptions {
+  /**
+   * The body parser to use (for body() call).
+   */
+  bodyParser?: BodyParser;
+
   /**
    * The serializer to use for the body.
    */
@@ -67,7 +75,7 @@ export interface LambdaProxyOptions {
    * The custom error logger to use.
    * If not provided, will use console.error.
    */
-  errorLogger?(lambdaProxyError: LambdaProxyError): void | Promise<void>;
+  errorLogger?(lambdaProxyError: LambdaProxyError, bodyParser: BodyParser): void | Promise<void>;
 }
 
 const defaultBodySerializer: BodySerializer = (body?: any) => body ? JSON.stringify(body) : "";
@@ -75,7 +83,8 @@ const defaultBodySerializer: BodySerializer = (body?: any) => body ? JSON.string
 /**
  * Parses the body of a request. Form or JSON.
  */
-const parseBody = <T>(event: lambda.APIGatewayProxyEvent, headers: () => Record<string, string>): T | undefined => {
+const defaultBodyParser: BodyParser =
+  <T>(event: lambda.APIGatewayProxyEvent, headers: () => Record<string, string>): T | undefined => {
   if (event.httpMethod === "GET") {
     return undefined;
   }
@@ -162,13 +171,13 @@ const normalizeHeaders = (event: lambda.APIGatewayProxyEvent): Record<string, st
   return normalizedHeaders;
 };
 
-const defaultErrorLogger = async (lambdaProxyError: LambdaProxyError) => {
+const defaultErrorLogger = async (lambdaProxyError: LambdaProxyError, bodyParser: BodyParser) => {
 
   let parsedBody;
 
   if (lambdaProxyError.event.body) {
     try {
-      parsedBody = parseBody(lambdaProxyError.event, () => normalizeHeaders(lambdaProxyError.event));
+      parsedBody = bodyParser(lambdaProxyError.event, () => normalizeHeaders(lambdaProxyError.event));
     } catch (parseError) {
       parsedBody = parseError.stack;
     }
@@ -260,10 +269,16 @@ export const lambdaProxy =
         options.bodySerializer = defaultBodySerializer;
       }
 
+      if (!options.bodyParser) {
+        options.bodyParser = defaultBodyParser;
+      }
+
       try {
 
         const memoizedNormalizeHeaders = memoize(() => normalizeHeaders(event)) as () => Record<string, string>;
-        const memoizedParseBody = memoize(() => parseBody(event, memoizedNormalizeHeaders)) as <T>() => T | undefined;
+        const memoizedParseBody =
+          // tslint:disable-next-line:no-non-null-assertion
+          memoize(() => options.bodyParser!(event, memoizedNormalizeHeaders)) as <T>() => T | undefined;
         const memoizedParameters = memoize(() => decodeParameters(event)) as <T>() => T;
 
         validate(memoizedParseBody, memoizedParameters, options.validation);
@@ -295,7 +310,7 @@ export const lambdaProxy =
         }
 
         try {
-          const loggerPromise = options.errorLogger({ event, context, error, result: proxyResult });
+          const loggerPromise = options.errorLogger({ event, context, error, result: proxyResult }, options.bodyParser);
           if (loggerPromise) {
             await loggerPromise;
           }
