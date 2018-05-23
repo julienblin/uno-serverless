@@ -340,6 +340,22 @@ import { dependencyError } from "opiniated-lambda";
 throw dependencyError(target, error, message);
 ```
 
+# Warmup source support
+
+This is primarily to support warmup for lambda function (using e.g. [serverless-plugin-warmup](https://github.com/FidelLimited/serverless-plugin-warmup)).
+
+It is possible to define a value that will be matched against `event.source` to shortcut the execution if a warm up event is received:
+
+```typescript
+import { lambdaProxy } from "opiniated-lambda";
+
+export const handler = lambdaProxy(
+  async () => ({ foo: "bar" }),
+  {
+    warmupEventSource: "serverless-plugin-warmup" // if event.source === "serverless-plugin-warmup", validation & execution will be bypath.
+  });
+```
+
 # Customization
 
 *Some* level of customization is available.

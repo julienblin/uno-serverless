@@ -72,6 +72,13 @@ export interface LambdaProxyOptions {
   validation?: LambdaProxyValidationOptions;
 
   /**
+   * A specific value for event.source that will be looked up for
+   * warming up the lambda. If values match, a shortcut response will be generated
+   * and the function will not be invoked.
+   */
+  warmupEventSource?: string;
+
+  /**
    * The custom error logger to use.
    * If not provided, will use console.error.
    */
@@ -262,7 +269,17 @@ const validate = (
 export const lambdaProxy =
   (func: LambdaProxyFunction, options: LambdaProxyOptions = {}): lambda.APIGatewayProxyHandler =>
     async (event: lambda.APIGatewayProxyEvent, context: lambda.Context, callback: lambda.ProxyCallback)
-      : Promise<lambda.APIGatewayProxyResult> => {
+      : Promise<lambda.APIGatewayProxyResult > => {
+
+      if (options.warmupEventSource) {
+        // tslint:disable-next-line:no-string-literal
+        if (event["source"] === options.warmupEventSource) {
+          return {
+            body: "",
+            statusCode: 200,
+          };
+        }
+      }
 
       let proxyResult: lambda.APIGatewayProxyResult | undefined;
       if (!options.bodySerializer) {

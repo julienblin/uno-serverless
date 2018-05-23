@@ -439,4 +439,29 @@ describe("lambdaProxy", () => {
     expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.BAD_REQUEST);
   });
 
+  it("should bypass execution on warmup source.", async () => {
+    const warmupSource = "warmup";
+    let executed = false;
+    const lambda = lambdaProxy(
+      async () => {
+        executed = true;
+
+        return undefined;
+      },
+      {
+        warmupEventSource: warmupSource,
+      });
+
+    const event = createAPIGatewayProxyEvent();
+    // tslint:disable-next-line:no-string-literal
+    event["source"] = warmupSource;
+
+    const lambdaResult = await lambda(
+      event,
+      createLambdaContext(),
+      nullCallback) as APIGatewayProxyResult;
+
+    expect(executed).to.be.false;
+  });
+
 });
