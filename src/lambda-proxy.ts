@@ -78,12 +78,12 @@ export interface LambdaProxyOptions {
   errorLogger?(lambdaProxyError: LambdaProxyError, bodyParser: BodyParser): void | Promise<void>;
 }
 
-const defaultBodySerializer: BodySerializer = (body?: any) => body ? JSON.stringify(body) : "";
+export const defaultBodySerializer: BodySerializer = (body?: any) => body ? JSON.stringify(body) : "";
 
 /**
  * Parses the body of a request. Form or JSON.
  */
-const defaultBodyParser: BodyParser =
+export const defaultBodyParser: BodyParser =
   <T>(event: lambda.APIGatewayProxyEvent, headers: () => Record<string, string>): T | undefined => {
   if (event.httpMethod === "GET") {
     return undefined;
@@ -171,7 +171,7 @@ const normalizeHeaders = (event: lambda.APIGatewayProxyEvent): Record<string, st
   return normalizedHeaders;
 };
 
-const defaultErrorLogger = async (lambdaProxyError: LambdaProxyError, bodyParser: BodyParser) => {
+export const defaultErrorLogger = async (lambdaProxyError: LambdaProxyError, bodyParser: BodyParser) => {
 
   let parsedBody;
 
