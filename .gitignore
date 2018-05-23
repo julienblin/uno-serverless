@@ -1,5 +1,5 @@
 node_modules/
 dist/
-nv-aws-lambda-*.tgz
+opiniated-lambda-*.tgz
 .nyc_output
 coverage
