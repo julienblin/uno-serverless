@@ -2,6 +2,7 @@ import * as Ajv from "ajv";
 // tslint:disable-next-line:no-implicit-dependencies
 import * as lambda from "aws-lambda";
 import { parse as parseQS } from "querystring";
+import { parseString as parseXml } from "xml2js";
 import { badRequestError, ErrorData, internalServerError, notFoundError, validationError } from "./errors";
 import { BodySerializer, isAPIGatewayProxyResultProvider, ok } from "./results";
 import { defaultConfidentialityReplacer, memoize } from "./utils";
@@ -96,6 +97,21 @@ const parseBody = <T>(event: lambda.APIGatewayProxyEvent, headers: () => Record<
       } catch (jsonParseError) {
         throw badRequestError(jsonParseError.message);
       }
+
+    case "application/xml":
+    case "text/xml":
+    try {
+      let xmlError: any;
+      let xmlResult: T | undefined;
+      parseXml(event.body, (e, r) => { xmlError = e; xmlResult = r; });
+      if (xmlError) {
+        throw xmlError;
+      }
+
+      return xmlResult;
+    } catch (xmlParseError) {
+      throw badRequestError(xmlParseError.message);
+    }
 
     case "application/x-www-form-urlencoded":
       try {
