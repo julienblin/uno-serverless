@@ -1,3 +1,5 @@
+[![Travis](https://travis-ci.org/julienblin/opiniated-lambda.svg?branch=master)](https://travis-ci.org/julienblin/opiniated-lambda)
+
 # opiniated-lambda
 
 Provides an opiniated framework for creating API using AWS Serverless stack (API Gateway/Lambda) on Node 8 / TypeScript.
