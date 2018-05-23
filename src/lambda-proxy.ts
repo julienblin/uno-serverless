@@ -3,7 +3,7 @@ import * as Ajv from "ajv";
 import * as lambda from "aws-lambda";
 import { parse as parseQS } from "querystring";
 import { badRequestError, ErrorData, internalServerError, notFoundError, validationError } from "./errors";
-import { isAPIGatewayProxyResultProvider, OKResult } from "./results";
+import { isAPIGatewayProxyResultProvider, ok } from "./results";
 import { defaultConfidentialityReplacer, memoize } from "./utils";
 
 export interface LambdaProxyFunctionArgs {
@@ -241,10 +241,9 @@ export const lambdaProxy =
         if (funcResult) {
           proxyResult = funcResult && isAPIGatewayProxyResultProvider(funcResult)
           ? funcResult.getAPIGatewayProxyResult()
-          : new OKResult(funcResult).getAPIGatewayProxyResult();
+          : ok(funcResult).getAPIGatewayProxyResult();
         } else {
-          proxyResult = notFoundError(event.path)
-            .getAPIGatewayProxyResult();
+          proxyResult = notFoundError(event.path).getAPIGatewayProxyResult();
         }
 
       } catch (error) {

@@ -40,3 +40,8 @@ export class OKResult implements APIGatewayProxyResultProvider {
     };
   }
 }
+
+/**
+ * Response with OK - 200 or No Content - 204 if body is not true.
+ */
+export const ok = (body?: {}, headers?: Headers) => new OKResult(body, headers);
