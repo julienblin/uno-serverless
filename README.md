@@ -23,9 +23,7 @@ export const handler = lambdaProxy(async ({ parameters }) => {
     "message": "<error message>",
     "target": "<and indication for the target of an error, e.g. backend API name or property name for validation>",
     "details": [
-      {
-        <Additional errors details in hierarchies>
-      }
+      // Additional errors details in hierarchies
     ],
     "data": "Any additional data if necessary."
   }
@@ -259,11 +257,88 @@ export const handler = lambdaProxy(
 ```
 # Health checks
 
-TBD
+It is recommended to create a health checking endpoint in every API created. This allows for a quick diagnosing and monitoring
+of problems in production.
+Health checks can validate anything, but you probably want to:
+- check that dependencies are ok (connection with database, remote APIs, etc...)
+- check that some configuration parameters are within some boundaries (size of authentication signing keys, etc.)
+
+Here is a summary example on how to implement health checks:
+
+In an example service class:
+
+```typescript
+import { checkHealth, HealthCheckResult, ICheckHealth } from "opiniated-lambda";
+
+export class MyService implements ICheckHealth {
+
+  // This is the sweet & short version.
+  // Returning HealthCheckResult directly offers more options if needed.
+  public async checkHealth(): Promise<HealthCheckResult> {
+    return checkHealth(
+      "health check name",
+      "target",
+      async () => { check the health, throw an error if there is a problem });
+  }
+
+}
+
+```
+
+Health check lambda handler:
+
+```typescript
+import { HealthChecker, lambdaProxy } from "opiniated-lambda";
+
+const healthChecker = new HealthChecker(
+  {
+    includeTargets: true,
+    name: "My API name"
+  },
+  [ new MyService(), ...]); // List of all ICheckHealth to run.
+
+// GET /health
+export const handler = lambdaProxy(async () => healthChecker.checkHealth(), { cors: true });
+```
 
 # Dependency errors
 
-TBD
+In addition to the health check endpoint, it is often advisable to return specific error classes when an error
+occurs in a downstream dependency, as opposed to the internal code of the API (e.g. a downstream server is down).
+
+There is a facility included for that:
+
+```typescript
+import { dependencyErrorProxy, lambdaProxy } from "opiniated-lambda";
+
+export class MyService {
+  // ... all downstream definitions
+}
+
+const serviceInstance = dependencyErrorProxy(new MyService(), "serviceName");
+// From now on, all errors (sync and async) coming back from MyService will be encapsulated in a dependencyError.
+
+export const handler = lambdaProxy(async () => serviceInstance.methodThatReturnsAnError(), { cors: true });
+// The response will look like the following:
+{
+  body: {
+    error: {
+      code: "dependencyError",
+      details: "<error details>",
+      message: "error.message property",
+      target: "serviceName"
+    }
+  }
+  statusCode: 502 // Bad Gateway
+}
+```
+
+if you do not which to use a `Proxy`, it is possible to throw `dependencyError` manually:
+```typescript
+import { dependencyError } from "opiniated-lambda";
+
+throw dependencyError(target, error, message);
+```
 
 # Customization
 
