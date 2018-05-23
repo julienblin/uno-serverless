@@ -13,7 +13,7 @@
     "lint": "tslint --project tsconfig.json",
     "prebuild": "npm run lint",
     "build": "webpack --config webpack.config.js",
-    "prepack": "npm run build",
+    "prepare": "npm run build",
     "test": "mocha -r ts-node/register tests/**/*-tests.ts",
     "cover": "nyc mocha -r ts-node/register -r source-map-support/register tests/**/*-tests.ts"
   },
