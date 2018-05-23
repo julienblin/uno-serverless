@@ -1,5 +1,5 @@
 import * as HttpStatusCodes from "http-status-codes";
-import { APIGatewayProxyResultProvider } from "./results";
+import { APIGatewayProxyResultProvider, BodySerializer } from "./results";
 
 export interface ErrorData {
   code: string;
@@ -18,8 +18,8 @@ export const buildError = (
   error.data = errorData.data;
   error.details = errorData.details;
   error.target = errorData.target;
-  error.getAPIGatewayProxyResult = () => ({
-    body: JSON.stringify({ error: errorData }),
+  error.getAPIGatewayProxyResult = (serializer: BodySerializer) => ({
+    body: serializer({ error: errorData }),
     statusCode: httpStatusCode,
   });
   Object.freeze(error);

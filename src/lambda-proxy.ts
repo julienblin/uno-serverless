@@ -3,16 +3,22 @@ import * as Ajv from "ajv";
 import * as lambda from "aws-lambda";
 import { parse as parseQS } from "querystring";
 import { badRequestError, ErrorData, internalServerError, notFoundError, validationError } from "./errors";
-import { isAPIGatewayProxyResultProvider, ok } from "./results";
+import { BodySerializer, isAPIGatewayProxyResultProvider, ok } from "./results";
 import { defaultConfidentialityReplacer, memoize } from "./utils";
 
 export interface LambdaProxyFunctionArgs {
   /** The Lambda Context */
   context: lambda.Context;
+
   /** The Lambda Event */
   event: lambda.APIGatewayEvent;
+
   /** The body parsed as an object, either JSON or FORM. */
   body<T>(): T | undefined;
+
+  /** The normalized headers, with all keys lower-cased. */
+  headers(): Record<string, string>;
+
   /** The path & query string parameters, decoded. */
   parameters<T>(): T;
 }
@@ -41,6 +47,11 @@ export interface LambdaProxyValidationOptions {
 
 export interface LambdaProxyOptions {
   /**
+   * The serializer to use for the body.
+   */
+  bodySerializer?: BodySerializer;
+
+  /**
    * If true, adds Access-Control-Allow-Origin: * to the response headers
    * If a string, set the Access-Control-Allow-Origin to the string value.
    */
@@ -58,10 +69,12 @@ export interface LambdaProxyOptions {
   errorLogger?(lambdaProxyError: LambdaProxyError): void | Promise<void>;
 }
 
+const defaultBodySerializer: BodySerializer = (body?: any) => body ? JSON.stringify(body) : "";
+
 /**
  * Parses the body of a request. Form or JSON.
  */
-const parseBody = <T>(event: lambda.APIGatewayProxyEvent): T | undefined => {
+const parseBody = <T>(event: lambda.APIGatewayProxyEvent, headers: () => Record<string, string>): T | undefined => {
   if (event.httpMethod === "GET") {
     return undefined;
   }
@@ -70,18 +83,7 @@ const parseBody = <T>(event: lambda.APIGatewayProxyEvent): T | undefined => {
     return undefined;
   }
 
-  let contentType: string | undefined;
-
-  if (event.headers) {
-    if (event.headers["Content-Type"]) {
-      contentType = event.headers["Content-Type"].toLowerCase();
-    } else {
-      if (event.headers["content-type"]) {
-        contentType = event.headers["content-type"].toLowerCase();
-      }
-    }
-  }
-
+  let contentType = headers()["content-type"];
   if (!contentType) {
     contentType = "application/json";
   }
@@ -129,13 +131,28 @@ const decodeParameters = <T>(event: lambda.APIGatewayProxyEvent): T => {
   return params as T;
 };
 
+const normalizeHeaders = (event: lambda.APIGatewayProxyEvent): Record<string, string> => {
+  const normalizedHeaders = {};
+
+  if (!event.headers) {
+    return normalizedHeaders;
+  }
+
+  const headerKeys = Object.keys(event.headers);
+  for (const key of headerKeys) {
+    normalizedHeaders[key.toLowerCase()] = event.headers[key];
+  }
+
+  return normalizedHeaders;
+};
+
 const defaultErrorLogger = async (lambdaProxyError: LambdaProxyError) => {
 
   let parsedBody;
 
   if (lambdaProxyError.event.body) {
     try {
-      parsedBody = parseBody(lambdaProxyError.event);
+      parsedBody = parseBody(lambdaProxyError.event, () => normalizeHeaders(lambdaProxyError.event));
     } catch (parseError) {
       parsedBody = parseError.stack;
     }
@@ -223,10 +240,14 @@ export const lambdaProxy =
       : Promise<lambda.APIGatewayProxyResult> => {
 
       let proxyResult: lambda.APIGatewayProxyResult | undefined;
+      if (!options.bodySerializer) {
+        options.bodySerializer = defaultBodySerializer;
+      }
 
       try {
 
-        const memoizedParseBody = memoize(() => parseBody(event)) as <T>() => T | undefined;
+        const memoizedNormalizeHeaders = memoize(() => normalizeHeaders(event)) as () => Record<string, string>;
+        const memoizedParseBody = memoize(() => parseBody(event, memoizedNormalizeHeaders)) as <T>() => T | undefined;
         const memoizedParameters = memoize(() => decodeParameters(event)) as <T>() => T;
 
         validate(memoizedParseBody, memoizedParameters, options.validation);
@@ -235,22 +256,23 @@ export const lambdaProxy =
           body: memoizedParseBody,
           context,
           event,
+          headers: memoizedNormalizeHeaders,
           parameters: memoizedParameters,
         });
 
         if (funcResult) {
           proxyResult = funcResult && isAPIGatewayProxyResultProvider(funcResult)
-          ? funcResult.getAPIGatewayProxyResult()
-          : ok(funcResult).getAPIGatewayProxyResult();
+          ? funcResult.getAPIGatewayProxyResult(options.bodySerializer)
+          : ok(funcResult).getAPIGatewayProxyResult(options.bodySerializer);
         } else {
-          proxyResult = notFoundError(event.path).getAPIGatewayProxyResult();
+          proxyResult = notFoundError(event.path).getAPIGatewayProxyResult(options.bodySerializer);
         }
 
       } catch (error) {
         proxyResult = isAPIGatewayProxyResultProvider(error)
-          ? error.getAPIGatewayProxyResult()
-          : internalServerError(error.message ? error.message : error.toString())
-            .getAPIGatewayProxyResult();
+          ? error.getAPIGatewayProxyResult(options.bodySerializer)
+          : internalServerError(
+              error.message ? error.message : error.toString()).getAPIGatewayProxyResult(options.bodySerializer);
 
         if (!options.errorLogger) {
           options.errorLogger = defaultErrorLogger;

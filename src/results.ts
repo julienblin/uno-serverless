@@ -2,7 +2,9 @@
 import { APIGatewayProxyResult } from "aws-lambda";
 import * as HttpStatusCodes from "http-status-codes";
 
-type Headers = Record<string, boolean | number | string>;
+export type Headers = Record<string, boolean | number | string>;
+
+export type BodySerializer = (body?: any) => string;
 
 /**
  * Marks a provider of {APIGatewayProxyResult}.
@@ -12,7 +14,7 @@ export interface APIGatewayProxyResultProvider {
   /**
    * Converts to {APIGatewayProxyResult}
    */
-  getAPIGatewayProxyResult(): APIGatewayProxyResult;
+  getAPIGatewayProxyResult(serializer: BodySerializer): APIGatewayProxyResult;
 }
 
 /**
@@ -32,9 +34,9 @@ export class OKResult implements APIGatewayProxyResultProvider {
   /**
    * Converts to {APIGatewayProxyResult}
    */
-  public getAPIGatewayProxyResult(): APIGatewayProxyResult {
+  public getAPIGatewayProxyResult(serializer: BodySerializer): APIGatewayProxyResult {
     return {
-      body: this.body ? JSON.stringify(this.body) : "",
+      body: serializer(this.body),
       headers: this.headers,
       statusCode: this.body ? HttpStatusCodes.OK : HttpStatusCodes.NO_CONTENT,
     };
