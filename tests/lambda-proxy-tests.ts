@@ -449,7 +449,8 @@ describe("lambdaProxy", () => {
         return undefined;
       },
       {
-        warmupEventSource: warmupSource,
+        // tslint:disable-next-line:no-string-literal
+        isWarmup: (e) => e["source"] === warmupSource,
       });
 
     const event = createAPIGatewayProxyEvent();

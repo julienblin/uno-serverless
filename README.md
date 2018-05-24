@@ -23,10 +23,8 @@ export const handler = lambdaProxy(async ({ parameters }) => {
   "error": {
     "code": "<error code>",
     "message": "<error message>",
-    "target": "<and indication for the target of an error, e.g. backend API name or property name for validation>",
-    "details": [
-      // Additional errors details in hierarchies
-    ],
+    "target": "<and indication for the target of an error, e.g. back-end API name or property name for validation>",
+    "details": [],
     "data": "Any additional data if necessary."
   }
 }
@@ -335,7 +333,7 @@ export const handler = lambdaProxy(async () => serviceInstance.methodThatReturns
 }
 ```
 
-if you do not which to use a `Proxy`, it is possible to throw `dependencyError` manually:
+if you do not wish to use a `Proxy`, it is possible to throw `dependencyError` manually:
 ```typescript
 import { dependencyError } from "opiniated-lambda";
 
@@ -346,7 +344,7 @@ throw dependencyError(target, error, message);
 
 This is primarily to support warmup for lambda function (using e.g. [serverless-plugin-warmup](https://github.com/FidelLimited/serverless-plugin-warmup)).
 
-It is possible to define a value that will be matched against `event.source` to shortcut the execution if a warm up event is received:
+It is possible to provide a function to be evaluated to shortcut the execution in case of warmup.
 
 ```typescript
 import { lambdaProxy } from "opiniated-lambda";
@@ -354,7 +352,7 @@ import { lambdaProxy } from "opiniated-lambda";
 export const handler = lambdaProxy(
   async () => ({ foo: "bar" }),
   {
-    warmupEventSource: "serverless-plugin-warmup" // if event.source === "serverless-plugin-warmup", validation & execution will be bypath.
+    isWarmup: (e) => e["source"] === "serverless-plugin-warmup" // if event.source === "serverless-plugin-warmup", validation & execution will not occur.
   });
 ```
 

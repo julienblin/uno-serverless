@@ -72,17 +72,16 @@ export interface LambdaProxyOptions {
   validation?: LambdaProxyValidationOptions;
 
   /**
-   * A specific value for event.source that will be looked up for
-   * warming up the lambda. If values match, a shortcut response will be generated
-   * and the function will not be invoked.
-   */
-  warmupEventSource?: string;
-
-  /**
    * The custom error logger to use.
    * If not provided, will use console.error.
    */
   errorLogger?(lambdaProxyError: LambdaProxyError, bodyParser: BodyParser): void | Promise<void>;
+
+  /**
+   * If provided, will be evaluated before anything and shortcut.
+   * This allows isolation of warm up events from the standard processing.
+   */
+  isWarmup?(event: lambda.APIGatewayProxyEvent): boolean;
 }
 
 export const defaultBodySerializer: BodySerializer = (body?: any) => body ? JSON.stringify(body) : "";
@@ -271,14 +270,11 @@ export const lambdaProxy =
     async (event: lambda.APIGatewayProxyEvent, context: lambda.Context, callback: lambda.ProxyCallback)
       : Promise<lambda.APIGatewayProxyResult > => {
 
-      if (options.warmupEventSource) {
-        // tslint:disable-next-line:no-string-literal
-        if (event["source"] === options.warmupEventSource) {
-          return {
-            body: "",
-            statusCode: 200,
-          };
-        }
+      if (options.isWarmup && options.isWarmup(event)) {
+        return {
+          body: "",
+          statusCode: 200,
+        };
       }
 
       let proxyResult: lambda.APIGatewayProxyResult | undefined;
