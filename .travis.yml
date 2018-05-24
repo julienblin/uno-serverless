@@ -1,3 +1,12 @@
 language: node_js
 node_js:
   - "lts/*"
+deploy:
+  skip_cleanup: true
+  provider: npm
+  email: julien.blin@gmail.com
+  api_key:
+    secure: eggy851BsaKgJAoDryTTZrlDLpDZAnJpJzym2PqXSJ0aFiQU9K2syF11w9L6tZAXTMoxw3bhefhI17/T2g3CeRR4YZO0oipyZWJ0WgCWR+303a8Z4DrQx4IZvUoB0kVdUsD7iX9VMyOpbUyC4huF1pp9o1+dDONIxKIVuJotrl/0zsqAMhTwxTH10UKkdtyyvH8NoWwSJTkeGgWzb/pfZaINNhOAxfij2o6D5QsrjKyaIAru2JbeQ5w0Aw98j1oeQIxsAwvG3ozqWxVpLK8vQLN0Mdf8mIFWV9icwuwKNa0vQVCQtPBPaXX2sZdHwVRPqwbRIucjS1fdJqE5uMqel+3VyURzhjbjhyI2zgpeb6RoSuQ2Ixy9eeAw9euuPZmU21tsxPQiHTAkvm/ZcS7ApExpRWxndii1+SXAjd9XtS4EspfznKy/ZXIuyWz1vNANn9JN+k+03d8JRhe2sPWtGgk1HhbifXOU+GE6F6lbhndhQBQctlbTf9KyBl2pi6xeG9nRTsoFNJXzsULOPZxnjiw8xCAex9hYwOILM0JbcPiuzsW0lroqZL76WhDsWOFJhvvlabfr3P14XemhD14NXVshb/ulrHmA1PQ7QPPSAktfsDl93UC07TV1SFbY52C+h2TV23n9taSB5KVbaF+Zssr8+qxqWUxpzFPeEucgDwM=
+  on:
+    tags: true
+    repo: julienblin/opiniated-lambda
