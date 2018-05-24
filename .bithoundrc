@@ -1,0 +1,8 @@
+"dependencies": {
+    "unused-ignores": [
+      "@types/aws-lambda",
+      "ajv",
+      "source-map-support",
+      "xml2js",
+    ]
+  }
