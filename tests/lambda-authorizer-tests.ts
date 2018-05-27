@@ -23,7 +23,7 @@ describe("lambdaAuthorizerBearer", () => {
       principalId: bearerToken,
     });
 
-    const inputBearerToken = "a987sfasd785sadf876";
+    const inputBearerToken = randomStr();
     const lambda = lambdaAuthorizerBearer(async ({ bearerToken, event, context }) => authorizerResult(bearerToken!));
 
     const lambdaResult = await lambda(
@@ -38,8 +38,40 @@ describe("lambdaAuthorizerBearer", () => {
     expect(lambdaResult.principalId).equal(inputBearerToken);
   });
 
+  it("should parse API Gateway ARN.", async () => {
+
+    const authorizerResult: CustomAuthorizerResult = {
+      policyDocument: {
+        Statement: [],
+        Version: "2012-10-17",
+      },
+      principalId: "foo",
+    };
+
+    const apiGatewayApiArn = `arn:${randomStr()}`;
+    const apiGatewayStage =  randomStr();
+    const lambda = lambdaAuthorizerBearer(
+      async ({ baseApiGatewayArn, event, context, stage }) => {
+        expect(baseApiGatewayArn).to.equal(`${apiGatewayApiArn}/${apiGatewayStage}`);
+        expect(stage).to.equal(apiGatewayStage);
+
+        return authorizerResult;
+      });
+
+    const lambdaResult = await lambda(
+      {
+        authorizationToken: `bearer ${randomStr()}`,
+        methodArn: `${apiGatewayApiArn}/${apiGatewayStage}/${randomStr()}`,
+        type: randomStr(),
+      },
+      createLambdaContext(),
+      (e, r) => {}) as CustomAuthorizerResult;
+
+    expect(lambdaResult).equal(authorizerResult);
+  });
+
   it("should handle errors", async () => {
-    const inputBearerToken = "a987sfasd785sadf876";
+    const inputBearerToken = randomStr();
     const errorMessage = "This is an error.";
     let loggedLambdaError: LambdaAuthorizerBearerError | undefined;
 

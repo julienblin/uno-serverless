@@ -3,9 +3,22 @@ import * as lambda from "aws-lambda";
 import { defaultConfidentialityReplacer } from "./utils";
 
 export interface LambdaAuthorizerBearerFunctionArgs {
+  /**
+   * The base arn for ApiGateway, including the stage.
+   * Useful for building policies.
+   */
+  baseApiGatewayArn: string;
+
+  /**
+   * The authorization header minus the bearer prefix.
+   */
   bearerToken?: string;
+
   context: lambda.Context;
   event: lambda.CustomAuthorizerEvent;
+
+  /** The Api Gateway stage */
+  stage: string;
 }
 
 export type LambdaAuthorizerBearerFunction =
@@ -53,11 +66,15 @@ export const lambdaAuthorizerBearer =
         ? event.authorizationToken.replace(/\s*bearer\s*/ig, "")
         : undefined;
 
+      const splitMethodArn = event.methodArn.split("/");
+
       try {
         return await func({
+          baseApiGatewayArn: `${splitMethodArn[0]}/${splitMethodArn[1]}`,
           bearerToken,
           context,
           event,
+          stage: splitMethodArn[1],
         });
       } catch (error) {
         if (!options.errorLogger) {
