@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { IConfigService, StaticConfigService } from "../src/config";
+import { IConfigService, ProcessEnvConfigService, StaticConfigService } from "../src/config";
 
 // tslint:disable:newline-per-chained-call
 // tslint:disable:no-unused-expression
@@ -43,6 +43,47 @@ describe("StaticConfigService", () => {
       expect(error.code).to.equal("configurationError");
       expect(error.data.key).to.equal("foo");
       expect(error.data.provider).to.equal("StaticConfigService");
+    }
+  });
+
+});
+
+describe("ProcessEnvConfigService", () => {
+
+  it("should return mandatory values", async () => {
+    process.env.foo = "bar";
+    const config = new ProcessEnvConfigService() as IConfigService;
+
+    const result = await config.get("foo");
+    expect(result).to.equal(process.env.foo);
+  });
+
+  it("should return optional values", async () => {
+    const config = new ProcessEnvConfigService({}) as IConfigService;
+
+    const result = await config.get("foo", false);
+    expect(result).to.be.undefined;
+  });
+
+  it("should throw on missing required values", async () => {
+    const config = new ProcessEnvConfigService({}) as IConfigService;
+
+    try {
+      await config.get("foo");
+      expect(false);
+    } catch (error) {
+      expect(error.code).to.equal("configurationError");
+      expect(error.data.key).to.equal("foo");
+      expect(error.data.provider).to.equal("ProcessEnvConfigService");
+    }
+
+    try {
+      await config.get("foo", true);
+      expect(false);
+    } catch (error) {
+      expect(error.code).to.equal("configurationError");
+      expect(error.data.key).to.equal("foo");
+      expect(error.data.provider).to.equal("ProcessEnvConfigService");
     }
   });
 

@@ -1,5 +1,7 @@
 import { configurationError } from "./errors";
 
+// tslint:disable:max-classes-per-file
+
 /** Provides configuration values as string. */
 export interface IConfigService {
 
@@ -35,4 +37,25 @@ export class StaticConfigService implements IConfigService {
 
     return result;
   }
+}
+
+/**
+ * IConfigService implementation that returns values
+ * defined in process.env.
+ */
+export class ProcessEnvConfigService implements IConfigService {
+
+  public constructor(private readonly env = process.env) {}
+
+  public async get(key: string): Promise<string>;
+  public async get(key: string, required = true): Promise<string | undefined> {
+    const result = this.env[key];
+
+    if (!result && required) {
+      throw configurationError(key, ProcessEnvConfigService.name);
+    }
+
+    return result;
+  }
+
 }
