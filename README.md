@@ -1,7 +1,5 @@
 [![Travis](https://travis-ci.org/julienblin/opiniated-lambda.svg?branch=master)](https://travis-ci.org/julienblin/opiniated-lambda)
 [![npm](https://img.shields.io/npm/v/opiniated-lambda.svg)](https://www.npmjs.com/package/opiniated-lambda)
-[![bitHound Overall Score](https://www.bithound.io/github/julienblin/opiniated-lambda/badges/score.svg)](https://www.bithound.io/github/julienblin/opiniated-lambda)
-[![bitHound Code](https://www.bithound.io/github/julienblin/opiniated-lambda/badges/code.svg)](https://www.bithound.io/github/julienblin/opiniated-lambda)
 
 # opiniated-lambda
 
@@ -119,7 +117,7 @@ export const handler = lambdaProxy(async () => { throw notFoundError(target); })
 export const handler = lambdaProxy(async () => { throw badRequestError("Error message"); });
 // Returns a 400 with custom error payload.
 
-export const handler = lambdaProxy(async () => { throw validationError([validationdetails]); });
+export const handler = lambdaProxy(async () => { throw validationError([validation details]); });
 // Returns a 400 with custom error payload.
 
 export const handler = lambdaProxy(async () => { throw new Error("Error message"); });
@@ -138,7 +136,7 @@ Errors also trigger additional logging that defaults to console.error/CloudWatch
 To get the default AWS Lambda event and context, declare them as arguments using ES6 object deconstruction:
 ```typescript
 import { lambdaProxy } from "opiniated-lambda";
-// e.g. GET /api/{projectId}?from=somevalue
+// e.g. GET /api/{projectId}?from=foo
 export const handler = lambdaProxy(async ({ context, event }) => {
   const method = event.httpMethod // The HTTP method.
   ...
@@ -159,7 +157,7 @@ interface HandlerParameters {
   from?: string;
 }
 
-// e.g. GET /api/{projectId}?from=somevalue
+// e.g. GET /api/{projectId}?from=foo
 export const handler = lambdaProxy(async ({ parameters }) => {
   const decodedParams = parameters<HandlerParameters>();
 
@@ -182,7 +180,7 @@ interface Client {
   age: number;
 }
 
-// e.g. GET /api/{projectId}?from=somevalue
+// e.g. POST /api/clients
 export const handler = lambdaProxy(async ({ body }) => {
   const bodyObj = body<Client>();
 
@@ -206,7 +204,7 @@ interface Client {
   age: number;
 }
 
-// e.g. GET /api/{projectId}?from=somevalue
+// e.g. POST /api/clients
 export const handler = lambdaProxy(
   async ({ body }) => {
     const bodyObj = body<Client>();
@@ -248,7 +246,7 @@ CORS headers (`Access-Control-Allow-Origin`) can be automatically appended to al
 ```typescript
 import { lambdaProxy, ok } from "opiniated-lambda";
 
-// e.g. GET /api/{projectId}?from=somevalue
+// e.g. GET /api/projects
 export const handler = lambdaProxy(
   async () => {
     return ok();
