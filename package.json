@@ -65,5 +65,8 @@
       "cobertura",
       "html"
     ]
+  },
+  "optionalDependencies": {
+    "aws-sdk": "^2.247.1"
   }
 }

@@ -28,5 +28,8 @@ module.exports = {
   },
   plugins: [
     new CleanWebpackPlugin([distFolder]),
-  ]
+  ],
+  externals: {
+    'aws-sdk': 'aws-sdk',
+  }
 };
