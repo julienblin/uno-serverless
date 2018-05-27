@@ -1,5 +1,6 @@
 import * as HttpStatusCodes from "http-status-codes";
 import { APIGatewayProxyResultProvider, BodySerializer } from "./results";
+import { defaultConfidentialityReplacer } from "./utils";
 
 export interface ErrorData {
   code: string;
@@ -56,7 +57,7 @@ export const badRequestError = (message: string, data?: object) =>
 export const validationError = (errors: ErrorData[], message?: string) =>
   buildError(
     {
-      code: "validationFailed",
+      code: "validationError",
       details: errors.map((e) => ({ code: e.code, message: e.message, target: e.target, data: e.data })),
       message: message ? message : "Validation failed",
     },

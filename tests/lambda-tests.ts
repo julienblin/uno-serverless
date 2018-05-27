@@ -13,8 +13,8 @@ import { createLambdaContext, randomStr } from "./lambda-helper-tests";
 
 describe("lambda", () => {
 
-  it("should execute .", async () => {
-    let executed = true;
+  it("should execute function", async () => {
+    let executed = false;
     const lambdaHandler = lambda<any>(async ({ event, context }) => { executed = true; });
 
     const lambdaResult = await lambdaHandler(
@@ -23,6 +23,41 @@ describe("lambda", () => {
       (e, r) => {});
 
     expect(executed).is.true;
+  });
+
+  it("should execute validate event", async () => {
+    let executed = false;
+    const lambdaHandler = lambda<any>(
+      async ({ event, context }) => { executed = true; },
+      {
+        errorLogger: () => {},
+        validation: {
+          event: {
+            properties: {
+              bar: {
+                type: "string",
+              },
+              foo: {
+                type: "number",
+              },
+            },
+            required: [ "bar" ],
+          },
+        },
+      });
+
+    try {
+      await lambdaHandler(
+        {
+          foo: randomStr(),
+        },
+        createLambdaContext(),
+        (e, r) => {});
+      expect(false);
+    } catch (error) {
+      expect(executed).is.false;
+      expect(error.code).to.equal("validationError");
+    }
   });
 
   it("should handle errors", async () => {

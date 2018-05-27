@@ -3,6 +3,7 @@
         "Serializer",
         "Serverless",
         "cobertura",
+        "memoized",
         "opiniated",
         "prebuild"
     ]

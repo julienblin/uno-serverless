@@ -1,4 +1,3 @@
-import * as Ajv from "ajv";
 // tslint:disable-next-line:no-implicit-dependencies
 import * as lambda from "aws-lambda";
 import { parse as parseQS } from "querystring";
@@ -6,6 +5,7 @@ import { parseString as parseXml } from "xml2js";
 import { badRequestError, ErrorData, internalServerError, notFoundError, validationError } from "./errors";
 import { BodySerializer, isAPIGatewayProxyResultProvider, ok } from "./results";
 import { defaultConfidentialityReplacer, memoize } from "./utils";
+import { validate } from "./validator";
 
 export interface LambdaProxyFunctionArgs {
   /** The Lambda Context */
@@ -205,11 +205,7 @@ export const defaultErrorLogger = async (lambdaProxyError: LambdaProxyError, bod
   console.error(JSON.stringify(payload, defaultConfidentialityReplacer, JSON_STRINGIFY_SPACE));
 };
 
-const ajv = new Ajv({
-  allErrors: true,
-});
-
-const validate = (
+const validateInput = (
   body: <T>() => T | undefined,
   parameters: <T>() => T,
   validationOptions?: LambdaProxyValidationOptions) => {
@@ -221,18 +217,7 @@ const validate = (
   const validationErrors: ErrorData[] = [];
 
   if (validationOptions.parameters) {
-    const parametersAsObject = parameters();
-    if (!ajv.validate(validationOptions.parameters, parametersAsObject) && ajv.errors) {
-      ajv.errors.forEach((e) => {
-        const target = e.dataPath.startsWith(".") ? e.dataPath.substring(1) : e.dataPath;
-        validationErrors.push({
-          code: e.keyword,
-          data: e.params,
-          message: e.message ? e.message : "unknown error",
-          target: target ? target : "parameters",
-        });
-      });
-    }
+    validationErrors.push(...validate(validationOptions.parameters, parameters(), "parameters"));
   }
 
   if (validationOptions.body) {
@@ -241,18 +226,7 @@ const validate = (
     if (!bodyAsObject) {
       validationErrors.push({ code: "required", message: "Missing body", target: "body" });
     }
-
-    if (!ajv.validate(validationOptions.body, bodyAsObject) && ajv.errors) {
-      ajv.errors.forEach((e) => {
-        const target = e.dataPath.startsWith(".") ? e.dataPath.substring(1) : e.dataPath;
-        validationErrors.push({
-          code: e.keyword,
-          data: e.params,
-          message: e.message ? e.message : "unknown error",
-          target: target ? target : "body",
-        });
-      });
-    }
+    validationErrors.push(...validate(validationOptions.body, bodyAsObject, "body"));
   }
 
   if (validationErrors.length > 0) {
@@ -294,7 +268,7 @@ export const lambdaProxy =
           memoize(() => options.bodyParser!(event, memoizedNormalizeHeaders)) as <T>() => T | undefined;
         const memoizedParameters = memoize(() => decodeParameters(event)) as <T>() => T;
 
-        validate(memoizedParseBody, memoizedParameters, options.validation);
+        validateInput(memoizedParseBody, memoizedParameters, options.validation);
 
         const funcResult = await func({
           body: memoizedParseBody,

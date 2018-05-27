@@ -1,6 +1,8 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import * as awsLambda from "aws-lambda";
+import { validationError } from "./errors";
 import { defaultConfidentialityReplacer } from "./utils";
+import { validate } from "./validator";
 
 export interface LambdaFunctionArgs<T> {
   /** The Lambda Context */
@@ -16,6 +18,18 @@ export interface LambdaError {
 }
 
 export interface LambdaOptions {
+
+  /**
+   * Validation options. Will run before the function.
+   */
+  validation?: {
+
+    /**
+     * Will validate the event based on the schema.
+     */
+    event?: {};
+  };
+
   /**
    * The custom error logger to use.
    * If not provided, will use console.error.
@@ -26,9 +40,9 @@ export interface LambdaOptions {
 const defaultErrorLogger = async (error: LambdaError) => {
 
   const payload = {
-    error: error.error.toString(),
+    error: error.error,
     errorStackTrace: error.error.stack,
-    headers: error.event.headers,
+    event: error.event,
     requestContext: error.event.requestContext,
   };
 
@@ -49,6 +63,14 @@ export const lambda = <T>(func: LambdaFunction<T>, options: LambdaOptions = {}):
   async (event: T, context: awsLambda.Context, callback: awsLambda.Callback)
   : Promise<any> => {
     try {
+
+      if (options.validation && options.validation.event) {
+        const validationErrors = validate(options.validation.event, event, "event");
+        if (validationErrors.length > 0) {
+          throw validationError(validationErrors);
+        }
+      }
+
       return await func({
         context,
         event,
