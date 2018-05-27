@@ -3,7 +3,7 @@ import { configurationError } from "./errors";
 // tslint:disable:max-classes-per-file
 
 /** Provides configuration values as string. */
-export interface IConfigService {
+export interface ConfigService {
 
   /**
    * Returns a configuration value associated with a key.
@@ -20,19 +20,21 @@ export interface IConfigService {
 }
 
 /**
- * IConfigService implementation that returns static values
+ * ConfigService implementation that returns static values
  * provided at service construction time.
  */
-export class StaticConfigService implements IConfigService {
+export class StaticConfigService implements ConfigService {
 
-  public constructor(private readonly values: Record<string, string>) {}
+  public constructor(
+    private readonly values: Record<string, string | undefined>,
+    private readonly name = StaticConfigService.name) {}
 
   public async get(key: string): Promise<string>;
   public async get(key: string, required = true): Promise<string | undefined> {
     const result = this.values[key];
 
     if (!result && required) {
-      throw configurationError(key, StaticConfigService.name);
+      throw configurationError(key, this.name);
     }
 
     return result;
@@ -40,22 +42,15 @@ export class StaticConfigService implements IConfigService {
 }
 
 /**
- * IConfigService implementation that returns values
+ * ConfigService implementation that returns values
  * defined in process.env.
  */
-export class ProcessEnvConfigService implements IConfigService {
+export class ProcessEnvConfigService extends StaticConfigService {
 
-  public constructor(private readonly env = process.env) {}
-
-  public async get(key: string): Promise<string>;
-  public async get(key: string, required = true): Promise<string | undefined> {
-    const result = this.env[key];
-
-    if (!result && required) {
-      throw configurationError(key, ProcessEnvConfigService.name);
-    }
-
-    return result;
+  public constructor(
+    env = process.env,
+    name = ProcessEnvConfigService.name) {
+    super(env, name);
   }
 
 }
