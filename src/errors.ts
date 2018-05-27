@@ -62,6 +62,15 @@ export const validationError = (errors: ErrorData[], message?: string) =>
     },
     HttpStatusCodes.BAD_REQUEST);
 
+export const configurationError = (key: string, provider: string) =>
+  buildError(
+    {
+      code: "configurationError",
+      data: { key, provider },
+      message: `Missing configuration value ${key}`,
+    },
+    HttpStatusCodes.INTERNAL_SERVER_ERROR);
+
 export const dependencyError = (target: string, error: Error, message?: string) =>
   buildError(
     {

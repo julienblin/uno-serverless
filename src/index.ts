@@ -1,3 +1,4 @@
+export * from "./config";
 export * from "./errors";
 export * from "./health-checks";
 export * from "./lambda-authorizer";
