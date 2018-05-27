@@ -1,6 +1,5 @@
 import * as HttpStatusCodes from "http-status-codes";
 import { APIGatewayProxyResultProvider, BodySerializer } from "./results";
-import { defaultConfidentialityReplacer } from "./utils";
 
 export interface ErrorData {
   code: string;

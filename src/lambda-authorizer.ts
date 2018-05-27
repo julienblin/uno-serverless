@@ -1,6 +1,6 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import * as lambda from "aws-lambda";
-import { defaultConfidentialityReplacer } from "./utils";
+import { defaultConfidentialityReplacer, safeJSONStringify } from "./utils";
 
 export interface LambdaAuthorizerBearerFunctionArgs {
   /**
@@ -41,16 +41,15 @@ export interface LambdaAuthorizerBearerOptions {
 const defaultErrorLogger = async (error: LambdaAuthorizerBearerError) => {
 
   const payload = {
-    authorizationToken: error.event.authorizationToken,
-    error: error.error.toString(),
+    context: error.context,
+    error: error.error,
     errorStackTrace: error.error.stack,
-    headers: error.event.headers,
-    requestContext: error.event.requestContext,
+    event: error.event,
   };
 
   const JSON_STRINGIFY_SPACE = 2;
 
-  console.error(JSON.stringify(payload, defaultConfidentialityReplacer, JSON_STRINGIFY_SPACE));
+  console.error(safeJSONStringify(payload, defaultConfidentialityReplacer, JSON_STRINGIFY_SPACE));
 };
 
 /**

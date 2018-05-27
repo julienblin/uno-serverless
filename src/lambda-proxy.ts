@@ -4,7 +4,7 @@ import { parse as parseQS } from "querystring";
 import { parseString as parseXml } from "xml2js";
 import { badRequestError, ErrorData, internalServerError, notFoundError, validationError } from "./errors";
 import { BodySerializer, isAPIGatewayProxyResultProvider, ok } from "./results";
-import { defaultConfidentialityReplacer, memoize } from "./utils";
+import { defaultConfidentialityReplacer, memoize, safeJSONStringify } from "./utils";
 import { validate } from "./validator";
 
 export interface LambdaProxyFunctionArgs {
@@ -190,19 +190,17 @@ export const defaultErrorLogger = async (lambdaProxyError: LambdaProxyError, bod
   }
 
   const payload = {
-    error: lambdaProxyError.error.toString(),
+    context: lambdaProxyError.context,
+    error: lambdaProxyError.error,
     errorStackTrace: lambdaProxyError.error.stack,
-    headers: lambdaProxyError.event.headers,
-    httpMethod: lambdaProxyError.event.httpMethod,
+    event: lambdaProxyError.event,
     parsedBody,
-    path: lambdaProxyError.event.path,
-    requestContext: lambdaProxyError.event.requestContext,
     response: lambdaProxyError.result,
   };
 
   const JSON_STRINGIFY_SPACE = 2;
 
-  console.error(JSON.stringify(payload, defaultConfidentialityReplacer, JSON_STRINGIFY_SPACE));
+  console.error(safeJSONStringify(payload, defaultConfidentialityReplacer, JSON_STRINGIFY_SPACE));
 };
 
 const validateInput = (

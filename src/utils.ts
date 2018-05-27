@@ -1,4 +1,6 @@
 
+import * as stringify from "json-stringify-safe";
+
 // tslint:disable:no-magic-numbers
 
 /**
@@ -29,6 +31,9 @@ export const createConfidentialityReplacer =
 
 /** Singleton default confidentiality replacer. */
 export const defaultConfidentialityReplacer = createConfidentialityReplacer();
+
+/** Safe JSON.stringify */
+export const safeJSONStringify = stringify;
 
 /** Very simple memoization function. */
 export const memoize = <T>(func: () => T) => {

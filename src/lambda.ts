@@ -1,7 +1,7 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import * as awsLambda from "aws-lambda";
 import { validationError } from "./errors";
-import { defaultConfidentialityReplacer } from "./utils";
+import { defaultConfidentialityReplacer, safeJSONStringify } from "./utils";
 import { validate } from "./validator";
 
 export interface LambdaFunctionArgs<T> {
@@ -40,15 +40,15 @@ export interface LambdaOptions {
 const defaultErrorLogger = async (error: LambdaError) => {
 
   const payload = {
+    context: error.context,
     error: error.error,
     errorStackTrace: error.error.stack,
     event: error.event,
-    requestContext: error.event.requestContext,
   };
 
   const JSON_STRINGIFY_SPACE = 2;
 
-  console.error(JSON.stringify(payload, defaultConfidentialityReplacer, JSON_STRINGIFY_SPACE));
+  console.error(safeJSONStringify(payload, defaultConfidentialityReplacer, JSON_STRINGIFY_SPACE));
 };
 
 export type LambdaFunction<T> =
