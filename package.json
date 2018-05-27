@@ -15,6 +15,7 @@
     "build": "webpack --config webpack.config.js",
     "prepare": "npm run build",
     "test": "mocha -r ts-node/register tests/**/*-tests.ts",
+    "test:watch": "npm run test -- --watch-extensions ts --watch",
     "cover": "nyc mocha -r ts-node/register -r source-map-support/register tests/**/*-tests.ts"
   },
   "repository": {

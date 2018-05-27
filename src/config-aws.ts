@@ -1,16 +1,22 @@
 // tslint:disable:no-implicit-dependencies
-import { SSM } from "aws-sdk";
-// tslint:disable-next-line:no-submodule-imports
+import { AWSError, SSM } from "aws-sdk";
+// tslint:disable:no-submodule-imports
 import { GetParametersByPathResult } from "aws-sdk/clients/ssm";
+import { PromiseResult } from "aws-sdk/lib/request";
 import { ConfigService } from "./config";
 import { configurationError } from "./errors";
+
+export interface SSMParameterStoreClient {
+  getParametersByPath(params: SSM.Types.GetParametersByPathRequest)
+      : { promise(): Promise<PromiseResult<SSM.Types.GetParametersByPathResult, AWSError>> };
+}
 
 export interface SSMParameterStoreConfigServiceOptions {
   numberOfIterations?: number;
   path: string;
-  ssm?: SSM;
+  ssm?: SSMParameterStoreClient;
 
-  /** TTL before expiration of the cache. */
+  /** TTL before expiration of the cache, in milliseconds. */
   ttl?: number;
 }
 
@@ -27,7 +33,7 @@ export class SSMParameterStoreConfigService implements ConfigService {
   } | undefined;
 
   /** The AWS SSM client. */
-  private readonly ssm: SSM;
+  private readonly ssm: SSMParameterStoreClient;
 
   public constructor(
     private readonly options: SSMParameterStoreConfigServiceOptions,
@@ -39,29 +45,29 @@ export class SSMParameterStoreConfigService implements ConfigService {
         });
 
       if (!this.options.path.endsWith("/")) {
-        this.options.path = this.options.path.slice(0, -1);
+        this.options.path = `${this.options.path}/`;
       }
 
       if (!this.options.numberOfIterations) {
         // tslint:disable-next-line:no-magic-numbers
         this.options.numberOfIterations = 10;
       }
-
-      if (!this.options.ttl) {
-        this.options.ttl = Number.MAX_SAFE_INTEGER;
-      }
     }
 
   public async get(key: string): Promise<string>;
   public async get(key: string, required = true): Promise<string | undefined> {
-    if (!this.cache) {
+    const now = new Date().getTime();
+
+    // tslint:disable-next-line:no-magic-numbers no-non-null-assertion
+    if (this.isCachePerished(now)) {
       this.cache = {
         parameters: this.getParameters(),
-        timestamp: new Date().getTime(),
+        timestamp: now,
       };
     }
 
-    const resolvedParameters = await this.cache.parameters;
+    // tslint:disable-next-line:no-non-null-assertion
+    const resolvedParameters = await this.cache!.parameters;
 
     if (resolvedParameters[key]) {
       return resolvedParameters[key];
@@ -111,5 +117,22 @@ export class SSMParameterStoreConfigService implements ConfigService {
     } while (!partialResult || partialResult.NextToken);
 
     return parameterMap;
+  }
+
+  /** Indicates whether to refresh the cache or not. */
+  private isCachePerished(now: number) {
+    // tslint:disable-next-line:strict-type-predicates
+    const cachedDisabled = ((this.options.ttl === undefined) || (this.options.ttl === null));
+
+    if (!this.cache) {
+      return true;
+    }
+
+    if (cachedDisabled) {
+      return false;
+    }
+
+    // tslint:disable-next-line:no-non-null-assertion
+    return (this.cache.timestamp + this.options.ttl!) <= now;
   }
 }
