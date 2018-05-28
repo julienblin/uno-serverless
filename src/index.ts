@@ -7,3 +7,8 @@ export * from "./lambda-proxy";
 export * from "./lambda";
 export * from "./results";
 export * from "./utils";
+export * from "./validator";
+import * as StatusCodes from "http-status-codes";
+
+// tslint:disable-next-line:variable-name
+export const HttpStatusCodes = StatusCodes;
