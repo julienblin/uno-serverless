@@ -8,9 +8,9 @@ This framework makes some choices and imposes some conventions. If you require a
 
 - [Features](#user-content-features)
 - [Getting started](#user-content-getting-started)
-  - [Using lambdaProxy](#user-content-using-lambdaProxy)
-  - [Using lambdaAuthorizerBearer](#user-content-using-lambdaAuthorizerBearer)
-  - [Using lambda](#user-content-using-lambda)
+  - [Using lambdaProxy](#using-lambdaProxy)
+  - [Using lambdaAuthorizerBearer](#using-lambdaAuthorizerBearer)
+  - [Using lambda](#using-lambda)
 - [Health checks](#user-content-health-checks)
 - [Configuration service](#user-content-configuration-service)
 - [Dependency errors](#user-content-dependency-errors)
