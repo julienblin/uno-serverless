@@ -226,54 +226,6 @@ describe("lambdaProxy", () => {
     expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.BAD_REQUEST);
   });
 
-  it("should parse XML Body", async () => {
-    const inputBody = { foo: "bar" };
-    const lambda = lambdaProxy(async ({ body }) => (body()));
-
-    const lambdaResult = await lambda(
-      createAPIGatewayProxyEvent({
-        body: "<foo>bar</foo>",
-        headers: { "Content-Type": "application/xml" },
-        method: "POST" }),
-      createLambdaContext(),
-      nullCallback) as APIGatewayProxyResult;
-
-    expect(lambdaResult.body).to.equal(JSON.stringify(inputBody));
-    expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.OK);
-  });
-
-  it("should parse XML Body when empty", async () => {
-    const lambda = lambdaProxy(async ({ body }) => (body()));
-
-    const lambdaResult = await lambda(
-      createAPIGatewayProxyEvent({
-        body: "",
-        headers: { "Content-Type": "application/xml" },
-        method: "POST" }),
-      createLambdaContext(),
-      nullCallback) as APIGatewayProxyResult;
-
-    expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.NOT_FOUND);
-  });
-
-  it("should return bad request on malformed XML.", async () => {
-    const lambda = lambdaProxy(
-      async ({ body }) => (body()),
-      {
-        errorLogger: (lambdaError) => { },
-      });
-
-    const lambdaResult = await lambda(
-      createAPIGatewayProxyEvent({
-        body: "<foo>asdfasd",
-        headers: { "Content-Type": "application/xml" },
-        method: "POST" }),
-      createLambdaContext(),
-      nullCallback) as APIGatewayProxyResult;
-
-    expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.BAD_REQUEST);
-  });
-
   it("should parse FORM Body", async () => {
     const lambda = lambdaProxy(async ({ body }) => (body()));
 
