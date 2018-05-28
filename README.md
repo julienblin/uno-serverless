@@ -6,6 +6,13 @@
 Provides an opiniated framework for creating API using AWS Serverless stack (API Gateway/Lambda) on Node 8 / TypeScript.
 This framework makes some choices and imposes some conventions. If you require a lot flexibility, there are probably better options.
 
+- [Features](#user-content-features)
+- [Getting started](#user-content-getting-started)
+- [Health checks](#user-content-health-checks)
+- [Configuration service](#user-content-configuration-service)
+- [Dependency errors](#user-content-dependency-errors)
+- [Warmup support](#user-content-warmup-support)
+
 # Features
 - Allow the creation of simple lambda handlers using async/await & Promises, e.g.:
 ```typescript
@@ -302,6 +309,101 @@ const healthChecker = new HealthChecker(
 export const handler = lambdaProxy(async () => healthChecker.checkHealth(), { cors: true });
 ```
 
+# Configuration service
+
+It is recommended to isolate and regroup all configuration variables for a given application behind an interface.
+Additionnaly, returning configuration values as `Promise` allows for greater flexibility when it comes to initialization and sources.
+
+This framework optionaly provide definition and support for this pattern.
+
+## Configuration service interface
+
+The framework provides an interface to define what a configuration service could look like:
+```typescript
+export interface ConfigService {
+  get(key: string): Promise<string>;
+  get(key: string, required?: boolean): Promise<string | undefined>;
+}
+```
+
+Usage:
+```typescript
+
+const service = ConfigService;
+
+// this one will throw a configuration error if the key external-service-url is not defined.
+const urlForExternalService = await service.get("external-service-url");
+
+// This one makes it an optional value
+const optionalUrlForExternalService = await service.get("external-service-url", false);
+
+```
+
+## Provided implementation
+
+3 implementations for the ConfigService are provided.
+
+### StaticConfigService
+
+The simplest one, useful for unit testing, simply provides values defined in its constructor.
+
+```typescript
+const configService = new StaticConfigService({
+  foo: "bar"
+});
+
+const foo = await configService.get("foo");
+```
+
+### ProcessEnvConfigService
+
+The `ProcessEnvConfigService` implementation provides values defined as environment variables.
+
+```bash
+export foo=bar // on Linux
+set foo=bar // on Windows
+```
+
+```typescript
+const configService = new ProcessEnvConfigService();
+
+const foo = await configService.get("foo");
+```
+
+### SSMParameterStoreConfigService
+
+The `SSMParameterStoreConfigService` retrieves configuration variables from [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html)
+Keys can be defined under a common path.
+They are retrieved in batch, and cached locally.
+
+```typescript
+const configService = new SSMParameterStoreConfigService({
+  path: "/my-service-path/env",
+  ttl: 15*60*1000 // The cache duration in ms. By default, they are cached indefinitely.
+});
+
+// The following retrieves the String value located at /my-service-path/env/foo.
+const foo = await configService.get("foo");
+```
+
+Do not forget to add the necessary permissions to your service to access the Parameter Store.
+Example IAM Policy:
+```YAML
+Effect: "Allow"
+Action:
+  - "ssm:GetParameterHistory" # This one must be provided, otherwise AWS will deny the GetParametersByPath call as well.
+  - "ssm:GetParametersByPath"
+Resource:
+  - "Fn::Join":
+      - ":"
+      - - "arn"
+        - Ref: "AWS::Partition"
+        - "ssm"
+        - Ref: "AWS::Region"
+        - Ref: "AWS::AccountId"
+        - "parameter/my-service-path/env/*" # Set correct path here.
+```
+
 # Dependency errors
 
 In addition to the health check endpoint, it is often advisable to return specific error classes when an error
@@ -341,7 +443,37 @@ import { dependencyError } from "opiniated-lambda";
 throw dependencyError(target, error, message);
 ```
 
-# Warmup source support
+Additionaly, if you enable [Typescript decorators support](http://www.typescriptlang.org/docs/handbook/decorators.html),
+you can just decorate your target classes with the `@dependency` decorator:
+
+```typescript
+import { dependency, lambdaProxy } from "opiniated-lambda";
+
+@dependency
+export class MyService {
+  // ... all downstream definitions
+}
+
+// The decorator automatically encapsulate the service in the dependency proxy.
+const serviceInstance = new MyService();
+// From now on, all errors (sync and async) coming back from MyService will be encapsulated in a dependencyError.
+
+export const handler = lambdaProxy(async () => serviceInstance.methodThatReturnsAnError(), { cors: true });
+// The response will look like the following:
+{
+  body: {
+    error: {
+      code: "dependencyError",
+      details: "<error details>",
+      message: "error.message property",
+      target: "serviceName"
+    }
+  }
+  statusCode: 502 // Bad Gateway
+}
+```
+
+# Warmup support
 
 This is primarily to support warmup for lambda function (using e.g. [serverless-plugin-warmup](https://github.com/FidelLimited/serverless-plugin-warmup)).
 
