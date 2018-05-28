@@ -8,6 +8,9 @@ This framework makes some choices and imposes some conventions. If you require a
 
 - [Features](#user-content-features)
 - [Getting started](#user-content-getting-started)
+  - [Using lambdaProxy](#user-content-using-lambdaProxy)
+  - [Using lambdaAuthorizerBearer](#user-content-using-lambdaAuthorizerBearer)
+  - [Using lambda](#user-content-using-lambda)
 - [Health checks](#user-content-health-checks)
 - [Configuration service](#user-content-configuration-service)
 - [Dependency errors](#user-content-dependency-errors)
@@ -39,11 +42,14 @@ export const handler = lambdaProxy(async ({ parameters }) => {
 ```
 - Provides additional facilities for validating input using JSON schema (using [ajv](https://github.com/epoberezkin/ajv)) & returning CORS headers
 - Provides a framework for exposing a health check endpoint
+- Support for isolating dependency errors.
+- Support for managing service configuration
+- Support for Lambda warmup
 
 # Getting started
 
 ## Prerequisites
-- An API Gateway / Lambda solution using Node 8. We recommend using [serverless](https://serverless.com/).
+- An API Gateway / Lambda solution using Node 8. We recommend using [serverless](https://serverless.com/) or [AWS SAM](https://github.com/awslabs/serverless-application-model).
 
 ## Installation
 
@@ -263,6 +269,65 @@ export const handler = lambdaProxy(
     // cors: "https://www.myfantasticwebapp.com" to return Access-Control-Allow-Origin: "https://www.myfantasticwebapp.com"
   });
 ```
+
+## Using lambdaAuthorizerBearer
+
+Similar to what `lambdaProxy` provides, there is a helper function to create [AWS API Gateway Lambda Authorizer](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-use-lambda-authorizer.html):
+
+```typescript
+import { lambdaAuthorizerBearer } from "opiniated-lambda";
+
+// e.g. GET /api/projects
+export const handler = lambdaAuthorizerBearer(
+  async ({ bearerToken, baseApiGatewayArn }) => {
+
+    // bearerToken contains the authorization header minus the bearer prefix
+    // baseApiGatewayArn is the ARN for the API Gateway, including the stage.
+
+    // Performs authentication/authorization here...
+
+    return { // Authorizer policy.
+      policyDocument: {
+        Statement: [
+          {
+            Action: "execute-api:Invoke",
+            Effect: "Allow",
+            Resource: `${baseApiGatewayArn}/*`, // e.g. for all endpoints in the API.
+          },
+        ],
+        Version: "2012-10-17",
+      },
+      principalId: "...",
+    };
+  });
+```
+
+## Using lambda
+
+Simple lambda function (not bound to events) can be handled with the `lambda` helper:
+
+```typescript
+import { lambda } from "opiniated-lambda";
+
+interface MyEvent {
+  id: string;
+}
+
+// e.g. GET /api/projects
+export const handler = lambda<MyEvent>(
+  async ({ event }) => {
+
+    const id = event.id;
+    
+    // Process..
+  },
+  {
+    validation: {
+      event: {} // As for lambdaProxy, a JSON Schema can be provided to validate the event.
+    }
+  });
+```
+
 # Health checks
 
 It is recommended to create a health checking endpoint in every API created. This allows for a quick diagnosing and monitoring
@@ -329,7 +394,7 @@ export interface ConfigService {
 Usage:
 ```typescript
 
-const service = ConfigService;
+const service: ConfigService;
 
 // this one will throw a configuration error if the key external-service-url is not defined.
 const urlForExternalService = await service.get("external-service-url");
