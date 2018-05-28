@@ -5,6 +5,7 @@ import { GetParametersByPathResult } from "aws-sdk/clients/ssm";
 import { PromiseResult } from "aws-sdk/lib/request";
 import { ConfigService } from "./config";
 import { configurationError } from "./errors";
+import { checkHealth, HealthCheckResult, ICheckHealth } from "./health-checks";
 
 export interface SSMParameterStoreClient {
   getParametersByPath(params: SSM.Types.GetParametersByPathRequest)
@@ -24,7 +25,7 @@ export interface SSMParameterStoreConfigServiceOptions {
  * ConfigService implementation that uses
  * AWS Systems Manager Parameter Store.
  */
-export class SSMParameterStoreConfigService implements ConfigService {
+export class SSMParameterStoreConfigService implements ConfigService, ICheckHealth {
 
   /** Cached promise */
   private cache: {
@@ -38,21 +39,29 @@ export class SSMParameterStoreConfigService implements ConfigService {
   public constructor(
     private readonly options: SSMParameterStoreConfigServiceOptions,
     private readonly name = SSMParameterStoreConfigService.name) {
-      this.ssm = options.ssm
-        ? options.ssm
-        : new SSM({
-          maxRetries: 3,
-        });
+    this.ssm = options.ssm
+      ? options.ssm
+      : new SSM({
+        maxRetries: 3,
+      });
 
-      if (!this.options.path.endsWith("/")) {
-        this.options.path = `${this.options.path}/`;
-      }
-
-      if (!this.options.numberOfIterations) {
-        // tslint:disable-next-line:no-magic-numbers
-        this.options.numberOfIterations = 10;
-      }
+    if (!this.options.path.endsWith("/")) {
+      this.options.path = `${this.options.path}/`;
     }
+
+    if (!this.options.numberOfIterations) {
+      // tslint:disable-next-line:no-magic-numbers
+      this.options.numberOfIterations = 10;
+    }
+  }
+
+  /** Performs a health check. */
+  public async checkHealth(): Promise<HealthCheckResult> {
+    return checkHealth(
+      SSMParameterStoreConfigService.name,
+      this.options.path,
+      async () => this.getParameters());
+  }
 
   public async get(key: string): Promise<string>;
   public async get(key: string, required = true): Promise<string | undefined> {

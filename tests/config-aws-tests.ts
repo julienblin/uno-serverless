@@ -7,6 +7,7 @@ import * as HttpStatusCodes from "http-status-codes";
 import { describe, it } from "mocha";
 import { ConfigService } from "../src/config";
 import { SSMParameterStoreClient, SSMParameterStoreConfigService } from "../src/config-aws";
+import { HealthCheckStatus } from "../src/health-checks";
 
 // tslint:disable:newline-per-chained-call
 // tslint:disable:no-unused-expression
@@ -164,6 +165,16 @@ describe("SSMParameterStoreClient", () => {
 
     await config.get("foo");
     expect(stub.currentIteration).to.equal(1);
+  });
+
+  it("should check health", async () => {
+    const config = new SSMParameterStoreConfigService({
+      path,
+      ssm: new SSMParameterStoreClientStub([]),
+    });
+
+    const result = await config.checkHealth();
+    expect(result.status).to.equal(HealthCheckStatus.Ok);
   });
 
 });
