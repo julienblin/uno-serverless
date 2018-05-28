@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { dependencyErrorProxy } from "../src/errors";
+import { dependencyErrorProxy, internalServerError } from "../src/errors";
 
 // tslint:disable:newline-per-chained-call
 // tslint:disable:no-unused-expression
@@ -15,6 +15,10 @@ describe("dependencyErrorProxy", () => {
 
     public promiseInvoked = false;
     public standardInvoked = false;
+
+    public managedError = () => {
+      throw internalServerError("This is a managed error");
+    }
 
     public async promiseFunc(thro?: boolean, timeout = 10) {
       return new Promise((resolve, reject) => {
@@ -46,7 +50,7 @@ describe("dependencyErrorProxy", () => {
 
   it("should forward no-promise calls", () => {
     const target = new TestTarget();
-    const proxy = dependencyErrorProxy(target, "TestTarget");
+    const proxy = dependencyErrorProxy(target, TestTarget.name);
 
     const result = proxy.standardFunc();
 
@@ -56,13 +60,13 @@ describe("dependencyErrorProxy", () => {
 
   it("should keep field access", () => {
     const target = new TestTarget();
-    const proxy = dependencyErrorProxy(target, "TestTarget");
+    const proxy = dependencyErrorProxy(target, TestTarget.name);
     expect(proxy.standardInvoked).to.be.false;
   });
 
   it("should encapsulate no-promise calls errors", () => {
     const target = new TestTarget();
-    const proxy = dependencyErrorProxy(target, "TestTarget");
+    const proxy = dependencyErrorProxy(target, TestTarget.name);
 
     try {
       proxy.standardFunc(true);
@@ -75,7 +79,7 @@ describe("dependencyErrorProxy", () => {
 
   it("should forward promise calls", async () => {
     const target = new TestTarget();
-    const proxy = dependencyErrorProxy(target, "TestTarget");
+    const proxy = dependencyErrorProxy(target, TestTarget.name);
 
     const result = await proxy.promiseFunc();
 
@@ -85,7 +89,7 @@ describe("dependencyErrorProxy", () => {
 
   it("should encapsulate promise calls errors", async () => {
     const target = new TestTarget();
-    const proxy = dependencyErrorProxy(target, "TestTarget");
+    const proxy = dependencyErrorProxy(target, TestTarget.name);
 
     try {
       await proxy.promiseFunc(true);
@@ -93,6 +97,18 @@ describe("dependencyErrorProxy", () => {
     } catch (error) {
       expect(error.code).to.equal("dependencyError");
       expect(error.target).to.equal("TestTarget");
+    }
+  });
+
+  it("should not encapsulate managed errors", async () => {
+    const target = new TestTarget();
+    const proxy = dependencyErrorProxy(target, TestTarget.name);
+
+    try {
+      proxy.managedError();
+      expect(false);
+    } catch (error) {
+      expect(error.code).to.equal("internalServerError");
     }
   });
 

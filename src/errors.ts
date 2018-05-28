@@ -5,6 +5,7 @@ export interface ErrorData {
   code: string;
   data?: object;
   details?: ErrorData[];
+  isManaged?: boolean;
   message: string;
   target?: string;
 }
@@ -17,6 +18,10 @@ export const buildError = (
   error.code = errorData.code;
   error.data = errorData.data;
   error.details = errorData.details;
+  // tslint:disable-next-line:strict-type-predicates
+  error.isManaged = ((errorData.isManaged === undefined) || (errorData.isManaged === null))
+    ? true
+    : errorData.isManaged;
   error.target = errorData.target;
   error.getAPIGatewayProxyResult = (serializer: BodySerializer) => ({
     body: serializer({ error: errorData }),
@@ -95,12 +100,20 @@ export const dependencyErrorProxy = <T extends object>(target: T, targetName: st
             .apply(proxyTarget, args);
 
           if (result && (typeof result.catch === "function")) {
-            return result.catch((err) => { throw dependencyError(targetName, err); });
+            return result.catch((error) => {
+              if (error.isManaged) {
+                throw error;
+              }
+              throw dependencyError(targetName, error);
+            });
           }
 
           return result;
         } catch (error) {
-          return dependencyError(targetName, error);
+          if (error.isManaged) {
+            throw error;
+          }
+          throw dependencyError(targetName, error);
         }
       };
     },
