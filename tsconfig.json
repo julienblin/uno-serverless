@@ -6,7 +6,9 @@
     "moduleResolution": "node",
     "sourceMap": true,
     "declaration": true,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "exclude": [
     "./tests"

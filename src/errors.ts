@@ -121,3 +121,22 @@ export const dependencyErrorProxy = <T extends object>(target: T, targetName: st
 
   return new Proxy<T>(target, dependencyHandler);
 };
+
+/**
+ * Typescript decorator function that encapsulate
+ * the target class in a dependencyErrorProxy.
+ */
+// tslint:disable-next-line:only-arrow-functions
+export function dependency(target: any) {
+  console.log("decorator");
+  // tslint:disable-next-line:only-arrow-functions
+  const newConstructor = function(args) {
+    const instance = new target(args);
+
+    return dependencyErrorProxy(instance, target.name);
+  };
+
+  newConstructor.prototype = target.prototype;
+
+  return newConstructor;
+}

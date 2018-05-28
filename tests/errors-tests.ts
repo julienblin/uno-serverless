@@ -1,11 +1,12 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { dependencyErrorProxy, internalServerError } from "../src/errors";
+import { dependency, dependencyErrorProxy, internalServerError } from "../src/errors";
 
 // tslint:disable:newline-per-chained-call
 // tslint:disable:no-unused-expression
 // tslint:disable:no-magic-numbers
 // tslint:disable:no-non-null-assertion
+// tslint:disable:max-classes-per-file
 
 describe("dependencyErrorProxy", () => {
 
@@ -109,6 +110,38 @@ describe("dependencyErrorProxy", () => {
       expect(false);
     } catch (error) {
       expect(error.code).to.equal("internalServerError");
+    }
+  });
+
+});
+
+describe("@dependency", () => {
+
+  @dependency
+  class TestDecoratorProxy {
+    public constructor(private readonly arg: string) {}
+
+    public getArg(thro?: boolean) {
+      if (thro) {
+        throw new Error(this.arg);
+      }
+
+      return this.arg;
+    }
+
+  }
+
+  it("should wrap target in dependencyErrorProxy", () => {
+    const arg = "foo";
+    const target = new TestDecoratorProxy(arg);
+    expect(target.getArg()).to.equal(arg);
+
+    try {
+      target.getArg(true);
+      expect(false);
+    } catch (error) {
+      expect(error.code).to.equal("dependencyError");
+      expect(error.target).to.equal("TestDecoratorProxy");
     }
   });
 
