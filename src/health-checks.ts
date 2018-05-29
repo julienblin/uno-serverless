@@ -15,11 +15,22 @@ export enum HealthCheckStatus {
 /** Result of a health check. */
 export class HealthCheckResult implements APIGatewayProxyResultProvider {
 
+  /** The health checks children */
   public readonly children: HealthCheckResult[] | undefined;
+
+  /** Elapsed time in ms. */
   public readonly elapsed: number | undefined;
+
+  /** The error, if any */
   public readonly error: any;
+
+  /** The name of the health check */
   public readonly name: string;
+
+  /** The status */
   public readonly status: HealthCheckStatus | undefined;
+
+  /** Additional info about the checked target */
   public target: string | undefined;
 
   public constructor(
