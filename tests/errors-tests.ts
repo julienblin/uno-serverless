@@ -114,35 +114,3 @@ describe("dependencyErrorProxy", () => {
   });
 
 });
-
-describe("@dependency", () => {
-
-  @dependency
-  class TestDecoratorProxy {
-    public constructor(private readonly arg: string) {}
-
-    public getArg(thro?: boolean) {
-      if (thro) {
-        throw new Error(this.arg);
-      }
-
-      return this.arg;
-    }
-
-  }
-
-  it("should wrap target in dependencyErrorProxy", () => {
-    const arg = "foo";
-    const target = new TestDecoratorProxy(arg);
-    expect(target.getArg()).to.equal(arg);
-
-    try {
-      target.getArg(true);
-      expect(false);
-    } catch (error) {
-      expect(error.code).to.equal("dependencyError");
-      expect(error.target).to.equal("TestDecoratorProxy");
-    }
-  });
-
-});

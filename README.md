@@ -509,36 +509,6 @@ import { dependencyError } from "opiniated-lambda";
 throw dependencyError(target, error, message);
 ```
 
-Additionaly, if you enable [Typescript decorators support](http://www.typescriptlang.org/docs/handbook/decorators.html),
-you can just decorate your target classes with the `@dependency` decorator:
-
-```typescript
-import { dependency, lambdaProxy } from "opiniated-lambda";
-
-@dependency
-export class MyService {
-  // ... all downstream definitions
-}
-
-// The decorator automatically encapsulate the service in the dependency proxy.
-const serviceInstance = new MyService();
-// From now on, all errors (sync and async) coming back from MyService will be encapsulated in a dependencyError.
-
-export const handler = lambdaProxy(async () => serviceInstance.methodThatReturnsAnError(), { cors: true });
-// The response will look like the following:
-{
-  body: {
-    error: {
-      code: "dependencyError",
-      details: "<error details>",
-      message: "error.message property",
-      target: "serviceName"
-    }
-  }
-  statusCode: 502 // Bad Gateway
-}
-```
-
 # Warmup support
 
 This is primarily to support warmup for lambda function (using e.g. [serverless-plugin-warmup](https://github.com/FidelLimited/serverless-plugin-warmup)).
