@@ -4,6 +4,9 @@ node_js:
 install:
 - npm i -g npm
 - npm ci
+script:
+- npm run cover
+- npm run coveralls
 deploy:
   skip_cleanup: true
   provider: npm
