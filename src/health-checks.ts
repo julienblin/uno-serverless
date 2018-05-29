@@ -1,8 +1,8 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import { APIGatewayProxyResult } from "aws-lambda";
 import * as HttpStatusCodes from "http-status-codes";
-import { APIGatewayProxyResultProvider } from "./results";
-import { convertHrtimeToMs, defaultConfidentialityReplacer } from "./utils";
+import { APIGatewayProxyResultProvider, BodySerializer } from "./results";
+import { convertHrtimeToMs, defaultConfidentialityReplacer, safeJSONStringify } from "./utils";
 
 /** Possible statuses for health check results. */
 export enum HealthCheckStatus {
@@ -58,7 +58,7 @@ export class HealthCheckResult implements APIGatewayProxyResultProvider {
     }
   }
 
-  public getAPIGatewayProxyResult(): APIGatewayProxyResult {
+  public getAPIGatewayProxyResult(serializer: BodySerializer): APIGatewayProxyResult {
     let statusCode: number;
 
     switch (this.status) {
@@ -73,7 +73,8 @@ export class HealthCheckResult implements APIGatewayProxyResultProvider {
     }
 
     return {
-      body: JSON.stringify(this, this.confidentialityReplacer),
+      // tslint:disable-next-line:no-magic-numbers
+      body: safeJSONStringify(this, this.confidentialityReplacer, 2),
       statusCode,
     };
   }
