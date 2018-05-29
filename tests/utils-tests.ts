@@ -27,13 +27,17 @@ describe("createConfidentialityReplacer", () => {
 
   it("should replace property values", async () => {
     const obj = {
+      _internal: "internal",
       a: "a",
+      keyWithSomething: "keyWithSomething",
       password: "thepassword",
     };
 
     const result = JSON.parse(JSON.stringify(obj, createConfidentialityReplacer()));
 
+    expect(result._internal).equal(DEFAULT_CONFIDENTIALITY_REPLACE_BY);
     expect(result.a).equal(obj.a);
+    expect(result.keyWithSomething).equal(DEFAULT_CONFIDENTIALITY_REPLACE_BY);
     expect(result.password).equal(DEFAULT_CONFIDENTIALITY_REPLACE_BY);
   });
 

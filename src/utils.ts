@@ -8,12 +8,14 @@ import * as stringify from "json-stringify-safe";
  */
 export const convertHrtimeToMs = (hrtime: [number, number]) => Math.ceil((((hrtime[0] * 1e9) + hrtime[1]) / 1e6));
 
-/** List of properties that are blacklisted in the confidentialityReplacer.  */
+/** List of properties prefixed that are blacklisted in the confidentialityReplacer.  */
 export const DEFAULT_CONFIDENTIALITY_BLACKLIST = new Set([
+  "_",
   "authorization",
   "key",
   "password",
   "secret",
+  "socket",
 ]);
 
 /** The default value for createConfidentialityReplace.replaceBy */
@@ -27,7 +29,16 @@ export const DEFAULT_CONFIDENTIALITY_REPLACE_BY = "******";
  */
 export const createConfidentialityReplacer =
   (blacklist: Set<string> = DEFAULT_CONFIDENTIALITY_BLACKLIST, replaceBy: any = DEFAULT_CONFIDENTIALITY_REPLACE_BY) =>
-    (key: string, value: {}) => blacklist.has(key.toLowerCase()) ? replaceBy : value;
+    (key: string, value: {}) => {
+      const loweredCasedKey = key.toLowerCase();
+      for (const blackListed of blacklist) {
+        if (loweredCasedKey.startsWith(blackListed)) {
+          return replaceBy;
+        }
+      }
+
+      return value;
+    };
 
 /** Singleton default confidentiality replacer. */
 export const defaultConfidentialityReplacer = createConfidentialityReplacer();
