@@ -51,7 +51,7 @@ describe("dependencyErrorProxy", () => {
 
   it("should forward no-promise calls", () => {
     const target = new TestTarget();
-    const proxy = dependencyErrorProxy(target, TestTarget.name);
+    const proxy = dependencyErrorProxy(target, "TestTarget");
 
     const result = proxy.standardFunc();
 
@@ -61,13 +61,13 @@ describe("dependencyErrorProxy", () => {
 
   it("should keep field access", () => {
     const target = new TestTarget();
-    const proxy = dependencyErrorProxy(target, TestTarget.name);
+    const proxy = dependencyErrorProxy(target, "TestTarget");
     expect(proxy.standardInvoked).to.be.false;
   });
 
   it("should encapsulate no-promise calls errors", () => {
     const target = new TestTarget();
-    const proxy = dependencyErrorProxy(target, TestTarget.name);
+    const proxy = dependencyErrorProxy(target, "TestTarget");
 
     try {
       proxy.standardFunc(true);
@@ -80,7 +80,7 @@ describe("dependencyErrorProxy", () => {
 
   it("should forward promise calls", async () => {
     const target = new TestTarget();
-    const proxy = dependencyErrorProxy(target, TestTarget.name);
+    const proxy = dependencyErrorProxy(target, "TestTarget");
 
     const result = await proxy.promiseFunc();
 
@@ -90,7 +90,7 @@ describe("dependencyErrorProxy", () => {
 
   it("should encapsulate promise calls errors", async () => {
     const target = new TestTarget();
-    const proxy = dependencyErrorProxy(target, TestTarget.name);
+    const proxy = dependencyErrorProxy(target, "TestTarget");
 
     try {
       await proxy.promiseFunc(true);
@@ -103,7 +103,7 @@ describe("dependencyErrorProxy", () => {
 
   it("should not encapsulate managed errors", async () => {
     const target = new TestTarget();
-    const proxy = dependencyErrorProxy(target, TestTarget.name);
+    const proxy = dependencyErrorProxy(target, "TestTarget");
 
     try {
       proxy.managedError();

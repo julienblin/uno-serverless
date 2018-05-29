@@ -38,7 +38,7 @@ export class SSMParameterStoreConfigService implements ConfigService, ICheckHeal
 
   public constructor(
     private readonly options: SSMParameterStoreConfigServiceOptions,
-    private readonly name = SSMParameterStoreConfigService.name) {
+    private readonly name = "SSMParameterStoreConfigService") {
     this.ssm = options.ssm
       ? options.ssm
       : new SSM({
@@ -58,7 +58,7 @@ export class SSMParameterStoreConfigService implements ConfigService, ICheckHeal
   /** Performs a health check. */
   public async checkHealth(): Promise<HealthCheckResult> {
     return checkHealth(
-      SSMParameterStoreConfigService.name,
+      "SSMParameterStoreConfigService",
       this.options.path,
       async () => this.getParameters());
   }

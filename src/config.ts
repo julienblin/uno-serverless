@@ -27,7 +27,7 @@ export class StaticConfigService implements ConfigService {
 
   public constructor(
     private readonly values: Record<string, string | undefined>,
-    private readonly name = StaticConfigService.name) {}
+    private readonly name = "StaticConfigService") {}
 
   public async get(key: string): Promise<string>;
   public async get(key: string, required = true): Promise<string | undefined> {
@@ -49,7 +49,7 @@ export class ProcessEnvConfigService extends StaticConfigService {
 
   public constructor(
     env = process.env,
-    name = ProcessEnvConfigService.name) {
+    name = "ProcessEnvConfigService") {
     super(env, name);
   }
 

@@ -15,8 +15,15 @@ export enum HealthCheckStatus {
 /** Result of a health check. */
 export class HealthCheckResult implements APIGatewayProxyResultProvider {
 
+  public readonly children: HealthCheckResult[] | undefined;
+  public readonly elapsed: number | undefined;
+  public readonly error: any;
+  public readonly name: string;
+  public readonly status: HealthCheckStatus | undefined;
+  public target: string | undefined;
+
   public constructor(
-    private readonly value: {
+    args: {
       children?: HealthCheckResult[];
       elapsed?: number;
       error?: any;
@@ -26,40 +33,24 @@ export class HealthCheckResult implements APIGatewayProxyResultProvider {
     },
     private readonly confidentialityReplacer = defaultConfidentialityReplacer) {
 
-    if (!this.value.status) {
-      this.value.status = HealthCheckStatus.Inconclusive;
-    }
+    this.children = args.children;
+    this.elapsed = args.elapsed;
+    this.error = args.error;
+    this.name = args.name;
+    this.status = args.status
+      ? args.status
+      : HealthCheckStatus.Inconclusive;
+    this.target = args.target;
 
-    if (this.value.children && this.value.children.length > 0) {
-      this.value.status = this.evaluateChildrenStatuses();
+    if (this.children && this.children.length > 0) {
+      this.status = this.evaluateChildrenStatuses();
     }
   }
-
-  /** Gets the name */
-  public get name() { return this.value.name; }
-
-  /** Gets the target */
-  public get target() { return this.value.target; }
-
-  /** Sets the target */
-  public set target(value) { this.value.target = value; }
-
-  /** Gets the status */
-  public get status() { return this.value.status; }
-
-  /** Gets the elapsed time */
-  public get elapsed() { return this.value.elapsed; }
-
-  /** Gets the children */
-  public get children() { return this.value.children; }
-
-  /** Gets the error */
-  public get error() { return this.value.error; }
 
   public getAPIGatewayProxyResult(): APIGatewayProxyResult {
     let statusCode: number;
 
-    switch (this.value.status) {
+    switch (this.status) {
       case HealthCheckStatus.Error:
         statusCode = HttpStatusCodes.INTERNAL_SERVER_ERROR;
         break;
@@ -71,26 +62,26 @@ export class HealthCheckResult implements APIGatewayProxyResultProvider {
     }
 
     return {
-      body: JSON.stringify(this.value, this.confidentialityReplacer),
+      body: JSON.stringify(this, this.confidentialityReplacer),
       statusCode,
     };
   }
 
   /** Evaluate status based on children statuses. */
   private evaluateChildrenStatuses(): HealthCheckStatus {
-    if (!this.value.children) {
+    if (!this.children) {
       return HealthCheckStatus.Inconclusive;
     }
 
-    if (this.value.children.some((x) => x.value.status === HealthCheckStatus.Error)) {
+    if (this.children.some((x) => x.status === HealthCheckStatus.Error)) {
       return HealthCheckStatus.Error;
     }
 
-    if (this.value.children.some((x) => x.value.status === HealthCheckStatus.Warning)) {
+    if (this.children.some((x) => x.status === HealthCheckStatus.Warning)) {
       return HealthCheckStatus.Warning;
     }
 
-    if (this.value.children.some((x) => x.value.status === HealthCheckStatus.Inconclusive)) {
+    if (this.children.some((x) => x.status === HealthCheckStatus.Inconclusive)) {
       return HealthCheckStatus.Inconclusive;
     }
 
