@@ -32,7 +32,7 @@ describe("StaticConfigService", () => {
       expect(false);
     } catch (error) {
       expect(error.code).to.equal("configurationError");
-      expect(error.data.key).to.equal("foo");
+      expect(error.data.configKey).to.equal("foo");
       expect(error.data.provider).to.equal("StaticConfigService");
     }
 
@@ -41,7 +41,7 @@ describe("StaticConfigService", () => {
       expect(false);
     } catch (error) {
       expect(error.code).to.equal("configurationError");
-      expect(error.data.key).to.equal("foo");
+      expect(error.data.configKey).to.equal("foo");
       expect(error.data.provider).to.equal("StaticConfigService");
     }
   });
@@ -73,7 +73,7 @@ describe("ProcessEnvConfigService", () => {
       expect(false);
     } catch (error) {
       expect(error.code).to.equal("configurationError");
-      expect(error.data.key).to.equal("foo");
+      expect(error.data.configKey).to.equal("foo");
       expect(error.data.provider).to.equal("ProcessEnvConfigService");
     }
 
@@ -82,7 +82,7 @@ describe("ProcessEnvConfigService", () => {
       expect(false);
     } catch (error) {
       expect(error.code).to.equal("configurationError");
-      expect(error.data.key).to.equal("foo");
+      expect(error.data.configKey).to.equal("foo");
       expect(error.data.provider).to.equal("ProcessEnvConfigService");
     }
   });

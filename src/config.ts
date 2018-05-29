@@ -34,7 +34,7 @@ export class StaticConfigService implements ConfigService {
     const result = this.values[key];
 
     if (!result && required) {
-      throw configurationError({ key, provider: this.name }, `Missing configuration value for ${key}`);
+      throw configurationError({ configKey: key, provider: this.name }, `Missing configuration value for ${key}`);
     }
 
     return result;

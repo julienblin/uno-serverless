@@ -80,7 +80,7 @@ describe("SSMParameterStoreClient", () => {
       expect(false);
     } catch (error) {
       expect(error.code).to.equal("configurationError");
-      expect(error.data.key).to.equal("foo");
+      expect(error.data.configKey).to.equal("foo");
       expect(error.data.provider).to.equal("SSMParameterStoreConfigService");
     }
 
@@ -89,7 +89,7 @@ describe("SSMParameterStoreClient", () => {
       expect(false);
     } catch (error) {
       expect(error.code).to.equal("configurationError");
-      expect(error.data.key).to.equal("foo");
+      expect(error.data.configKey).to.equal("foo");
       expect(error.data.provider).to.equal("SSMParameterStoreConfigService");
     }
   });
