@@ -120,7 +120,7 @@ describe("HealthChecker", () => {
       ];
 
       const checker = new HealthChecker({ name: HEALTH_CHECKER_NAME, includeTargets: true }, healthChecks);
-      const result = (await checker.checkHealth()).getAPIGatewayProxyResult();
+      const result = (await checker.checkHealth()).getAPIGatewayProxyResult(JSON.stringify);
 
       expect(result.statusCode).to.equal(statusMapping[status]);
     });
