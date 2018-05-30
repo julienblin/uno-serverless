@@ -1,7 +1,6 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import * as lambda from "aws-lambda";
 import { parse as parseQS } from "querystring";
-import { RootContainer, ScopedContainer } from "./container";
 import { badRequestError, ErrorData, internalServerError, notFoundError, validationError } from "./errors";
 import { BodySerializer, isAPIGatewayProxyResultProvider, ok } from "./results";
 import { defaultConfidentialityReplacer, memoize, safeJSONStringify } from "./utils";
@@ -24,8 +23,8 @@ export interface LambdaProxyFunctionArgs {
   parameters<T>(): T;
 }
 
-export type LambdaProxyFunction<TSpec> =
-  (args: LambdaProxyFunctionArgs & ScopedContainer<TSpec>) => Promise<object | undefined>;
+export type LambdaProxyFunction =
+  (args: LambdaProxyFunctionArgs) => Promise<object | undefined>;
 
 export interface LambdaProxyError {
   context: lambda.Context;
@@ -49,7 +48,7 @@ export interface LambdaProxyValidationOptions {
 export type BodyParser =
   <T>(event: lambda.APIGatewayProxyEvent, headers: () => Record<string, string>) => T | undefined;
 
-export interface LambdaProxyOptions<TSpec> {
+export interface LambdaProxyOptions {
   /**
    * The body parser to use (for body() call).
    */
@@ -70,12 +69,6 @@ export interface LambdaProxyOptions<TSpec> {
    * Validation options. Will run before the function.
    */
   validation?: LambdaProxyValidationOptions;
-
-  /**
-   * Factory method to create the injected container.
-   * The container will be kept around between handler invocations.
-   */
-  container?(arg: { context: lambda.Context; event: lambda.APIGatewayProxyEvent }): RootContainer<TSpec>;
 
   /**
    * The custom error logger to use.
@@ -229,11 +222,8 @@ const validateInput = (
  * @param options - various options.
  */
 export const lambdaProxy =
-  <TSpec>(func: LambdaProxyFunction<TSpec>, options: LambdaProxyOptions<TSpec> = {}): lambda.APIGatewayProxyHandler => {
-
-    let rootContainer: RootContainer<TSpec> | undefined;
-
-    return async (event: lambda.APIGatewayProxyEvent, context: lambda.Context, callback: lambda.ProxyCallback)
+  (func: LambdaProxyFunction, options: LambdaProxyOptions = {}): lambda.APIGatewayProxyHandler =>
+    async (event: lambda.APIGatewayProxyEvent, context: lambda.Context, callback: lambda.ProxyCallback)
       : Promise<lambda.APIGatewayProxyResult > => {
 
       if (options.isWarmup && options.isWarmup(event)) {
@@ -241,12 +231,6 @@ export const lambdaProxy =
           body: "",
           statusCode: 200,
         };
-      }
-
-      if (options.container) {
-        if (!rootContainer) {
-          rootContainer = options.container({ context, event });
-        }
       }
 
       let proxyResult: lambda.APIGatewayProxyResult | undefined;
@@ -268,28 +252,13 @@ export const lambdaProxy =
 
         validateInput(memoizedParseBody, memoizedParameters, options.validation);
 
-        const funcArg: LambdaProxyFunctionArgs = {
+        const funcResult = await func({
           body: memoizedParseBody,
           context,
           event,
           headers: memoizedNormalizeHeaders,
           parameters: memoizedParameters,
-        };
-
-        let scopedContainer: ScopedContainer<TSpec> | undefined;
-        if (rootContainer) {
-          scopedContainer = rootContainer.scope();
-        }
-
-        const finalArg = {
-          ...funcArg,
-          // Because of a strange behavior in TS compiler, we need to cast as object first.
-          // tslint:disable-next-line:no-angle-bracket-type-assertion
-          ...<object> scopedContainer,
-        };
-
-        const funcResult =
-          await func(finalArg as LambdaProxyFunctionArgs & ScopedContainer<TSpec>);
+        });
 
         if (funcResult) {
           proxyResult = funcResult && isAPIGatewayProxyResultProvider(funcResult)
@@ -332,4 +301,3 @@ export const lambdaProxy =
 
       return proxyResult;
     };
-  };

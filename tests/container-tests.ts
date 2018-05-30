@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { configureContainer, Lifetime } from "../src/container";
+import { configureContainer, Lifetime, inject } from "../src/container";
 
 // tslint:disable:newline-per-chained-call
 // tslint:disable:no-unused-expression
@@ -9,21 +9,21 @@ import { configureContainer, Lifetime } from "../src/container";
 // tslint:disable:no-empty-interface
 // tslint:disable:max-classes-per-file
 
+interface IA {}
+
+class A implements IA {}
+
+interface IB {}
+
+class B implements IB {}
+
+class C {
+  public constructor(public readonly arg: any) {}
+}
+
 describe("configureContainer", () => {
 
-  interface IA {}
-
-  class A implements IA {}
-
-  interface IB {}
-
-  class B implements IB {}
-
-  class C {
-    public constructor(public readonly arg: any) {}
-  }
-
-  it("should register singleton services", async () => {
+  it("should register singleton services", () => {
 
     const createContainer = configureContainer({
       a: () => new A() as IA,
@@ -37,7 +37,7 @@ describe("configureContainer", () => {
     expect(container.a()).to.equal(container.a());
   });
 
-  it("singleton lifetime should be bound to the container.", async () => {
+  it("singleton lifetime should be bound to the container.", () => {
 
     const createContainer = configureContainer({
       a: () => new A(),
@@ -54,7 +54,7 @@ describe("configureContainer", () => {
     expect(a2).to.not.equal(a3);
   });
 
-  it("should register singleton and transient services", async () => {
+  it("should register singleton and transient services", () => {
 
     const createContainer = configureContainer({
       a: () => new A(),
@@ -69,7 +69,7 @@ describe("configureContainer", () => {
     expect(container.b()).to.not.equal(container.b());
   });
 
-  it("should pass options", async () => {
+  it("should pass options", () => {
     const createContainer = configureContainer({
       a: () => new A(),
       b: { build: () => new B(), lifetime: Lifetime.Transient },
@@ -83,7 +83,7 @@ describe("configureContainer", () => {
     expect(container.c().arg).to.be.equal("bar");
   });
 
-  it("should pass container", async () => {
+  it("should pass container", () => {
     const createContainer = configureContainer({
       a: () => new A(),
       c: (arg) => new C(arg.container.a()),
@@ -100,7 +100,7 @@ describe("configureContainer", () => {
     expect(container.c2().arg).to.be.equal(container.c());
   });
 
-  it("scoped component should not resolve in the root container", async () => {
+  it("scoped component should not resolve in the root container", () => {
     const createContainer = configureContainer({
       a: () => new A(),
       b: { build: () => new B(), lifetime: Lifetime.Scoped },
@@ -112,7 +112,7 @@ describe("configureContainer", () => {
     expect(() => container.b()).to.throw;
   });
 
-  it("should create scope and manage lifetime", async () => {
+  it("should create scope and manage lifetime", () => {
     const createContainer = configureContainer({
       a: () => new A(),
       b: { build: () => new B(), lifetime: Lifetime.Scoped },
@@ -139,7 +139,7 @@ describe("configureContainer", () => {
     expect(scopedContainer2.c().arg).to.equal(scopedContainer2);
   });
 
-  it("should create scope when no scope components", async () => {
+  it("should create scope when no scope components", () => {
     const createContainer = configureContainer({
       a: () => new A(),
       c: { build: ({ container }) => new C(container), lifetime: Lifetime.Transient },
@@ -159,6 +159,33 @@ describe("configureContainer", () => {
     expect(rootContainer.c().arg).to.equal(rootContainer);
     expect(scopedContainer1.c().arg).to.equal(scopedContainer1);
     expect(scopedContainer2.c().arg).to.equal(scopedContainer2);
+  });
+
+});
+
+describe("inject", () => {
+
+  it("should manage and inject the container", () => {
+    interface Spec {
+      a: IA;
+      b: IB;
+    }
+
+    const createContainer = configureContainer({
+      a: () => new A(),
+      b: { build: () => new B(), lifetime: Lifetime.Scoped },
+    });
+
+    const injectedFunc = inject(
+      ({ a, b }) => ({ a: a(), b: b(), b2: b() }),
+      () => createContainer({}));
+
+    const execution1 = injectedFunc();
+    const execution2 = injectedFunc();
+
+    expect(execution1.a).to.equal(execution2.a);
+    expect(execution1.b).to.equal(execution1.b2);
+    expect(execution1.b).to.not.equal(execution2.b);
   });
 
 });
