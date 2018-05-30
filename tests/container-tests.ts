@@ -139,4 +139,26 @@ describe("configureContainer", () => {
     expect(scopedContainer2.c().arg).to.equal(scopedContainer2);
   });
 
+  it("should create scope when no scope components", async () => {
+    const createContainer = configureContainer({
+      a: () => new A(),
+      c: { build: ({ container }) => new C(container), lifetime: Lifetime.Transient },
+    });
+
+    const rootContainer = createContainer({});
+    const scopedContainer1 = rootContainer.scope();
+    const scopedContainer2 = rootContainer.scope();
+
+    expect(scopedContainer1.a()).to.equal(rootContainer.a());
+    expect(scopedContainer2.a()).to.equal(rootContainer.a());
+
+    expect(rootContainer.c()).to.not.equal(rootContainer.c());
+    expect(scopedContainer1.c()).to.not.equal(scopedContainer1.c());
+    expect(scopedContainer2.c()).to.not.equal(scopedContainer2.c());
+
+    expect(rootContainer.c().arg).to.equal(rootContainer);
+    expect(scopedContainer1.c().arg).to.equal(scopedContainer1);
+    expect(scopedContainer2.c().arg).to.equal(scopedContainer2);
+  });
+
 });

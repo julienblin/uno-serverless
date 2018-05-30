@@ -64,32 +64,38 @@ export const configureContainer =
       }
     });
 
-    // tslint:disable-next-line:no-string-literal
-    rootContainer["scope"] = () => {
-      const scopedContainer = {};
+    if (!resolvedRegistrations.some((reg) => reg.lifetime === Lifetime.Scoped)) {
+      // If there are no scoped registrations, we optimize the scope call by always returning the root container.
+      // tslint:disable-next-line:no-string-literal
+      rootContainer["scope"] = () => rootContainer;
+    } else {
+      // tslint:disable-next-line:no-string-literal
+      rootContainer["scope"] = () => {
+        const scopedContainer = {};
 
-      resolvedRegistrations.forEach((reg) => {
+        resolvedRegistrations.forEach((reg) => {
 
-        switch (reg.lifetime) {
-          case Lifetime.Singleton:
-            scopedContainer[reg.key] = rootContainer[reg.key];
-            break;
+          switch (reg.lifetime) {
+            case Lifetime.Singleton:
+              scopedContainer[reg.key] = rootContainer[reg.key];
+              break;
 
-          case Lifetime.Transient:
-            scopedContainer[reg.key] = () => reg.build({ container: scopedContainer, options });
-            break;
+            case Lifetime.Transient:
+              scopedContainer[reg.key] = () => reg.build({ container: scopedContainer, options });
+              break;
 
-          case Lifetime.Scoped:
-            scopedContainer[reg.key] = memoize(() => reg.build({ container: scopedContainer, options }));
-            break;
+            case Lifetime.Scoped:
+              scopedContainer[reg.key] = memoize(() => reg.build({ container: scopedContainer, options }));
+              break;
 
-          default:
-            throw new Error(`Unknown lifetime ${reg.lifetime}`);
-        }
-      });
+            default:
+              throw new Error(`Unknown lifetime ${reg.lifetime}`);
+          }
+        });
 
-      return scopedContainer;
-    };
+        return scopedContainer;
+      };
+    }
 
     return rootContainer as RootContainer<TSpec>;
   };
