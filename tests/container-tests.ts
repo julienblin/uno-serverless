@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { configureContainer, Lifetime, inject } from "../src/container";
+import { configureContainer, inject, Lifetime } from "../src/container";
 
 // tslint:disable:newline-per-chained-call
 // tslint:disable:no-unused-expression
@@ -177,11 +177,11 @@ describe("inject", () => {
     });
 
     const injectedFunc = inject(
-      ({ a, b }) => ({ a: a(), b: b(), b2: b() }),
+      (args, { a, b }) => ({ a: a(), b: b(), b2: b() }),
       () => createContainer({}));
 
-    const execution1 = injectedFunc();
-    const execution2 = injectedFunc();
+    const execution1 = injectedFunc({});
+    const execution2 = injectedFunc({});
 
     expect(execution1.a).to.equal(execution2.a);
     expect(execution1.b).to.equal(execution1.b2);

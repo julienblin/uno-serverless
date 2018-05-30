@@ -102,9 +102,16 @@ export const configureContainer =
 
 /** Manages the creation of a root container and handles scoped execution. */
 export const inject = <TFunc, TSpec>(
-  func: (scopedContainer: ScopedContainer<TSpec>) => TFunc,
-  containerFactory: () => RootContainer<TSpec>): () => TFunc => {
-    const rootContainer = containerFactory();
+  func: (args: any, scopedContainer: ScopedContainer<TSpec>) => TFunc,
+  containerFactory: (args: any) => RootContainer<TSpec>): (args: any) => TFunc => {
+    let rootContainer: RootContainer<TSpec>;
 
-    return () => func(rootContainer.scope());
+    return (a) => {
+
+      if (!rootContainer) {
+        rootContainer = containerFactory(a);
+      }
+
+      return func(a, rootContainer.scope());
+    };
 };
