@@ -1,68 +1,95 @@
-
-export type Container<T> = {
-  readonly [P in keyof T]: () => T[P];
-};
+import { memoize } from "./utils";
 
 export enum Lifetime {
   Singleton = "singleton",
   Transient = "transient",
+  Scoped = "scoped",
 }
 
 export interface Registration<T, TArg> {
-  // tslint:disable-next-line:prefer-method-signature
-  build: (arg: TArg) => T;
   lifetime: Lifetime;
+  build(arg: TArg): T;
 }
 
-export type Registrations<T, TArg> = {
+export type ContainerSpecification<T, TArg> = {
   [P in keyof T]: ((arg: TArg) => T[P]) | Registration<T[P], TArg>;
 };
 
-export interface RegistrationArg<TContract, TOptions> {
-  container: Container<TContract>;
-  options?: TOptions;
+export type UnpackRegistration<T> =
+  T extends Registration<infer S, T> ? S :
+  T extends (args: any) => infer U ? U :
+  never;
+
+export type ScopedContainer<TSpec> = {
+  readonly [P in keyof TSpec]: () => UnpackRegistration<TSpec[P]>;
+};
+
+export interface ScopeCreator<TSpec> {
+  scope(): ScopedContainer<TSpec>;
 }
 
-export type ContainerCreation<TOptions, TContract> = (options?: TOptions) => Container<TContract>;
+export type RootContainer<TSpec> = ScopedContainer<TSpec> & ScopeCreator<TSpec>;
 
-export const configureContainer = <TContract, TOptions = any>(
-  registrations: Registrations<TContract, RegistrationArg<TContract, TOptions>>)
-  : ContainerCreation<TOptions, TContract> =>
+export type ContainerCreation<TOptions, TSpec> = (options: TOptions) => RootContainer<TSpec>;
 
-  (containerOptions?: TOptions) => {
-    const resolvedRegistrations: Record<string, Registration<any, any>> = {};
-    const singletonInstances: Record<string, any> = {};
-    const container = {};
+export const configureContainer =
+  <TOptions, TSpec>(registrations: TSpec): ContainerCreation<TOptions, TSpec> =>
+  (options: TOptions) => {
+    const rootContainer = {};
+    const resolvedRegistrations = Object.keys(registrations).map((regKey) => {
+      const reg = registrations[regKey];
 
-    for (const contractKey of Object.keys(registrations)) {
+      return typeof reg === "function"
+        ? { key: regKey, build: reg, lifetime: Lifetime.Singleton }
+        : { key: regKey, ...reg};
+    });
 
-      container[contractKey] = () => {
+    resolvedRegistrations.forEach((reg) => {
 
-        if (singletonInstances[contractKey]) {
-          return singletonInstances[contractKey];
-        }
+      switch (reg.lifetime) {
+        case Lifetime.Singleton:
+          rootContainer[reg.key] = memoize(() => reg.build({ container: rootContainer, options }));
+          break;
 
-        if (!resolvedRegistrations[contractKey]) {
-          const registration = registrations[contractKey];
-          resolvedRegistrations[contractKey] = (typeof registration === "function")
-            ? { build: registration, lifetime: Lifetime.Singleton }
-            : registration;
-        }
+        case Lifetime.Transient:
+          rootContainer[reg.key] = () => reg.build({ container: rootContainer, options });
+          break;
 
-        const resolvedRegistration = resolvedRegistrations[contractKey];
-        switch (resolvedRegistration.lifetime) {
-          case Lifetime.Transient:
-            return resolvedRegistration.build({ container, options: containerOptions });
+        case Lifetime.Scoped:
+          rootContainer[reg.key] = () => { throw new Error("Cannot instantiate scoped component in root container"); };
+          break;
+
+        default:
+          throw new Error(`Unknown lifetime ${reg.lifetime}`);
+      }
+    });
+
+    // tslint:disable-next-line:no-string-literal
+    rootContainer["scope"] = () => {
+      const scopedContainer = {};
+
+      resolvedRegistrations.forEach((reg) => {
+
+        switch (reg.lifetime) {
           case Lifetime.Singleton:
-            singletonInstances[contractKey] =
-              resolvedRegistration.build({ container, options: containerOptions });
+            scopedContainer[reg.key] = rootContainer[reg.key];
+            break;
 
-            return singletonInstances[contractKey];
+          case Lifetime.Transient:
+            scopedContainer[reg.key] = () => reg.build({ container: scopedContainer, options });
+            break;
+
+          case Lifetime.Scoped:
+            scopedContainer[reg.key] = memoize(() => reg.build({ container: scopedContainer, options }));
+            break;
+
           default:
-            throw new Error(`Unknown lifetime ${resolvedRegistration.lifetime}`);
+            throw new Error(`Unknown lifetime ${reg.lifetime}`);
         }
-      };
-    }
+      });
 
-    return container as Container<TContract>;
+      return scopedContainer;
+    };
+
+    return rootContainer as RootContainer<TSpec>;
   };
