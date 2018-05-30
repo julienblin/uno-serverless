@@ -1,5 +1,6 @@
+
 export type Container<T> = {
-  readonly [P in keyof T]: T[P];
+  readonly [P in keyof T]: () => T[P];
 };
 
 export enum Lifetime {
@@ -14,7 +15,7 @@ export interface Registration<T, TArg> {
 }
 
 export type Registrations<T, TArg> = {
-  [P in keyof T]: (arg: TArg) => T[P] | Promise<T[P]> | Registration<T, TArg>;
+  [P in keyof T]: ((arg: TArg) => T[P]) | Registration<T[P], TArg>;
 };
 
 export interface RegistrationArg<TContract, TOptions> {
@@ -22,24 +23,46 @@ export interface RegistrationArg<TContract, TOptions> {
   options?: TOptions;
 }
 
-export const buildContainer = <TContract, TOptions>(
-  registrations: Registrations<TContract, RegistrationArg<TContract, TOptions>>,
-  options?: TOptions): Container<TContract> => {
-  throw new Error();
-};
+export type ContainerCreation<TOptions, TContract> = (options?: TOptions) => Container<TContract>;
 
-/* class A {}
+export const configureContainer = <TContract, TOptions = any>(
+  registrations: Registrations<TContract, RegistrationArg<TContract, TOptions>>)
+  : ContainerCreation<TOptions, TContract> =>
 
-class B {}
+  (containerOptions?: TOptions) => {
+    const resolvedRegistrations: Record<string, Registration<any, any>> = {};
+    const singletonInstances: Record<string, any> = {};
+    const container = {};
 
-interface ContainerContract {
-  a: A;
-  b: B;
-  configService: ConfigService;
-}
+    for (const contractKey of Object.keys(registrations)) {
 
-const test = buildContainer<ContainerContract, any>({
-  a: () => new A(),
-  b: () => ({ build: () => new B(), lifetime: Lifetime.Transient }),
-  configService: async () => new SSMParameterStoreConfigService({ path: "/ngl/lewtt-api/foo" }),
-});*/
+      container[contractKey] = () => {
+
+        if (singletonInstances[contractKey]) {
+          return singletonInstances[contractKey];
+        }
+
+        if (!resolvedRegistrations[contractKey]) {
+          const registration = registrations[contractKey];
+          resolvedRegistrations[contractKey] = (typeof registration === "function")
+            ? { build: registration, lifetime: Lifetime.Singleton }
+            : registration;
+        }
+
+        const resolvedRegistration = resolvedRegistrations[contractKey];
+        switch (resolvedRegistration.lifetime) {
+          case Lifetime.Transient:
+            return resolvedRegistration.build({ container, options: containerOptions });
+          case Lifetime.Singleton:
+            singletonInstances[contractKey] =
+              resolvedRegistration.build({ container, options: containerOptions });
+
+            return singletonInstances[contractKey];
+          default:
+            throw new Error(`Unknown lifetime ${resolvedRegistration.lifetime}`);
+        }
+      };
+    }
+
+    return container as Container<TContract>;
+  };
