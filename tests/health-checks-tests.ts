@@ -155,7 +155,7 @@ describe("checkHealth", () => {
 
     expect(result.name).to.equal(healthCheckName);
     expect(result.target).to.equal(healthCheckTarget);
-    expect(result.error).to.equal(error);
+    expect(result.error.message).to.contain(error.message);
     expect(result.status).to.equal(HealthCheckStatus.Error);
     expect(result.elapsed).to.be.greaterThan(0);
   });

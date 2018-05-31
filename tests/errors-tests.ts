@@ -17,7 +17,7 @@ describe("dependencyErrorProxy", () => {
     public promiseInvoked = false;
     public standardInvoked = false;
 
-    public managedError = () => {
+    public knownError = () => {
       throw internalServerError("This is a managed error");
     }
 
@@ -101,12 +101,12 @@ describe("dependencyErrorProxy", () => {
     }
   });
 
-  it("should not encapsulate managed errors", async () => {
+  it("should not encapsulate known errors", async () => {
     const target = new TestTarget();
     const proxy = dependencyErrorProxy(target, "TestTarget");
 
     try {
-      proxy.managedError();
+      proxy.knownError();
       expect(false);
     } catch (error) {
       expect(error.code).to.equal("internalServerError");
