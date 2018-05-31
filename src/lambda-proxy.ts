@@ -5,7 +5,7 @@ import { RootContainer } from "./container";
 import { badRequestError, ErrorData, internalServerError, notFoundError, validationError } from "./errors";
 import { ContainerFactoryOptions, ContainerFunction } from "./lambda-container";
 import { BodySerializer, isAPIGatewayProxyResultProvider, ok } from "./results";
-import { defaultConfidentialityReplacer, memoize, safeJSONStringify } from "./utils";
+import { defaultConfidentialityReplacer, memoize, safeJSONStringify, supportDestructuring } from "./utils";
 import { validate } from "./validator";
 
 export interface LambdaProxyFunctionArgs {
@@ -324,7 +324,7 @@ export const containerLambdaProxy = <TContainerContract>(
 
         const scopedContainer = rootContainer.scope();
 
-        return func(args, scopedContainer);
+        return func(args, supportDestructuring(scopedContainer));
       },
       options);
   };

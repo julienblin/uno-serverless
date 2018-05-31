@@ -58,3 +58,16 @@ export const memoize = <T>(func: () => T) => {
     return cache;
   };
 };
+
+/** Handler for proxy to support container method desctructuring without losing the this context. */
+const destructuringHandler = <T extends object>(target: any): ProxyHandler<T> => ({
+  get: (proxyTarget, name, receiver) =>
+    (...args) =>
+      Reflect
+      .get(proxyTarget, name, receiver)
+      .apply(target, args),
+});
+
+/** Wraps target behind a proxy to support ES destructuring for methods. */
+export const supportDestructuring = <T extends object>(target: T): T =>
+  new Proxy(target, destructuringHandler(target));

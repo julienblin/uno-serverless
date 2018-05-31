@@ -3,7 +3,7 @@ import * as awsLambda from "aws-lambda";
 import { RootContainer } from "./container";
 import { validationError } from "./errors";
 import { ContainerFactoryOptions, ContainerFunction } from "./lambda-container";
-import { defaultConfidentialityReplacer, safeJSONStringify } from "./utils";
+import { defaultConfidentialityReplacer, safeJSONStringify, supportDestructuring } from "./utils";
 import { validate } from "./validator";
 
 export interface LambdaFunctionArgs<T> {
@@ -114,7 +114,7 @@ export const containerLambda = <TEvent, TContainerContract>(
 
         const scopedContainer = rootContainer.scope();
 
-        return func(args, scopedContainer);
+        return func(args, supportDestructuring(scopedContainer));
       },
       options);
   };

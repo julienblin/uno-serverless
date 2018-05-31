@@ -2,7 +2,7 @@
 import * as lambda from "aws-lambda";
 import { RootContainer } from "./container";
 import { ContainerFactoryOptions, ContainerFunction } from "./lambda-container";
-import { defaultConfidentialityReplacer, safeJSONStringify } from "./utils";
+import { defaultConfidentialityReplacer, safeJSONStringify, supportDestructuring } from "./utils";
 
 export interface LambdaAuthorizerBearerFunctionArgs {
   /**
@@ -115,7 +115,7 @@ export const containerLambdaAuthorizerBearer = <TContainerContract>(
 
         const scopedContainer = rootContainer.scope();
 
-        return func(args, scopedContainer);
+        return func(args, supportDestructuring(scopedContainer));
       },
       options);
   };
