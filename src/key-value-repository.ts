@@ -9,6 +9,7 @@ export interface KeyValueRepository {
 /**
  * KeyValueRepository in-memory.
  * Useful for unit-testing.
+ * Objects are serialized / deserialized to better catch error.
  */
 export class InMemoryKeyValueRepository implements KeyValueRepository {
 
@@ -17,8 +18,8 @@ export class InMemoryKeyValueRepository implements KeyValueRepository {
 
   // tslint:disable:no-unbound-method
   public constructor(
-    private readonly serialize: (value: any) => string = JSON.stringify,
-    private readonly deserialize: (text: string) => any = JSON.parse) {}
+    private readonly serialize: <T>(value: T) => string = JSON.stringify,
+    private readonly deserialize: <T>(text: string) => T = JSON.parse) {}
 
   /** Clear the repository */
   public clear() {
@@ -42,7 +43,7 @@ export class InMemoryKeyValueRepository implements KeyValueRepository {
     const retrieved = this.storage.get(key);
 
     return retrieved
-      ? this.deserialize(retrieved) as T
+      ? this.deserialize(retrieved)
       : undefined;
   }
 
