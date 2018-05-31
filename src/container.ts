@@ -56,6 +56,7 @@ export type ContainerFactory<TContract, TOptions> = (options?: TOptions) => Root
 export const createContainerFactory = <TContract, TOptions = any>(
   builder: ContainerBuilder<TContract, TOptions>): ContainerFactory<TContract, TOptions> => {
 
+    /** Dynamic container generation. */
     // tslint:disable:variable-name
     function Container(this: any, options?: TOptions, parent?: any) {
       this._options = options;
