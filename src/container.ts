@@ -49,42 +49,45 @@ export type RootContainer<TContract> = ScopedContainer<TContract> & ScopeCreator
 
 export type ContainerFactory<TContract, TOptions> = (options?: TOptions) => RootContainer<TContract>;
 
-const ROOT_CONTAINER_INSTANCES = "_instances";
+/**
+ * Creates a container factory that conforms to the
+ * contract and follows instructions given by the builder.
+ */
+export const createContainerFactory = <TContract, TOptions = any>(
+  builder: ContainerBuilder<TContract, TOptions>): ContainerFactory<TContract, TOptions> => {
 
-// tslint:disable:no-string-literal
-const buildContainer = <TContract, TOptions>(
-  builder: ContainerBuilder<TContract, TOptions>,
-  options?: TOptions,
-  root?: RootContainer<TContract>): RootContainer<TContract> | ScopedContainer<TContract> => {
-    const instances: Record<string, any> = {};
-    const container = {};
+    // tslint:disable:variable-name
+    function Container(this: any, options?: TOptions, parent?: any) {
+      this._options = options;
+      this._parent = parent;
+      this._instances = {};
+    }
 
     Object.keys(builder).forEach((builderKey) => {
-      const componentBuilder = builder[builderKey];
-
-      container[builderKey] = () => {
-        if (instances[builderKey]) {
-          return instances[builderKey];
+      Container.prototype[builderKey] = function(this: any) {
+        if (this._instances[builderKey]) {
+          return this._instances[builderKey];
         }
 
-        if (root && root[ROOT_CONTAINER_INSTANCES] && root[ROOT_CONTAINER_INSTANCES][builderKey]) {
-          return root[ROOT_CONTAINER_INSTANCES][builderKey];
+        if (this._parent && this._parent._instances[builderKey]) {
+          return this._parent._instances[builderKey];
         }
 
+        const componentBuilder = builder[builderKey];
         const builderOptions = new BuilderOptions();
 
         const componentBuilderResult = componentBuilder({
           builder: builderOptions,
-          container,
-          options,
+          container: this,
+          options: this._options,
         });
 
         switch (builderOptions.lifetime) {
           case Lifetime.Singleton:
-            if (root) {
-              root[ROOT_CONTAINER_INSTANCES][builderKey] = componentBuilderResult;
+            if (this._parent) {
+              this._parent._instances[builderKey] = componentBuilderResult;
             } else {
-              instances[builderKey] = componentBuilderResult;
+              this._instances[builderKey] = componentBuilderResult;
             }
 
             return componentBuilderResult;
@@ -93,10 +96,10 @@ const buildContainer = <TContract, TOptions>(
             return componentBuilderResult;
 
           case Lifetime.Scoped:
-            if (!root) {
+            if (!this._parent) {
               throw new Error("Cannot instantiate scoped component in root container");
             }
-            instances[builderKey] = componentBuilderResult;
+            this._instances[builderKey] = componentBuilderResult;
 
             return componentBuilderResult;
 
@@ -106,24 +109,10 @@ const buildContainer = <TContract, TOptions>(
       };
     });
 
-    if (!root) {
-      // tslint:disable-next-line:no-string-literal
-      container["scope"] = () =>
-        buildContainer(builder, options, container as RootContainer<TContract>);
+    // tslint:disable-next-line:no-string-literal
+    Container.prototype["scope"] = function(this: any) {
+      return new Container(this._options, this);
+    };
 
-      // tslint:disable-next-line:no-string-literal
-      container[ROOT_CONTAINER_INSTANCES] = instances;
-    }
-
-    return container as RootContainer<TContract> | ScopedContainer<TContract>;
+    return (factoryOptions?: TOptions) => new Container(factoryOptions);
   };
-// tslint:enable:no-string-literal
-
-/**
- * Creates a container factory that conforms to the
- * contract and follows instructions given by the builder.
- */
-export const createContainerFactory = <TContract, TOptions = any>(
-  builder: ContainerBuilder<TContract, TOptions>): ContainerFactory<TContract, TOptions> =>
-    (options?: TOptions) =>
-      buildContainer<TContract, TOptions>(builder, options) as RootContainer<TContract>;
