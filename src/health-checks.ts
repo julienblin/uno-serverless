@@ -73,6 +73,10 @@ export class HealthCheckResult implements APIGatewayProxyResultProvider {
         statusCode = HttpStatusCodes.OK;
     }
 
+    if (this.error && this.error.externalPayload) {
+      this.error = this.error.externalPayload;
+    }
+
     return {
       // tslint:disable-next-line:no-magic-numbers
       body: safeJSONStringify(this, this.confidentialityReplacer, 2),
@@ -124,13 +128,11 @@ export const checkHealth = async (
       target,
     });
   } catch (error) {
-    console.error(error);
-
     return new HealthCheckResult({
       elapsed: convertHrtimeToMs(process.hrtime(start)),
       error: error.code && error.code === "dependencyError"
-        ? error.externalPayload
-        : dependencyError(target ? target : "unknown", error).externalPayload,
+        ? error
+        : dependencyError(target ? target : "unknown", error),
       name,
       status: HealthCheckStatus.Error,
       target,
