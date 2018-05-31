@@ -72,7 +72,7 @@ describe("createContainerFactory", () => {
 
     const createContainer = createContainerFactory<Contract>({
       a: () => new A(),
-      b: ({ builder }) => builder.transient(() => new B()),
+      b: ({ builder }) => builder.transient(new B()),
     });
 
     const container = createContainer();
@@ -96,7 +96,7 @@ describe("createContainerFactory", () => {
 
     const createContainer = createContainerFactory<Contract, Options>({
       c: ({ options }) => new C(options.foo),
-      c2: ({ builder, options }) => builder.transient(() => new C(options.foo)),
+      c2: ({ builder, options }) => builder.transient(new C(options.foo)),
     });
 
     const container = createContainer({ foo: "bar" });
@@ -116,7 +116,7 @@ describe("createContainerFactory", () => {
     const createContainer = createContainerFactory<Contract>({
       a: () => new A(),
       c: ({ container }) => new C(container.a()),
-      c2: ({ builder, container }) => builder.transient(() => new C(container.c())),
+      c2: ({ builder, container }) => builder.transient(new C(container.c())),
     });
 
     const result = createContainer();
@@ -156,8 +156,8 @@ describe("createContainerFactory", () => {
 
     const createContainer = createContainerFactory<Contract>({
       a: () => new A(),
-      b: ({ builder }) => builder.scoped(() => new B()),
-      c: ({ builder, container }) => builder.transient(() => new C(container)),
+      b: ({ builder }) => builder.scoped(new B()),
+      c: ({ builder, container }) => builder.transient(new C(container)),
     });
 
     const rootContainer = createContainer();

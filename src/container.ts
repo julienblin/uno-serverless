@@ -10,24 +10,24 @@ export class BuilderOptions {
   public constructor(public lifetime: Lifetime = Lifetime.Singleton) {}
 
   /** Creates a component with the scoped lifetime. */
-  public scoped<T>(factory: () => T) {
+  public scoped<T>(value: T) {
     this.lifetime = Lifetime.Scoped;
 
-    return factory();
+    return value;
   }
 
   /** Creates a component with the singleton lifetime. */
-  public singleton<T>(factory: () => T) {
+  public singleton<T>(value: T) {
     this.lifetime = Lifetime.Singleton;
 
-    return factory();
+    return value;
   }
 
   /** Creates a component with the transient lifetime. */
-  public transient<T>(factory: () => T) {
+  public transient<T>(value: T) {
     this.lifetime = Lifetime.Transient;
 
-    return factory();
+    return value;
   }
 }
 

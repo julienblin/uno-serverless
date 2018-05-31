@@ -97,8 +97,8 @@ describe("lambda", () => {
     // tslint:disable:no-unnecessary-callback-wrapper
     const createContainer = createContainerFactory<ContainerContract>({
       a: () => randomStr(),
-      b: ({ builder }) => builder.transient(() => randomStr()),
-      c: ({ builder }) => builder.scoped(() => randomStr()),
+      b: ({ builder }) => builder.transient(randomStr()),
+      c: ({ builder }) => builder.scoped(randomStr()),
     });
 
     let collected: any;
