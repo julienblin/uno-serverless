@@ -5,7 +5,7 @@ export interface ErrorData {
   code: string;
   data?: object;
   details?: ErrorData[];
-  externalPayload?: ErrorData;
+  isManaged?: boolean;
   message: string;
   target?: string;
 }
@@ -18,10 +18,13 @@ export const buildError = (
   error.code = errorData.code;
   error.data = errorData.data;
   error.details = errorData.details;
-  error.externalPayload = errorData.externalPayload;
+  // tslint:disable-next-line:strict-type-predicates
+  error.isManaged = ((errorData.isManaged === undefined) || (errorData.isManaged === null))
+    ? true
+    : errorData.isManaged;
   error.target = errorData.target;
   error.getAPIGatewayProxyResult = (serializer: BodySerializer) => ({
-    body: serializer({ error: error.externalPayload ? error.externalPayload : errorData }),
+    body: serializer({ error: errorData }),
     statusCode: httpStatusCode,
   });
   Object.freeze(error);
@@ -78,12 +81,6 @@ export const dependencyError = (target: string, error: Error, message?: string) 
     {
       code: "dependencyError",
       details: [{ code: error.name, message: error.message, data: error}],
-      externalPayload: {
-        code: "dependencyError",
-        details: [{ code: error.name, message: error.message, data: error}],
-        message: message ? message : error.toString(),
-        target,
-      },
       message: message ? message : error.toString(),
       target,
     },
@@ -104,7 +101,7 @@ export const dependencyErrorProxy = <T extends object>(target: T, targetName: st
 
           if (result && (typeof result.catch === "function")) {
             return result.catch((error) => {
-              if (error.getAPIGatewayProxyResult) {
+              if (error.isManaged) {
                 throw error;
               }
               throw dependencyError(targetName, error);
@@ -113,7 +110,7 @@ export const dependencyErrorProxy = <T extends object>(target: T, targetName: st
 
           return result;
         } catch (error) {
-          if (error.getAPIGatewayProxyResult) {
+          if (error.isManaged) {
             throw error;
           }
           throw dependencyError(targetName, error);

@@ -1,7 +1,6 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import { APIGatewayProxyResult } from "aws-lambda";
 import * as HttpStatusCodes from "http-status-codes";
-import { dependencyError } from "./errors";
 import { APIGatewayProxyResultProvider, BodySerializer } from "./results";
 import { convertHrtimeToMs, defaultConfidentialityReplacer, safeJSONStringify } from "./utils";
 
@@ -23,7 +22,7 @@ export class HealthCheckResult implements APIGatewayProxyResultProvider {
   public readonly elapsed: number | undefined;
 
   /** The error, if any */
-  public error: any;
+  public readonly error: any;
 
   /** The name of the health check */
   public readonly name: string;
@@ -71,10 +70,6 @@ export class HealthCheckResult implements APIGatewayProxyResultProvider {
         break;
       default:
         statusCode = HttpStatusCodes.OK;
-    }
-
-    if (this.error && this.error.externalPayload) {
-      this.error = this.error.externalPayload;
     }
 
     return {
@@ -130,9 +125,7 @@ export const checkHealth = async (
   } catch (error) {
     return new HealthCheckResult({
       elapsed: convertHrtimeToMs(process.hrtime(start)),
-      error: error.code && error.code === "dependencyError"
-        ? error
-        : dependencyError(target ? target : "unknown", error),
+      error,
       name,
       status: HealthCheckStatus.Error,
       target,
