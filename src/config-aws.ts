@@ -83,7 +83,7 @@ export class SSMParameterStoreConfigService implements ConfigService, ICheckHeal
     }
 
     if (required) {
-      throw configurationError({ configKey: key, provider: this.name }, `Missing configuration value for ${key}`);
+      throw configurationError({ key, provider: this.name }, `Missing configuration value for ${key}`);
     }
 
     return undefined;

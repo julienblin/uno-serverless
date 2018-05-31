@@ -12,7 +12,6 @@ export const convertHrtimeToMs = (hrtime: [number, number]) => Math.ceil((((hrti
 export const DEFAULT_CONFIDENTIALITY_BLACKLIST = new Set([
   "_",
   "authorization",
-  "key",
   "password",
   "secret",
   "socket",

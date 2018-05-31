@@ -29,7 +29,6 @@ describe("createConfidentialityReplacer", () => {
     const obj = {
       _internal: "internal",
       a: "a",
-      keyWithSomething: "keyWithSomething",
       password: "thepassword",
     };
 
@@ -37,7 +36,6 @@ describe("createConfidentialityReplacer", () => {
 
     expect(result._internal).equal(DEFAULT_CONFIDENTIALITY_REPLACE_BY);
     expect(result.a).equal(obj.a);
-    expect(result.keyWithSomething).equal(DEFAULT_CONFIDENTIALITY_REPLACE_BY);
     expect(result.password).equal(DEFAULT_CONFIDENTIALITY_REPLACE_BY);
   });
 
