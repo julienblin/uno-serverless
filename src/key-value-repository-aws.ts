@@ -4,7 +4,7 @@ import { KeyValueRepository } from "./key-value-repository";
 
 export interface S3KeyValueRepositoryOptions {
   /** S3 bucket name. */
-  bucket: string;
+  bucket: string | Promise<string>;
 
   /** The content type for the files. */
   contentType?: string;
@@ -52,7 +52,7 @@ export class S3KeyValueRepository implements KeyValueRepository {
   /** Delete the value associated with the key */
   public async delete(key: string): Promise<void> {
     await this.options.s3.deleteObject({
-      Bucket: this.options.bucket,
+      Bucket: await this.options.bucket,
       Key: this.getKey(key),
     }).promise();
   }
@@ -61,7 +61,7 @@ export class S3KeyValueRepository implements KeyValueRepository {
   public async get<T>(key: string): Promise<T | undefined> {
     try {
       const response = await this.options.s3.getObject({
-        Bucket: this.options.bucket,
+        Bucket: await this.options.bucket,
         Key: this.getKey(key),
       }).promise();
       if (!response.Body) {
@@ -82,7 +82,7 @@ export class S3KeyValueRepository implements KeyValueRepository {
   public async set<T>(key: string, value: T): Promise<void> {
     await this.options.s3.putObject({
       Body: this.options.serialize(value),
-      Bucket: this.options.bucket,
+      Bucket: await this.options.bucket,
       ContentType: this.options.contentType,
       Key: this.getKey(key),
     }).promise();
