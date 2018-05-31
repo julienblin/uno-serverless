@@ -1,6 +1,7 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import * as lambda from "aws-lambda";
 import { RootContainer } from "./container";
+import { ContainerFactoryOptions, ContainerFunction } from "./lambda-container";
 import { defaultConfidentialityReplacer, safeJSONStringify } from "./utils";
 
 export interface LambdaAuthorizerBearerFunctionArgs {
@@ -94,22 +95,15 @@ export const lambdaAuthorizerBearer =
       }
     };
 
-export type ContainerLambdaAuthorizerBearerFunction<TContainerContract> =
-  (args: LambdaAuthorizerBearerFunctionArgs, container: TContainerContract) => Promise<lambda.CustomAuthorizerResult>;
-
-export interface ContainerFactoryLambdaAuthorizerBearerOptions<TContainerContract> {
-  containerFactory(
-    args: { context: lambda.Context; event: lambda.CustomAuthorizerEvent }): RootContainer<TContainerContract>;
-}
-
 /**
  * Creates a wrapper for a Lambda authorizer function for a bearer token.
  * Manages a scoped container execution.
  * @param func - The function to wrap.
  */
 export const containerLambdaAuthorizerBearer = <TContainerContract>(
-  func: ContainerLambdaAuthorizerBearerFunction<TContainerContract>,
-  options: LambdaAuthorizerBearerOptions & ContainerFactoryLambdaAuthorizerBearerOptions<TContainerContract>)
+  func: ContainerFunction<
+    LambdaAuthorizerBearerFunctionArgs, TContainerContract, Promise<lambda.CustomAuthorizerResult>>,
+  options: LambdaAuthorizerBearerOptions & ContainerFactoryOptions<lambda.CustomAuthorizerEvent, TContainerContract>)
   : lambda.CustomAuthorizerHandler => {
     let rootContainer: RootContainer<TContainerContract> | undefined;
 

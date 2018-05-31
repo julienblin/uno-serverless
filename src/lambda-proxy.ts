@@ -3,6 +3,7 @@ import * as lambda from "aws-lambda";
 import { parse as parseQS } from "querystring";
 import { RootContainer } from "./container";
 import { badRequestError, ErrorData, internalServerError, notFoundError, validationError } from "./errors";
+import { ContainerFactoryOptions, ContainerFunction } from "./lambda-container";
 import { BodySerializer, isAPIGatewayProxyResultProvider, ok } from "./results";
 import { defaultConfidentialityReplacer, memoize, safeJSONStringify } from "./utils";
 import { validate } from "./validator";
@@ -303,14 +304,6 @@ export const lambdaProxy =
       return proxyResult;
     };
 
-export type ContainerLambdaProxyFunction<TContainerContract> =
-    (args: LambdaProxyFunctionArgs, container: TContainerContract) => Promise<object | undefined>;
-
-export interface ContainerFactoryLambdaProxyOptions<TContainerContract> {
-  containerFactory(
-    args: { context: lambda.Context; event: lambda.APIGatewayProxyEvent }): RootContainer<TContainerContract>;
-}
-
 /**
  * Creates a wrapper for a Lambda function bound to API Gateway using PROXY.
  * Manages a scoped container execution.
@@ -318,8 +311,8 @@ export interface ContainerFactoryLambdaProxyOptions<TContainerContract> {
  * @param options - various options.
  */
 export const containerLambdaProxy = <TContainerContract>(
-  func: ContainerLambdaProxyFunction<TContainerContract>,
-  options: LambdaProxyOptions & ContainerFactoryLambdaProxyOptions<TContainerContract>)
+  func: ContainerFunction<LambdaProxyFunctionArgs, TContainerContract, Promise<object | undefined>>,
+  options: LambdaProxyOptions & ContainerFactoryOptions<lambda.APIGatewayProxyEvent, TContainerContract>)
   : lambda.APIGatewayProxyHandler => {
     let rootContainer: RootContainer<TContainerContract> | undefined;
 

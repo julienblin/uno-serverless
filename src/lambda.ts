@@ -2,6 +2,7 @@
 import * as awsLambda from "aws-lambda";
 import { RootContainer } from "./container";
 import { validationError } from "./errors";
+import { ContainerFactoryOptions, ContainerFunction } from "./lambda-container";
 import { defaultConfidentialityReplacer, safeJSONStringify } from "./utils";
 import { validate } from "./validator";
 
@@ -94,22 +95,14 @@ export const lambda = <T>(func: LambdaFunction<T>, options: LambdaOptions = {}):
     }
   };
 
-export type ContainerLambdaFunction<TEvent, TContainerContract> =
-  (args: LambdaFunctionArgs<TEvent>, container: TContainerContract) => Promise<any>;
-
-export interface ContainerFactoryLambdaOptions<TEvent, TContainerContract> {
-  containerFactory(
-    args: { context: awsLambda.Context; event: TEvent }): RootContainer<TContainerContract>;
-}
-
 /**
  * Creates a wrapper for a Lambda authorizer function for a bearer token.
  * Manages a scoped container execution.
  * @param func - The function to wrap.
  */
 export const containerLambda = <TEvent, TContainerContract>(
-  func: ContainerLambdaFunction<TEvent, TContainerContract>,
-  options: LambdaOptions & ContainerFactoryLambdaOptions<TEvent, TContainerContract>)
+  func: ContainerFunction<LambdaFunctionArgs<TEvent>, TContainerContract, Promise<any>>,
+  options: LambdaOptions & ContainerFactoryOptions<TEvent, TContainerContract>)
   : awsLambda.Handler<TEvent> => {
     let rootContainer: RootContainer<TContainerContract> | undefined;
 
