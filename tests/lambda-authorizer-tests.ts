@@ -2,7 +2,10 @@
 import { CustomAuthorizerResult } from "aws-lambda";
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { lambdaAuthorizerBearer, LambdaAuthorizerBearerError } from "../src/lambda-authorizer";
+import { createContainerFactory } from "../src/container";
+import {
+  containerLambdaAuthorizerBearer, lambdaAuthorizerBearer,
+  LambdaAuthorizerBearerError } from "../src/lambda-authorizer";
 import { createLambdaContext, randomStr } from "./lambda-helper-tests";
 
 // tslint:disable:newline-per-chained-call
@@ -24,7 +27,7 @@ describe("lambdaAuthorizerBearer", () => {
     });
 
     const inputBearerToken = randomStr();
-    const lambda = lambdaAuthorizerBearer(async ({ bearerToken, event, context }) => authorizerResult(bearerToken!));
+    const lambda = lambdaAuthorizerBearer(async ({ bearerToken }) => authorizerResult(bearerToken!));
 
     const lambdaResult = await lambda(
       {
@@ -98,6 +101,72 @@ describe("lambdaAuthorizerBearer", () => {
       expect(loggedLambdaError!.context).to.not.be.undefined;
       expect(loggedLambdaError!.error.message).to.equal(errorMessage);
     }
+  });
+
+  it("should manage and inject container.", async () => {
+
+    interface ContainerContract {
+      a(): string;
+      b(): string;
+      c(): string;
+    }
+
+    // tslint:disable:no-unnecessary-callback-wrapper
+    const createContainer = createContainerFactory<ContainerContract>({
+      a: () => randomStr(),
+      b: ({ builder }) => builder.transient(() => randomStr()),
+      c: ({ builder }) => builder.scoped(() => randomStr()),
+    });
+
+    const authorizerResult = (values: any): CustomAuthorizerResult => ({
+      policyDocument: {
+        Statement: [],
+        Version: "2012-10-17",
+      },
+      principalId: JSON.stringify(values),
+    });
+
+    const lambda = containerLambdaAuthorizerBearer<ContainerContract>(
+      async ({}, { a, b, c }) => authorizerResult({
+        scoped1: c(),
+        scoped2: c(),
+        singleton: a(),
+        transient1: b(),
+        transient2: b(),
+      }),
+      {
+        containerFactory: () => createContainer(),
+      });
+
+    const lambdaResult1 = await lambda(
+      {
+        authorizationToken: randomStr(),
+        methodArn: randomStr(),
+        type: randomStr(),
+      },
+      createLambdaContext(),
+      (e, r) => {}) as CustomAuthorizerResult;
+
+    const parsedPrincipalId1 = JSON.parse(lambdaResult1.principalId);
+
+    const lambdaResult2 = await lambda(
+      {
+        authorizationToken: randomStr(),
+        methodArn: randomStr(),
+        type: randomStr(),
+      },
+      createLambdaContext(),
+      (e, r) => {}) as CustomAuthorizerResult;
+
+    const parsedPrincipalId2 = JSON.parse(lambdaResult2.principalId);
+
+    expect(parsedPrincipalId1.singleton).to.be.equal(parsedPrincipalId2.singleton);
+    expect(parsedPrincipalId1.scoped1).to.not.equal(parsedPrincipalId2.scoped1);
+    expect(parsedPrincipalId1.transient1).to.not.equal(parsedPrincipalId2.transient1);
+
+    expect(parsedPrincipalId1.scoped1).to.be.equal(parsedPrincipalId1.scoped2);
+    expect(parsedPrincipalId2.scoped1).to.be.equal(parsedPrincipalId2.scoped2);
+    expect(parsedPrincipalId1.transient1).to.not.equal(parsedPrincipalId1.transient2);
   });
 
 });

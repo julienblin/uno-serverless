@@ -3,8 +3,8 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult, CustomAuthorizerResult, Pr
 import { expect } from "chai";
 import * as HttpStatusCodes from "http-status-codes";
 import { describe, it } from "mocha";
-import { configureContainer, Lifetime } from "../src/container";
-import { lambdaProxy, LambdaProxyError, LambdaProxyOptions } from "../src/lambda-proxy";
+import { createContainerFactory } from "../src/container";
+import { containerLambdaProxy, lambdaProxy, LambdaProxyError, LambdaProxyOptions } from "../src/lambda-proxy";
 import { APIGatewayProxyResultProvider } from "../src/results";
 import { createLambdaContext, randomStr } from "./lambda-helper-tests";
 
@@ -416,6 +416,58 @@ describe("lambdaProxy", () => {
       nullCallback) as APIGatewayProxyResult;
 
     expect(executed).to.be.false;
+  });
+
+  it("should manage and inject container.", async () => {
+
+    interface ContainerContract {
+      a(): string;
+      b(): string;
+      c(): string;
+    }
+
+    // tslint:disable:no-unnecessary-callback-wrapper
+    const createContainer = createContainerFactory<ContainerContract>({
+      a: () => randomStr(),
+      b: ({ builder }) => builder.transient(() => randomStr()),
+      c: ({ builder }) => builder.scoped(() => randomStr()),
+    });
+
+    const lambda = containerLambdaProxy<ContainerContract>(
+      async ({}, { a, b, c }) => ({
+        scoped1: c(),
+        scoped2: c(),
+        singleton: a(),
+        transient1: b(),
+        transient2: b(),
+      }),
+      {
+        containerFactory: () => createContainer(),
+      });
+
+    const event = createAPIGatewayProxyEvent();
+
+    const lambdaResult1 = await lambda(
+      event,
+      createLambdaContext(),
+      nullCallback) as APIGatewayProxyResult;
+
+    const parsedBody1 = JSON.parse(lambdaResult1.body);
+
+    const lambdaResult2 = await lambda(
+      event,
+      createLambdaContext(),
+      nullCallback) as APIGatewayProxyResult;
+
+    const parsedBody2 = JSON.parse(lambdaResult2.body);
+
+    expect(parsedBody1.singleton).to.be.equal(parsedBody2.singleton);
+    expect(parsedBody1.scoped1).to.not.equal(parsedBody2.scoped1);
+    expect(parsedBody1.transient1).to.not.equal(parsedBody2.transient1);
+
+    expect(parsedBody1.scoped1).to.be.equal(parsedBody1.scoped2);
+    expect(parsedBody2.scoped1).to.be.equal(parsedBody2.scoped2);
+    expect(parsedBody1.transient1).to.not.equal(parsedBody1.transient2);
   });
 
 });

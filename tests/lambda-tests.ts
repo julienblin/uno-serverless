@@ -2,7 +2,8 @@
 import { CustomAuthorizerResult } from "aws-lambda";
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { lambda, LambdaError } from "../src/lambda";
+import { createContainerFactory } from "../src/container";
+import { containerLambda, lambda, LambdaError } from "../src/lambda";
 import { createLambdaContext, randomStr } from "./lambda-helper-tests";
 
 // tslint:disable:newline-per-chained-call
@@ -83,6 +84,67 @@ describe("lambda", () => {
       expect(loggedLambdaError!.context).to.not.be.undefined;
       expect(loggedLambdaError!.error.message).to.equal(errorMessage);
     }
+  });
+
+  it("should manage and inject container.", async () => {
+
+    interface ContainerContract {
+      a(): string;
+      b(): string;
+      c(): string;
+    }
+
+    // tslint:disable:no-unnecessary-callback-wrapper
+    const createContainer = createContainerFactory<ContainerContract>({
+      a: () => randomStr(),
+      b: ({ builder }) => builder.transient(() => randomStr()),
+      c: ({ builder }) => builder.scoped(() => randomStr()),
+    });
+
+    let collected: any;
+
+    const lambdaHandler = containerLambda<any, ContainerContract>(
+      async ({ event, context }, { a, b, c}) => {
+        collected = {
+          scoped1: c(),
+          scoped2: c(),
+          singleton: a(),
+          transient1: b(),
+          transient2: b(),
+        }; },
+      {
+        containerFactory: () => createContainer(),
+      });
+
+    await lambdaHandler(
+      {
+        authorizationToken: randomStr(),
+        methodArn: randomStr(),
+        type: randomStr(),
+      },
+      createLambdaContext(),
+      (e, r) => {}) as CustomAuthorizerResult;
+
+    const collected1 = collected;
+
+    await lambdaHandler(
+      {
+        authorizationToken: randomStr(),
+        methodArn: randomStr(),
+        type: randomStr(),
+      },
+      createLambdaContext(),
+      (e, r) => {}) as CustomAuthorizerResult;
+
+    const collected2 = collected;
+
+    expect(collected1.singleton).to.be.equal(collected2.singleton);
+    expect(collected1.scoped1).to.not.equal(collected2.scoped1);
+    expect(collected1.transient1).to.not.equal(collected2.transient1);
+
+    expect(collected1.scoped1).to.be.equal(collected1.scoped2);
+    expect(collected2.scoped1).to.be.equal(collected2.scoped2);
+    expect(collected1.transient1).to.not.equal(collected1.transient2);
   });
 
 });

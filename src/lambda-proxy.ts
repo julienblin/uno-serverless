@@ -1,6 +1,7 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import * as lambda from "aws-lambda";
 import { parse as parseQS } from "querystring";
+import { RootContainer } from "./container";
 import { badRequestError, ErrorData, internalServerError, notFoundError, validationError } from "./errors";
 import { BodySerializer, isAPIGatewayProxyResultProvider, ok } from "./results";
 import { defaultConfidentialityReplacer, memoize, safeJSONStringify } from "./utils";
@@ -11,7 +12,7 @@ export interface LambdaProxyFunctionArgs {
   context: lambda.Context;
 
   /** The Lambda Event */
-  event: lambda.APIGatewayEvent;
+  event: lambda.APIGatewayProxyEvent;
 
   /** The body parsed as an object, either JSON or FORM. */
   body<T>(): T | undefined;
@@ -29,7 +30,7 @@ export type LambdaProxyFunction =
 export interface LambdaProxyError {
   context: lambda.Context;
   error: any;
-  event: lambda.APIGatewayEvent;
+  event: lambda.APIGatewayProxyEvent;
   result?: lambda.APIGatewayProxyResult;
 }
 
@@ -301,3 +302,36 @@ export const lambdaProxy =
 
       return proxyResult;
     };
+
+export type ContainerLambdaProxyFunction<TContainerContract> =
+    (args: LambdaProxyFunctionArgs, container: TContainerContract) => Promise<object | undefined>;
+
+export interface ContainerFactoryLambdaProxyOptions<TContainerContract> {
+  containerFactory(
+    args: { context: lambda.Context; event: lambda.APIGatewayProxyEvent }): RootContainer<TContainerContract>;
+}
+
+/**
+ * Creates a wrapper for a Lambda function bound to API Gateway using PROXY.
+ * Manages a scoped container execution.
+ * @param func - The function to wrap.
+ * @param options - various options.
+ */
+export const containerLambdaProxy = <TContainerContract>(
+  func: ContainerLambdaProxyFunction<TContainerContract>,
+  options: LambdaProxyOptions & ContainerFactoryLambdaProxyOptions<TContainerContract>)
+  : lambda.APIGatewayProxyHandler => {
+    let rootContainer: RootContainer<TContainerContract> | undefined;
+
+    return lambdaProxy(
+      async (args) => {
+        if (!rootContainer) {
+          rootContainer = options.containerFactory({ context: args.context, event: args.event });
+        }
+
+        const scopedContainer = rootContainer.scope();
+
+        return func(args, scopedContainer);
+      },
+      options);
+  };
