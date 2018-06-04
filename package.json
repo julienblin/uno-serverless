@@ -14,9 +14,8 @@
     "prebuild": "npm run lint",
     "build": "webpack --config webpack.config.js",
     "prepare": "npm run build",
-    "test": "mocha -r ts-node/register tests/**/*-tests.ts",
-    "test:watch": "npm run test -- --watch-extensions ts --watch",
-    "cover": "nyc mocha -r ts-node/register -r source-map-support/register tests/**/*-tests.ts",
+    "test": "mocha",
+    "cover": "nyc mocha",
     "coveralls": "nyc report --reporter=text-lcov | coveralls"
   },
   "repository": {

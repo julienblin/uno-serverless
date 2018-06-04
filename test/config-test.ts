@@ -92,7 +92,7 @@ describe("JSONFileConfigService", () => {
 
   it("should return mandatory values", async () => {
     const config = new JSONFileConfigService({
-      path: "./tests/config-tests.json",
+      path: "./test/config-test.json",
     }) as ConfigService;
 
     const result = await config.get("foo");
@@ -101,7 +101,7 @@ describe("JSONFileConfigService", () => {
 
   it("should return optional values", async () => {
     const config = new JSONFileConfigService({
-      path: "./tests/config-tests.json",
+      path: "./test/config-test.json",
     }) as ConfigService;
 
     const result = await config.get("missing", false);
@@ -110,7 +110,7 @@ describe("JSONFileConfigService", () => {
 
   it("should throw on missing required values", async () => {
     const config = new JSONFileConfigService({
-      path: "./tests/config-tests.json",
+      path: "./test/config-test.json",
     }) as ConfigService;
 
     try {

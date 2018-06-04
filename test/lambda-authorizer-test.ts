@@ -6,7 +6,7 @@ import { createContainerFactory } from "../src/container";
 import {
   containerLambdaAuthorizerBearer, lambdaAuthorizerBearer,
   LambdaAuthorizerBearerError } from "../src/lambda-authorizer";
-import { createLambdaContext, randomStr } from "./lambda-helper-tests";
+import { createLambdaContext, randomStr } from "./lambda-helper-test";
 
 // tslint:disable:newline-per-chained-call
 // tslint:disable:no-unused-expression

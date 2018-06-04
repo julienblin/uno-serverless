@@ -6,7 +6,7 @@ import { describe, it } from "mocha";
 import { createContainerFactory } from "../src/container";
 import { containerLambdaProxy, lambdaProxy, LambdaProxyError, LambdaProxyOptions } from "../src/lambda-proxy";
 import { APIGatewayProxyResultProvider } from "../src/results";
-import { createLambdaContext, randomStr } from "./lambda-helper-tests";
+import { createLambdaContext, randomStr } from "./lambda-helper-test";
 
 // tslint:disable:newline-per-chained-call
 // tslint:disable:no-unused-expression
