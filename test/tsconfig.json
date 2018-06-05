@@ -5,14 +5,10 @@
     "strict": true,
     "moduleResolution": "node",
     "sourceMap": true,
-    "declaration": true,
     "noImplicitAny": false,
-    "baseUrl": "./",
+    "baseUrl": "../",
     "paths": {
       "@src/*": ["./src/*"]
     }
-  },
-  "exclude": [
-    "./test"
-  ]
+  }
 }
