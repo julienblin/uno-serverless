@@ -2,12 +2,7 @@ import { expect } from "chai";
 import { describe, it } from "mocha";
 import {
   convertHrtimeToMs, createConfidentialityReplacer,
-  DEFAULT_CONFIDENTIALITY_REPLACE_BY, memoize, safeJSONStringify, randomStr } from "../src/utils";
-
-// tslint:disable:newline-per-chained-call
-// tslint:disable:no-unused-expression
-// tslint:disable:no-magic-numbers
-// tslint:disable:no-non-null-assertion
+  DEFAULT_CONFIDENTIALITY_REPLACE_BY, memoize, randomStr, safeJSONStringify } from "../../src/utils";
 
 describe("convertHrtimeToMs", () => {
 

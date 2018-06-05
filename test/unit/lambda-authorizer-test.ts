@@ -2,18 +2,12 @@
 import { CustomAuthorizerResult } from "aws-lambda";
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { createContainerFactory } from "../src/container";
+import { createContainerFactory } from "../../src/container";
 import {
   containerLambdaAuthorizerBearer, lambdaAuthorizerBearer,
-  LambdaAuthorizerBearerError } from "../src/lambda-authorizer";
-import { randomStr } from "../src/utils";
+  LambdaAuthorizerBearerError } from "../../src/lambda-authorizer";
+import { randomStr } from "../../src/utils";
 import { createLambdaContext } from "./lambda-helper-test";
-
-// tslint:disable:newline-per-chained-call
-// tslint:disable:no-unused-expression
-// tslint:disable:no-magic-numbers
-// tslint:disable:no-non-null-assertion
-// tslint:disable:no-empty
 
 describe("lambdaAuthorizerBearer", () => {
 

@@ -1,13 +1,6 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { createContainerFactory, Lifetime } from "../src/container";
-
-// tslint:disable:newline-per-chained-call
-// tslint:disable:no-unused-expression
-// tslint:disable:no-magic-numbers
-// tslint:disable:no-non-null-assertion
-// tslint:disable:no-empty-interface
-// tslint:disable:max-classes-per-file
+import { createContainerFactory } from "../../src/container";
 
 interface IA {}
 

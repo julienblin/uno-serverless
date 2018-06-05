@@ -1,12 +1,6 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { dependencyErrorProxy, internalServerError } from "../src/errors";
-
-// tslint:disable:newline-per-chained-call
-// tslint:disable:no-unused-expression
-// tslint:disable:no-magic-numbers
-// tslint:disable:no-non-null-assertion
-// tslint:disable:max-classes-per-file
+import { dependencyErrorProxy, internalServerError } from "../../src/errors";
 
 describe("dependencyErrorProxy", () => {
 
