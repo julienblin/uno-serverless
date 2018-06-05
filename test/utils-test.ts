@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { describe, it } from "mocha";
 import {
   convertHrtimeToMs, createConfidentialityReplacer,
-  DEFAULT_CONFIDENTIALITY_REPLACE_BY, memoize, safeJSONStringify } from "../src/utils";
+  DEFAULT_CONFIDENTIALITY_REPLACE_BY, memoize, safeJSONStringify, randomStr } from "../src/utils";
 
 // tslint:disable:newline-per-chained-call
 // tslint:disable:no-unused-expression
@@ -90,6 +90,19 @@ describe("memoize", () => {
     result = memoizedFunc();
     expect(result).to.equal("foo");
     expect(invocationCount).to.equal(1);
+  });
+
+});
+
+describe("randomStr", () => {
+
+  it("should generate random strings", () => {
+    const value1 = randomStr();
+    const value2 = randomStr();
+    expect(value1).to.not.equal(value2);
+
+    expect(randomStr(1)).to.have.lengthOf(1);
+    expect(randomStr(16)).to.have.lengthOf(16);
   });
 
 });

@@ -1,10 +1,10 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import { Context } from "aws-lambda";
+import { randomStr } from "../src/utils";
 
 // tslint:disable:newline-per-chained-call
 // tslint:disable:no-magic-numbers
 // tslint:disable:no-empty
-export const randomStr = () => Math.random().toString(36).substring(2);
 
 export const createLambdaContext = (): Context => ({
   awsRequestId: randomStr(),

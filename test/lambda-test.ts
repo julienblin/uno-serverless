@@ -4,7 +4,8 @@ import { expect } from "chai";
 import { describe, it } from "mocha";
 import { createContainerFactory } from "../src/container";
 import { containerLambda, lambda, LambdaError } from "../src/lambda";
-import { createLambdaContext, randomStr } from "./lambda-helper-test";
+import { randomStr } from "../src/utils";
+import { createLambdaContext } from "./lambda-helper-test";
 
 // tslint:disable:newline-per-chained-call
 // tslint:disable:no-unused-expression
