@@ -1,4 +1,3 @@
-// tslint:disable-next-line:no-implicit-dependencies
 import { CustomAuthorizerResult } from "aws-lambda";
 import { expect } from "chai";
 import { describe, it } from "mocha";
@@ -106,7 +105,6 @@ describe("lambdaAuthorizerBearer", () => {
       c(): string;
     }
 
-    // tslint:disable:no-unnecessary-callback-wrapper
     const createContainer = createContainerFactory<ContainerContract>({
       a: () => randomStr(),
       b: ({ builder }) => builder.transient(randomStr()),

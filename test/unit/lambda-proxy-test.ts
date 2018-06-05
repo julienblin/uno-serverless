@@ -1,4 +1,3 @@
-// tslint:disable-next-line:no-implicit-dependencies
 import { APIGatewayProxyEvent, APIGatewayProxyResult, ProxyCallback } from "aws-lambda";
 import { expect } from "chai";
 import * as HttpStatusCodes from "http-status-codes";
@@ -420,7 +419,6 @@ describe("lambdaProxy", () => {
       c(): string;
     }
 
-    // tslint:disable:no-unnecessary-callback-wrapper
     const createContainer = createContainerFactory<ContainerContract>({
       a: () => randomStr(),
       b: ({ builder }) => builder.transient(randomStr()),

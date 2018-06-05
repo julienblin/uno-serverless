@@ -1,6 +1,4 @@
-// tslint:disable:no-implicit-dependencies
 import { AWSError, SSM } from "aws-sdk";
-// tslint:disable:no-submodule-imports
 import { GetParametersByPathResult } from "aws-sdk/clients/ssm";
 import { PromiseResult } from "aws-sdk/lib/request";
 import { ConfigService } from "./config";
@@ -50,7 +48,6 @@ export class SSMParameterStoreConfigService implements ConfigService, ICheckHeal
     }
 
     if (!this.options.numberOfIterations) {
-      // tslint:disable-next-line:no-magic-numbers
       this.options.numberOfIterations = 10;
     }
   }
@@ -67,7 +64,6 @@ export class SSMParameterStoreConfigService implements ConfigService, ICheckHeal
   public async get(key: string, required = true): Promise<string | undefined> {
     const now = new Date().getTime();
 
-    // tslint:disable-next-line:no-magic-numbers no-non-null-assertion
     if (this.isCachePerished(now)) {
       this.cache = {
         parameters: this.getParameters(),
@@ -75,7 +71,6 @@ export class SSMParameterStoreConfigService implements ConfigService, ICheckHeal
       };
     }
 
-    // tslint:disable-next-line:no-non-null-assertion
     const resolvedParameters = await this.cache!.parameters;
 
     if (resolvedParameters[key]) {
@@ -115,7 +110,6 @@ export class SSMParameterStoreConfigService implements ConfigService, ICheckHeal
       ++iteration;
 
       // Safeguard for unbounded results
-      // tslint:disable-next-line:no-non-null-assertion
       if (iteration > this.options.numberOfIterations!) {
         throw configurationError(
           { provider: this.name },
@@ -130,7 +124,6 @@ export class SSMParameterStoreConfigService implements ConfigService, ICheckHeal
 
   /** Indicates whether to refresh the cache or not. */
   private isCachePerished(now: number) {
-    // tslint:disable-next-line:strict-type-predicates
     const cachedDisabled = ((this.options.ttl === undefined) || (this.options.ttl === null));
 
     if (!this.cache) {
@@ -141,7 +134,6 @@ export class SSMParameterStoreConfigService implements ConfigService, ICheckHeal
       return false;
     }
 
-    // tslint:disable-next-line:no-non-null-assertion
     return (this.cache.timestamp + this.options.ttl!) <= now;
   }
 }

@@ -1,6 +1,4 @@
-// tslint:disable-next-line:no-implicit-dependencies
 import { AWSError, Response, SSM } from "aws-sdk";
-// tslint:disable-next-line:no-submodule-imports no-implicit-dependencies
 import { PromiseResult } from "aws-sdk/lib/request";
 import { expect } from "chai";
 import { describe, it } from "mocha";

@@ -1,4 +1,3 @@
-// tslint:disable-next-line:no-implicit-dependencies
 import { APIGatewayProxyResult } from "aws-lambda";
 import * as HttpStatusCodes from "http-status-codes";
 
@@ -75,7 +74,6 @@ export const redirect = (location: string, permanent = false, headers?: Headers)
       {...headers, Location: location });
 
 /** Represents a binary result with a 200 status code.. */
-// tslint:disable-next-line:max-classes-per-file
 export class BinaryResult implements APIGatewayProxyResultProvider {
   public constructor(public data: Buffer, public contentType: string, public headers?: Headers) {
   }

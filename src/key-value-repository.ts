@@ -16,7 +16,6 @@ export class InMemoryKeyValueRepository implements KeyValueRepository {
   /** The storage. */
   private readonly storage = new Map<string, string>();
 
-  // tslint:disable:no-unbound-method
   public constructor(
     private readonly serialize: <T>(value: T) => string = JSON.stringify,
     private readonly deserialize: <T>(text: string) => T = JSON.parse) {}

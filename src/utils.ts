@@ -2,8 +2,6 @@
 import { randomBytes } from "crypto";
 import * as stringify from "json-stringify-safe";
 
-// tslint:disable:no-magic-numbers
-
 /**
  * Converts the result of process.hrtime into milliseconds.
  */
