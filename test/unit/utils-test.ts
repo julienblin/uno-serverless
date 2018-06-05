@@ -1,8 +1,8 @@
-import { expect } from "chai";
-import { describe, it } from "mocha";
 import {
   convertHrtimeToMs, createConfidentialityReplacer,
-  DEFAULT_CONFIDENTIALITY_REPLACE_BY, memoize, randomStr, safeJSONStringify } from "../../src/utils";
+  DEFAULT_CONFIDENTIALITY_REPLACE_BY, memoize, randomStr, safeJSONStringify } from "@src/utils";
+import { expect } from "chai";
+import { describe, it } from "mocha";
 
 describe("convertHrtimeToMs", () => {
 

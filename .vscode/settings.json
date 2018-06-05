@@ -6,5 +6,6 @@
         "memoized",
         "opiniated",
         "prebuild"
-    ]
+    ],
+    "typescript.tsdk": "node_modules\\typescript\\lib"
 }

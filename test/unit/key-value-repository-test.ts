@@ -1,6 +1,6 @@
+import { InMemoryKeyValueRepository } from "@src/key-value-repository";
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { InMemoryKeyValueRepository } from "../../src/key-value-repository";
 
 describe("InMemoryKeyValueRepository", () => {
 

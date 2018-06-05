@@ -1,10 +1,10 @@
+import { ConfigService } from "@src/config";
+import { SSMParameterStoreClient, SSMParameterStoreConfigService } from "@src/config-aws";
+import { HealthCheckStatus } from "@src/health-checks";
 import { AWSError, Response, SSM } from "aws-sdk";
 import { PromiseResult } from "aws-sdk/lib/request";
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { ConfigService } from "../../src/config";
-import { SSMParameterStoreClient, SSMParameterStoreConfigService } from "../../src/config-aws";
-import { HealthCheckStatus } from "../../src/health-checks";
 
 const path = "/opiniated-lambda/tests";
 

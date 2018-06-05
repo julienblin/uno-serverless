@@ -1,8 +1,8 @@
+import { defaultBodySerializer } from "@src/lambda-proxy";
+import * as results from "@src/results";
 import { expect } from "chai";
 import * as HttpStatusCodes from "http-status-codes";
 import { describe, it } from "mocha";
-import { defaultBodySerializer } from "../../src/lambda-proxy";
-import * as results from "../../src/results";
 
 describe("results", () => {
 

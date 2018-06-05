@@ -1,11 +1,11 @@
+import { createContainerFactory } from "@src/container";
+import { containerLambdaProxy, lambdaProxy, LambdaProxyError } from "@src/lambda-proxy";
+import { APIGatewayProxyResultProvider } from "@src/results";
+import { randomStr } from "@src/utils";
 import { APIGatewayProxyEvent, APIGatewayProxyResult, ProxyCallback } from "aws-lambda";
 import { expect } from "chai";
 import * as HttpStatusCodes from "http-status-codes";
 import { describe, it } from "mocha";
-import { createContainerFactory } from "../../src/container";
-import { containerLambdaProxy, lambdaProxy, LambdaProxyError } from "../../src/lambda-proxy";
-import { APIGatewayProxyResultProvider } from "../../src/results";
-import { randomStr } from "../../src/utils";
 import { createLambdaContext } from "./lambda-helper-test";
 
 describe("lambdaProxy", () => {

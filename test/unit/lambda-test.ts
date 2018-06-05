@@ -1,8 +1,8 @@
+import { createContainerFactory } from "@src/container";
+import { containerLambda, lambda, LambdaError } from "@src/lambda";
+import { randomStr } from "@src/utils";
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { createContainerFactory } from "../../src/container";
-import { containerLambda, lambda, LambdaError } from "../../src/lambda";
-import { randomStr } from "../../src/utils";
 import { createLambdaContext } from "./lambda-helper-test";
 
 describe("lambda", () => {

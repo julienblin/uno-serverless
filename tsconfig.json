@@ -6,7 +6,12 @@
     "moduleResolution": "node",
     "sourceMap": true,
     "declaration": true,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "rootDir": "./",
+    "baseUrl": ".",
+    "paths": {
+      "@src/*": ["./src/*"]
+    }
   },
   "exclude": [
     "./test"

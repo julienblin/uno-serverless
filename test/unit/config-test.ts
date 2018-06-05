@@ -1,6 +1,6 @@
+import { ConfigService, JSONFileConfigService, ProcessEnvConfigService, StaticConfigService } from "@src/config";
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { ConfigService, JSONFileConfigService, ProcessEnvConfigService, StaticConfigService } from "../../src/config";
 
 describe("StaticConfigService", () => {
 

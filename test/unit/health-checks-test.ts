@@ -1,9 +1,9 @@
+import {
+  checkHealth, HealthChecker, HealthCheckResult,
+  HealthCheckStatus, ICheckHealth } from "@src/health-checks";
 import { expect } from "chai";
 import * as HttpStatusCodes from "http-status-codes";
 import { describe, it } from "mocha";
-import {
-  checkHealth, HealthChecker, HealthCheckResult,
-  HealthCheckStatus, ICheckHealth } from "../../src/health-checks";
 
 describe("HealthChecker", () => {
 

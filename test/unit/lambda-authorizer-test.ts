@@ -1,11 +1,11 @@
+import { createContainerFactory } from "@src/container";
+import {
+  containerLambdaAuthorizerBearer, lambdaAuthorizerBearer,
+  LambdaAuthorizerBearerError } from "@src/lambda-authorizer";
+import { randomStr } from "@src/utils";
 import { CustomAuthorizerResult } from "aws-lambda";
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { createContainerFactory } from "../../src/container";
-import {
-  containerLambdaAuthorizerBearer, lambdaAuthorizerBearer,
-  LambdaAuthorizerBearerError } from "../../src/lambda-authorizer";
-import { randomStr } from "../../src/utils";
 import { createLambdaContext } from "./lambda-helper-test";
 
 describe("lambdaAuthorizerBearer", () => {

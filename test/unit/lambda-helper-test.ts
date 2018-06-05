@@ -1,5 +1,5 @@
+import { randomStr } from "@src/utils";
 import { Context } from "aws-lambda";
-import { randomStr } from "../../src/utils";
 
 export const createLambdaContext = (): Context => ({
   awsRequestId: randomStr(),
