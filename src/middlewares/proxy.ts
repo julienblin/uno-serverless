@@ -1,4 +1,5 @@
 import { LambdaArg, LambdaExecution, Middleware } from "@src/builder";
+import { internalServerError, isStatusCodeProvider } from "@src/errors";
 import * as awsLambda from "aws-lambda";
 
 /**
@@ -46,3 +47,22 @@ export const responseHeaders = <TEvent, TServices>(headers: Record<string, Heade
  */
 export const cors = (origin?: string | Promise<string>) =>
   responseHeaders({ "Access-Control-Allow-Origin": origin ? async () => origin : "*" });
+
+export const httpErrors = <TEvent, TServices>(): Middleware<TEvent, TServices> => {
+  return async (arg: LambdaArg<TEvent, TServices>, next: LambdaExecution<TEvent, TServices>): Promise<any> => {
+
+    try {
+      return await next(arg);
+    } catch (error) {
+      const finalError = isStatusCodeProvider(error)
+        ? error
+        : internalServerError(error.message);
+
+      return {
+        body: finalError,
+        statusCode: finalError.getStatusCode(),
+      };
+    }
+
+  };
+};

@@ -1,6 +1,7 @@
-import { cors, responseHeaders } from "@middlewares/proxy";
+import { cors, httpErrors, responseHeaders } from "@middlewares/proxy";
 import { lambda } from "@src/builder";
 import { createContainerFactory } from "@src/container";
+import { notFoundError } from "@src/errors";
 import { randomStr } from "@src/utils";
 import { createLambdaContext } from "@test/lambda-helper-test";
 import { APIGatewayProxyResult } from "aws-lambda";
@@ -89,6 +90,60 @@ describe("cors middleware", () => {
       (e, r) => {}) as APIGatewayProxyResult;
 
     expect(result.headers!["Access-Control-Allow-Origin"]).to.equal("example.org");
+  });
+
+});
+
+describe("httpErrors middleware", () => {
+
+  it("should do nothing when no errors", async () => {
+    const handlerResult = {};
+    const handler = lambda()
+      .use(httpErrors())
+      .handler<any, APIGatewayProxyResult, any>(async () => handlerResult);
+
+    const result = await handler(
+      {},
+      createLambdaContext(),
+      (e, r) => {}) as APIGatewayProxyResult;
+
+    expect(result).to.equal(handlerResult);
+  });
+
+  it("should transform known errors", async () => {
+    const target = "https://example.org";
+    const handler = lambda()
+      .use(httpErrors())
+      .handler<any, APIGatewayProxyResult, any>(async () => {
+        throw notFoundError(target);
+      });
+
+    const result = await handler(
+      {},
+      createLambdaContext(),
+      (e, r) => {}) as any;
+
+    expect(result.statusCode).to.equal(HttpStatusCodes.NOT_FOUND);
+    expect(result.body.code).to.equal("notFound");
+    expect(result.body.target).to.equal(target);
+  });
+
+  it("should encapsulate unknown errors", async () => {
+    const message = randomStr();
+    const handler = lambda()
+      .use(httpErrors())
+      .handler<any, APIGatewayProxyResult, any>(async () => {
+        throw new Error(message);
+      });
+
+    const result = await handler(
+      {},
+      createLambdaContext(),
+      (e, r) => {}) as any;
+
+    expect(result.statusCode).to.equal(HttpStatusCodes.INTERNAL_SERVER_ERROR);
+    expect(result.body.code).to.equal("internalServerError");
+    expect(result.body.message).to.equal(message);
   });
 
 });
