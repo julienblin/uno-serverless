@@ -1,4 +1,5 @@
 import Axios, * as axios from "axios";
+import MockAdapter from "axios-mock-adapter";
 
 export type PossiblePromise<T> = T | Promise<T>;
 
@@ -177,3 +178,16 @@ export const httpClientFactory = (config: HttpClientConfig = {}): HttpClient =>
       validateStatus: config.validateStatus ? config.validateStatus : Axios.defaults.validateStatus,
       withCredentials: config.withCredentials ? await config.withCredentials : Axios.defaults.withCredentials,
     }));
+
+export const mockHttpClientFactory = (config: HttpClientConfig = {}): { client: HttpClient, mock: MockAdapter } => {
+  const mock = new MockAdapter(undefined!);
+  const client = httpClientFactory({
+    ...config,
+    adapter: mock.adapter(),
+  });
+
+  return {
+    client,
+    mock,
+  };
+};
