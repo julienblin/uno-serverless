@@ -1,4 +1,4 @@
-import { HttpClientConfig, HttpClientError, httpClientFactory, mockHttpClientFactory } from "@src/http-client";
+import { HttpClientConfig, HttpClientError, httpClientFactory, mockHttpClientFactory } from "@services/http-client";
 import { randomStr } from "@src/utils";
 import { expect } from "chai";
 import * as HttpStatusCodes from "http-status-codes";

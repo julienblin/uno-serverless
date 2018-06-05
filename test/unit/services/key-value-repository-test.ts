@@ -1,4 +1,4 @@
-import { InMemoryKeyValueRepository } from "@src/key-value-repository";
+import { InMemoryKeyValueRepository } from "@services/key-value-repository";
 import { expect } from "chai";
 import { describe, it } from "mocha";
 

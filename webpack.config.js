@@ -9,6 +9,7 @@ module.exports = {
   entry: {
     './index': './index',
     './middlewares/index': './middlewares/index',
+    './services/index': './services/index',
   },
   devtool: 'source-map',
   mode: 'production',
