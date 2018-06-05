@@ -9,7 +9,9 @@
     "noImplicitAny": false,
     "baseUrl": "./",
     "paths": {
-      "@src/*": ["./src/*"]
+      "@middlewares/*": ["./src/middlewares/*"],
+      "@src/*": ["./src/*"],
+      "@test/*": ["./test/unit/*"]
     }
   },
   "exclude": [
