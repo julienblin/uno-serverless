@@ -3,7 +3,7 @@ import * as awsLambda from "aws-lambda";
 export interface LambdaArg<TEvent, TServices> {
   event: TEvent;
   context: awsLambda.Context;
-  services?: TServices;
+  services: TServices;
 }
 
 export type LambdaExecution<TEvent, TServices> = (arg: LambdaArg<TEvent, TServices>) => Promise<any>;
@@ -44,7 +44,7 @@ export class LambdaBuildImpl implements LambdaBuilder {
       };
     });
 
-    return (event: TEvent, context: awsLambda.Context) => outerCircle({ event, context });
+    return (event: TEvent, context: awsLambda.Context) => outerCircle({ event, context, services: {} as TServices });
   }
 }
 
