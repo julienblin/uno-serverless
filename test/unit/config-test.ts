@@ -1,11 +1,6 @@
+import { ConfigService, JSONFileConfigService, ProcessEnvConfigService, StaticConfigService } from "@src/config";
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { ConfigService, JSONFileConfigService, ProcessEnvConfigService, StaticConfigService } from "../src/config";
-
-// tslint:disable:newline-per-chained-call
-// tslint:disable:no-unused-expression
-// tslint:disable:no-magic-numbers
-// tslint:disable:no-non-null-assertion
 
 describe("StaticConfigService", () => {
 
@@ -90,9 +85,11 @@ describe("ProcessEnvConfigService", () => {
 
 describe("JSONFileConfigService", () => {
 
+  const testConfigFile = "./test/unit/config-test.json";
+
   it("should return mandatory values", async () => {
     const config = new JSONFileConfigService({
-      path: "./tests/config-tests.json",
+      path: testConfigFile,
     }) as ConfigService;
 
     const result = await config.get("foo");
@@ -101,7 +98,7 @@ describe("JSONFileConfigService", () => {
 
   it("should return optional values", async () => {
     const config = new JSONFileConfigService({
-      path: "./tests/config-tests.json",
+      path: testConfigFile,
     }) as ConfigService;
 
     const result = await config.get("missing", false);
@@ -110,7 +107,7 @@ describe("JSONFileConfigService", () => {
 
   it("should throw on missing required values", async () => {
     const config = new JSONFileConfigService({
-      path: "./tests/config-tests.json",
+      path: testConfigFile,
     }) as ConfigService;
 
     try {

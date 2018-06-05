@@ -1,20 +1,10 @@
-// tslint:disable-next-line:no-implicit-dependencies
+import { ConfigService } from "@src/config";
+import { SSMParameterStoreClient, SSMParameterStoreConfigService } from "@src/config-aws";
+import { HealthCheckStatus } from "@src/health-checks";
 import { AWSError, Response, SSM } from "aws-sdk";
-// tslint:disable-next-line:no-submodule-imports no-implicit-dependencies
 import { PromiseResult } from "aws-sdk/lib/request";
 import { expect } from "chai";
-import * as HttpStatusCodes from "http-status-codes";
 import { describe, it } from "mocha";
-import { ConfigService } from "../src/config";
-import { SSMParameterStoreClient, SSMParameterStoreConfigService } from "../src/config-aws";
-import { HealthCheckStatus } from "../src/health-checks";
-
-// tslint:disable:newline-per-chained-call
-// tslint:disable:no-unused-expression
-// tslint:disable:no-magic-numbers
-// tslint:disable:no-non-null-assertion
-// tslint:disable:no-null-keyword
-// tslint:disable:no-object-literal-type-assertion
 
 const path = "/opiniated-lambda/tests";
 
@@ -109,10 +99,10 @@ describe("SSMParameterStoreClient", () => {
       ssm: stub,
     }) as ConfigService;
 
-    let result = await config.get("foo");
+    await config.get("foo");
 
     // Testing cache
-    result = await config.get("foo");
+    await config.get("foo");
     expect(stub.currentIteration).to.equal(0);
   });
 

@@ -1,4 +1,3 @@
-// tslint:disable-next-line:no-implicit-dependencies
 import { APIGatewayProxyResult } from "aws-lambda";
 import * as HttpStatusCodes from "http-status-codes";
 import { APIGatewayProxyResultProvider, BodySerializer } from "./results";
@@ -73,7 +72,6 @@ export class HealthCheckResult implements APIGatewayProxyResultProvider {
     }
 
     return {
-      // tslint:disable-next-line:no-magic-numbers
       body: safeJSONStringify(this, this.confidentialityReplacer, 2),
       statusCode,
     };
@@ -141,7 +139,6 @@ export interface IHealthServiceOptions {
 }
 
 /** Performs and aggregates checks for a set of ICheckHealth. */
-// tslint:disable-next-line:max-classes-per-file
 export class HealthChecker implements ICheckHealth {
 
   public constructor(
@@ -168,7 +165,6 @@ export class HealthChecker implements ICheckHealth {
           elapsed: convertHrtimeToMs(process.hrtime(start)),
           name: this.options.name,
         },
-        // tslint:disable-next-line:no-non-null-assertion
         (key, value) => this.options.confidentialityReplacer!(key, value));
     } catch (error) {
       return new HealthCheckResult(
@@ -178,7 +174,6 @@ export class HealthChecker implements ICheckHealth {
           name: this.options.name,
           status: HealthCheckStatus.Error,
         },
-        // tslint:disable-next-line:no-non-null-assertion
         (key, value) => this.options.confidentialityReplacer!(key, value));
     }
   }

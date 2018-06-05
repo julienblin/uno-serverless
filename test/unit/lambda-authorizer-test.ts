@@ -1,18 +1,12 @@
-// tslint:disable-next-line:no-implicit-dependencies
+import { createContainerFactory } from "@src/container";
+import {
+  containerLambdaAuthorizerBearer, lambdaAuthorizerBearer,
+  LambdaAuthorizerBearerError } from "@src/lambda-authorizer";
+import { randomStr } from "@src/utils";
 import { CustomAuthorizerResult } from "aws-lambda";
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { createContainerFactory } from "../src/container";
-import {
-  containerLambdaAuthorizerBearer, lambdaAuthorizerBearer,
-  LambdaAuthorizerBearerError } from "../src/lambda-authorizer";
-import { createLambdaContext, randomStr } from "./lambda-helper-tests";
-
-// tslint:disable:newline-per-chained-call
-// tslint:disable:no-unused-expression
-// tslint:disable:no-magic-numbers
-// tslint:disable:no-non-null-assertion
-// tslint:disable:no-empty
+import { createLambdaContext } from "./lambda-helper-test";
 
 describe("lambdaAuthorizerBearer", () => {
 
@@ -111,7 +105,6 @@ describe("lambdaAuthorizerBearer", () => {
       c(): string;
     }
 
-    // tslint:disable:no-unnecessary-callback-wrapper
     const createContainer = createContainerFactory<ContainerContract>({
       a: () => randomStr(),
       b: ({ builder }) => builder.transient(randomStr()),

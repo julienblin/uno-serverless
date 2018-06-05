@@ -1,13 +1,8 @@
+import { defaultBodySerializer } from "@src/lambda-proxy";
+import * as results from "@src/results";
 import { expect } from "chai";
 import * as HttpStatusCodes from "http-status-codes";
 import { describe, it } from "mocha";
-import { defaultBodySerializer } from "../src/lambda-proxy";
-import * as results from "../src/results";
-
-// tslint:disable:newline-per-chained-call
-// tslint:disable:no-unused-expression
-// tslint:disable:no-magic-numbers
-// tslint:disable:no-non-null-assertion
 
 describe("results", () => {
 
@@ -55,7 +50,7 @@ describe("results", () => {
   });
 
   it("should return base64 binary", async () => {
-    const buffer = new Buffer("hello");
+    const buffer = Buffer.from("hello");
     const result = results.binary(buffer).getAPIGatewayProxyResult(defaultBodySerializer);
     expect(result.statusCode).to.equal(HttpStatusCodes.OK);
     expect(result.headers!["Content-Type"]).to.equal("application/octet-stream");

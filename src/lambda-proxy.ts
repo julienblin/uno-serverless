@@ -1,4 +1,3 @@
-// tslint:disable-next-line:no-implicit-dependencies
 import * as lambda from "aws-lambda";
 import { parse as parseQS } from "querystring";
 import { RootContainer } from "./container";
@@ -248,7 +247,6 @@ export const lambdaProxy =
 
         const memoizedNormalizeHeaders = memoize(() => normalizeHeaders(event)) as () => Record<string, string>;
         const memoizedParseBody =
-          // tslint:disable-next-line:no-non-null-assertion
           memoize(() => options.bodyParser!(event, memoizedNormalizeHeaders)) as <T>() => T | undefined;
         const memoizedParameters = memoize(() => decodeParameters(event)) as <T>() => T;
 

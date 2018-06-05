@@ -2,8 +2,6 @@ import { readFile } from "fs";
 import { configurationError } from "./errors";
 import { checkHealth, HealthCheckResult, ICheckHealth } from "./health-checks";
 
-// tslint:disable:max-classes-per-file
-
 /** Provides configuration values as string. */
 export interface ConfigService {
 

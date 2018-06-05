@@ -1,26 +1,20 @@
+import {
+  checkHealth, HealthChecker, HealthCheckResult,
+  HealthCheckStatus, ICheckHealth } from "@src/health-checks";
 import { expect } from "chai";
 import * as HttpStatusCodes from "http-status-codes";
 import { describe, it } from "mocha";
-import { checkHealth, HealthChecker, HealthCheckResult, HealthCheckStatus, ICheckHealth } from "../src/health-checks";
-
-// tslint:disable:newline-per-chained-call
-// tslint:disable:no-unused-expression
-// tslint:disable:no-magic-numbers
-// tslint:disable:no-non-null-assertion
 
 describe("HealthChecker", () => {
 
   const HEALTH_CHECKER_NAME = "TestHeathChecker";
 
-  /** Mock health check. */
   class MockCheckHealth implements ICheckHealth {
 
-    /** Has the health check ran? */
     public ran = false;
 
     public constructor(public readonly mockResult: HealthCheckResult) {}
 
-    /** Check the health */
     public async checkHealth(): Promise<HealthCheckResult> {
       this.ran = true;
 
@@ -120,7 +114,7 @@ describe("HealthChecker", () => {
       ];
 
       const checker = new HealthChecker({ name: HEALTH_CHECKER_NAME, includeTargets: true }, healthChecks);
-      const result = (await checker.checkHealth()).getAPIGatewayProxyResult(JSON.stringify);
+      const result = (await checker.checkHealth()).getAPIGatewayProxyResult((response) => JSON.stringify(response));
 
       expect(result.statusCode).to.equal(statusMapping[status]);
     });
@@ -136,7 +130,7 @@ describe("checkHealth", () => {
     const result = await checkHealth(
       healthCheckName,
       healthCheckTarget,
-      async () => { new Promise((resolve) => setTimeout(resolve, 5)); });
+      async () => new Promise((resolve) => setTimeout(resolve, 5)));
 
     expect(result.name).to.equal(healthCheckName);
     expect(result.target).to.equal(healthCheckTarget);

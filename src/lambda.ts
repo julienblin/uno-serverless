@@ -1,4 +1,3 @@
-// tslint:disable-next-line:no-implicit-dependencies
 import * as awsLambda from "aws-lambda";
 import { RootContainer } from "./container";
 import { validationError } from "./errors";

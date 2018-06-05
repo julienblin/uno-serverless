@@ -1,19 +1,12 @@
-// tslint:disable-next-line:no-implicit-dependencies
-import { APIGatewayProxyEvent, APIGatewayProxyResult, CustomAuthorizerResult, ProxyCallback } from "aws-lambda";
+import { createContainerFactory } from "@src/container";
+import { containerLambdaProxy, lambdaProxy, LambdaProxyError } from "@src/lambda-proxy";
+import { APIGatewayProxyResultProvider } from "@src/results";
+import { randomStr } from "@src/utils";
+import { APIGatewayProxyEvent, APIGatewayProxyResult, ProxyCallback } from "aws-lambda";
 import { expect } from "chai";
 import * as HttpStatusCodes from "http-status-codes";
 import { describe, it } from "mocha";
-import { createContainerFactory } from "../src/container";
-import { containerLambdaProxy, lambdaProxy, LambdaProxyError, LambdaProxyOptions } from "../src/lambda-proxy";
-import { APIGatewayProxyResultProvider } from "../src/results";
-import { createLambdaContext, randomStr } from "./lambda-helper-tests";
-
-// tslint:disable:newline-per-chained-call
-// tslint:disable:no-unused-expression
-// tslint:disable:no-magic-numbers
-// tslint:disable:no-non-null-assertion
-// tslint:disable:no-empty
-// tslint:disable:no-null-keyword
+import { createLambdaContext } from "./lambda-helper-test";
 
 describe("lambdaProxy", () => {
 
@@ -410,10 +403,10 @@ describe("lambdaProxy", () => {
     // tslint:disable-next-line:no-string-literal
     event["source"] = warmupSource;
 
-    const lambdaResult = await lambda(
+    await lambda(
       event,
       createLambdaContext(),
-      nullCallback) as APIGatewayProxyResult;
+      nullCallback);
 
     expect(executed).to.be.false;
   });
@@ -426,7 +419,6 @@ describe("lambdaProxy", () => {
       c(): string;
     }
 
-    // tslint:disable:no-unnecessary-callback-wrapper
     const createContainer = createContainerFactory<ContainerContract>({
       a: () => randomStr(),
       b: ({ builder }) => builder.transient(randomStr()),

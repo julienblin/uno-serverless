@@ -1,7 +1,6 @@
 
+import { randomBytes } from "crypto";
 import * as stringify from "json-stringify-safe";
-
-// tslint:disable:no-magic-numbers
 
 /**
  * Converts the result of process.hrtime into milliseconds.
@@ -58,7 +57,7 @@ export const memoize = <T>(func: () => T) => {
   };
 };
 
-/** Handler for proxy to support container method desctructuring without losing the this context. */
+/** Handler for proxy to support container method destructuring without losing the this context. */
 const destructuringHandler = <T extends object>(target: any): ProxyHandler<T> => ({
   get: (proxyTarget, name, receiver) =>
     (...args) =>
@@ -70,3 +69,6 @@ const destructuringHandler = <T extends object>(target: any): ProxyHandler<T> =>
 /** Wraps target behind a proxy to support ES destructuring for methods. */
 export const supportDestructuring = <T extends object>(target: T): T =>
   new Proxy(target, destructuringHandler(target));
+
+/** Generates a random string of a given length using crypto.randomBytes. */
+export const randomStr = (length = 12) => randomBytes(Math.ceil(length / 2)).toString("hex").slice(0, length);

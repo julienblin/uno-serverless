@@ -57,7 +57,6 @@ export const createContainerFactory = <TContract, TOptions = any>(
   builder: ContainerBuilder<TContract, TOptions>): ContainerFactory<TContract, TOptions> => {
 
     /** Dynamic container generation. */
-    // tslint:disable:variable-name
     function Container(this: any, options?: TOptions, parent?: any) {
       this._options = options;
       this._parent = parent;
@@ -110,8 +109,7 @@ export const createContainerFactory = <TContract, TOptions = any>(
       };
     });
 
-    // tslint:disable-next-line:no-string-literal
-    Container.prototype["scope"] = function(this: any) {
+    Container.prototype.scope = function(this: any) {
       return new Container(this._options, this);
     };
 

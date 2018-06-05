@@ -1,11 +1,6 @@
+import { InMemoryKeyValueRepository } from "@src/key-value-repository";
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { InMemoryKeyValueRepository } from "../src/key-value-repository";
-
-// tslint:disable:newline-per-chained-call
-// tslint:disable:no-unused-expression
-// tslint:disable:no-magic-numbers
-// tslint:disable:no-non-null-assertion
 
 describe("InMemoryKeyValueRepository", () => {
 

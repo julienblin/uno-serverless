@@ -1,4 +1,3 @@
-// tslint:disable-next-line:no-implicit-dependencies
 import { Context } from "aws-lambda";
 import { RootContainer } from "./container";
 

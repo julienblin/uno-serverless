@@ -1,16 +1,9 @@
-// tslint:disable-next-line:no-implicit-dependencies
-import { CustomAuthorizerResult } from "aws-lambda";
+import { createContainerFactory } from "@src/container";
+import { containerLambda, lambda, LambdaError } from "@src/lambda";
+import { randomStr } from "@src/utils";
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { createContainerFactory } from "../src/container";
-import { containerLambda, lambda, LambdaError } from "../src/lambda";
-import { createLambdaContext, randomStr } from "./lambda-helper-tests";
-
-// tslint:disable:newline-per-chained-call
-// tslint:disable:no-unused-expression
-// tslint:disable:no-magic-numbers
-// tslint:disable:no-non-null-assertion
-// tslint:disable:no-empty
+import { createLambdaContext } from "./lambda-helper-test";
 
 describe("lambda", () => {
 
@@ -18,7 +11,7 @@ describe("lambda", () => {
     let executed = false;
     const lambdaHandler = lambda<any>(async ({ event, context }) => { executed = true; });
 
-    const lambdaResult = await lambdaHandler(
+    await lambdaHandler(
       {},
       createLambdaContext(),
       (e, r) => {});
@@ -94,7 +87,6 @@ describe("lambda", () => {
       c(): string;
     }
 
-    // tslint:disable:no-unnecessary-callback-wrapper
     const createContainer = createContainerFactory<ContainerContract>({
       a: () => randomStr(),
       b: ({ builder }) => builder.transient(randomStr()),
@@ -123,7 +115,7 @@ describe("lambda", () => {
         type: randomStr(),
       },
       createLambdaContext(),
-      (e, r) => {}) as CustomAuthorizerResult;
+      (e, r) => {});
 
     const collected1 = collected;
 
@@ -134,7 +126,7 @@ describe("lambda", () => {
         type: randomStr(),
       },
       createLambdaContext(),
-      (e, r) => {}) as CustomAuthorizerResult;
+      (e, r) => {});
 
     const collected2 = collected;
 

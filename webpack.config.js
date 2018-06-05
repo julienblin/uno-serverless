@@ -1,5 +1,6 @@
 const path = require('path');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
+const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 
 const distFolder = path.join(__dirname, 'dist');
 
@@ -14,6 +15,9 @@ module.exports = {
       '.js',
       '.json',
       '.ts'
+    ],
+    plugins: [
+      new TsconfigPathsPlugin()
     ]
   },
   output: {
