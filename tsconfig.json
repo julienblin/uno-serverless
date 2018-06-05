@@ -9,6 +9,6 @@
     "noImplicitAny": false
   },
   "exclude": [
-    "./tests"
+    "./test"
   ]
 }
