@@ -35,5 +35,6 @@ module.exports = {
   ],
   externals: {
     'aws-sdk': 'aws-sdk',
+    'axios': 'axios',
   }
 };

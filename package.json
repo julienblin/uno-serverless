@@ -37,6 +37,7 @@
     "@types/xml2js": "^0.4.2",
     "ajv": "^6.5.0",
     "aws-sdk": "^2.247.1",
+    "axios": "^0.18.0",
     "chai": "^4.1.2",
     "clean-webpack-plugin": "^0.1.19",
     "coveralls": "^3.0.1",
