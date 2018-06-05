@@ -1,4 +1,4 @@
-import * as lambda from "aws-lambda";
+import * as awsLambda from "aws-lambda";
 import { parse as parseQS } from "querystring";
 import { RootContainer } from "./container";
 import { badRequestError, ErrorData, internalServerError, notFoundError, validationError } from "./errors";
@@ -9,10 +9,10 @@ import { validate } from "./validator";
 
 export interface LambdaProxyFunctionArgs {
   /** The Lambda Context */
-  context: lambda.Context;
+  context: awsLambda.Context;
 
   /** The Lambda Event */
-  event: lambda.APIGatewayProxyEvent;
+  event: awsLambda.APIGatewayProxyEvent;
 
   /** The body parsed as an object, either JSON or FORM. */
   body<T>(): T | undefined;
@@ -28,10 +28,10 @@ export type LambdaProxyFunction =
   (args: LambdaProxyFunctionArgs) => Promise<object | undefined>;
 
 export interface LambdaProxyError {
-  context: lambda.Context;
+  context: awsLambda.Context;
   error: any;
-  event: lambda.APIGatewayProxyEvent;
-  result?: lambda.APIGatewayProxyResult;
+  event: awsLambda.APIGatewayProxyEvent;
+  result?: awsLambda.APIGatewayProxyResult;
 }
 
 export interface LambdaProxyValidationOptions {
@@ -47,7 +47,7 @@ export interface LambdaProxyValidationOptions {
 }
 
 export type BodyParser =
-  <T>(event: lambda.APIGatewayProxyEvent, headers: () => Record<string, string>) => T | undefined;
+  <T>(event: awsLambda.APIGatewayProxyEvent, headers: () => Record<string, string>) => T | undefined;
 
 export interface LambdaProxyOptions {
   /**
@@ -81,7 +81,7 @@ export interface LambdaProxyOptions {
    * If provided, will be evaluated before anything and shortcut.
    * This allows isolation of warm up events from the standard processing.
    */
-  isWarmup?(event: lambda.APIGatewayProxyEvent): boolean;
+  isWarmup?(event: awsLambda.APIGatewayProxyEvent): boolean;
 }
 
 export const defaultBodySerializer: BodySerializer = (body?: any) => body ? JSON.stringify(body) : "";
@@ -90,7 +90,7 @@ export const defaultBodySerializer: BodySerializer = (body?: any) => body ? JSON
  * Parses the body of a request. Form or JSON.
  */
 export const defaultBodyParser: BodyParser =
-  <T>(event: lambda.APIGatewayProxyEvent, headers: () => Record<string, string>): T | undefined => {
+  <T>(event: awsLambda.APIGatewayProxyEvent, headers: () => Record<string, string>): T | undefined => {
   if (event.httpMethod === "GET") {
     return undefined;
   }
@@ -133,7 +133,7 @@ const decodeFromSource = (source: { [name: string]: string }, params: any) => {
   }
 };
 
-const decodeParameters = <T>(event: lambda.APIGatewayProxyEvent): T => {
+const decodeParameters = <T>(event: awsLambda.APIGatewayProxyEvent): T => {
   const params: any = {};
 
   if (event.pathParameters) {
@@ -147,7 +147,7 @@ const decodeParameters = <T>(event: lambda.APIGatewayProxyEvent): T => {
   return params as T;
 };
 
-const normalizeHeaders = (event: lambda.APIGatewayProxyEvent): Record<string, string> => {
+const normalizeHeaders = (event: awsLambda.APIGatewayProxyEvent): Record<string, string> => {
   const normalizedHeaders = {};
 
   if (!event.headers) {
@@ -223,9 +223,9 @@ const validateInput = (
  * @param options - various options.
  */
 export const lambdaProxy =
-  (func: LambdaProxyFunction, options: LambdaProxyOptions = {}): lambda.APIGatewayProxyHandler =>
-    async (event: lambda.APIGatewayProxyEvent, context: lambda.Context, callback: lambda.ProxyCallback)
-      : Promise<lambda.APIGatewayProxyResult > => {
+  (func: LambdaProxyFunction, options: LambdaProxyOptions = {}): awsLambda.APIGatewayProxyHandler =>
+    async (event: awsLambda.APIGatewayProxyEvent, context: awsLambda.Context, callback: awsLambda.ProxyCallback)
+      : Promise<awsLambda.APIGatewayProxyResult > => {
 
       if (options.isWarmup && options.isWarmup(event)) {
         return {
@@ -234,7 +234,7 @@ export const lambdaProxy =
         };
       }
 
-      let proxyResult: lambda.APIGatewayProxyResult | undefined;
+      let proxyResult: awsLambda.APIGatewayProxyResult | undefined;
       if (!options.bodySerializer) {
         options.bodySerializer = defaultBodySerializer;
       }
@@ -310,8 +310,8 @@ export const lambdaProxy =
  */
 export const containerLambdaProxy = <TContainerContract>(
   func: ContainerFunction<LambdaProxyFunctionArgs, TContainerContract, Promise<object | undefined>>,
-  options: LambdaProxyOptions & ContainerFactoryOptions<lambda.APIGatewayProxyEvent, TContainerContract>)
-  : lambda.APIGatewayProxyHandler => {
+  options: LambdaProxyOptions & ContainerFactoryOptions<awsLambda.APIGatewayProxyEvent, TContainerContract>)
+  : awsLambda.APIGatewayProxyHandler => {
     let rootContainer: RootContainer<TContainerContract> | undefined;
 
     return lambdaProxy(

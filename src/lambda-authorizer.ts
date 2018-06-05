@@ -1,4 +1,4 @@
-import * as lambda from "aws-lambda";
+import * as awsLambda from "aws-lambda";
 import { RootContainer } from "./container";
 import { ContainerFactoryOptions, ContainerFunction } from "./lambda-container";
 import { defaultConfidentialityReplacer, safeJSONStringify, supportDestructuring } from "./utils";
@@ -15,20 +15,20 @@ export interface LambdaAuthorizerBearerFunctionArgs {
    */
   bearerToken?: string;
 
-  context: lambda.Context;
-  event: lambda.CustomAuthorizerEvent;
+  context: awsLambda.Context;
+  event: awsLambda.CustomAuthorizerEvent;
 
   /** The Api Gateway stage */
   stage: string;
 }
 
 export type LambdaAuthorizerBearerFunction =
-  (args: LambdaAuthorizerBearerFunctionArgs) => Promise<lambda.CustomAuthorizerResult>;
+  (args: LambdaAuthorizerBearerFunctionArgs) => Promise<awsLambda.CustomAuthorizerResult>;
 
 export interface LambdaAuthorizerBearerError {
-  context: lambda.Context;
+  context: awsLambda.Context;
   error: any;
-  event: lambda.CustomAuthorizerEvent;
+  event: awsLambda.CustomAuthorizerEvent;
 }
 
 export interface LambdaAuthorizerBearerOptions {
@@ -58,9 +58,13 @@ const defaultErrorLogger = async (error: LambdaAuthorizerBearerError) => {
  * @param func - The function to wrap.
  */
 export const lambdaAuthorizerBearer =
-  (func: LambdaAuthorizerBearerFunction, options: LambdaAuthorizerBearerOptions = {}): lambda.CustomAuthorizerHandler =>
-    async (event: lambda.CustomAuthorizerEvent, context: lambda.Context, callback: lambda.CustomAuthorizerCallback)
-    : Promise<lambda.CustomAuthorizerResult> => {
+  (func: LambdaAuthorizerBearerFunction, options: LambdaAuthorizerBearerOptions = {})
+    : awsLambda.CustomAuthorizerHandler =>
+    async (
+      event: awsLambda.CustomAuthorizerEvent,
+      context: awsLambda.Context,
+      callback: awsLambda.CustomAuthorizerCallback)
+    : Promise<awsLambda.CustomAuthorizerResult> => {
 
       const bearerToken = event.authorizationToken
         ? event.authorizationToken.replace(/\s*bearer\s*/ig, "")
@@ -101,9 +105,9 @@ export const lambdaAuthorizerBearer =
  */
 export const containerLambdaAuthorizerBearer = <TContainerContract>(
   func: ContainerFunction<
-    LambdaAuthorizerBearerFunctionArgs, TContainerContract, Promise<lambda.CustomAuthorizerResult>>,
-  options: LambdaAuthorizerBearerOptions & ContainerFactoryOptions<lambda.CustomAuthorizerEvent, TContainerContract>)
-  : lambda.CustomAuthorizerHandler => {
+    LambdaAuthorizerBearerFunctionArgs, TContainerContract, Promise<awsLambda.CustomAuthorizerResult>>,
+  options: LambdaAuthorizerBearerOptions & ContainerFactoryOptions<awsLambda.CustomAuthorizerEvent, TContainerContract>)
+  : awsLambda.CustomAuthorizerHandler => {
     let rootContainer: RootContainer<TContainerContract> | undefined;
 
     return lambdaAuthorizerBearer(
