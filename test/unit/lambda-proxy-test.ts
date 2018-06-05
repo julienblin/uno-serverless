@@ -54,6 +54,7 @@ describe("lambdaProxy", () => {
           userAgent: null,
           userArn: null,
         },
+        path: "/unit-tests",
         requestId: randomStr(),
         requestTimeEpoch: new Date().getTime(),
         resourceId: randomStr(),
