@@ -41,6 +41,15 @@ export const internalServerError = (message: string) =>
     },
     HttpStatusCodes.INTERNAL_SERVER_ERROR);
 
+export const unauthorizedError = (target: string, message: string) =>
+  buildError(
+    {
+      code: "unauthorized",
+      message,
+      target,
+    },
+    HttpStatusCodes.UNAUTHORIZED);
+
 export const notFoundError = (target: string, message?: string) =>
     buildError(
       {
