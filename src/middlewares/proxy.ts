@@ -6,7 +6,7 @@ import * as awsLambda from "aws-lambda";
  * Determine if result is an APIGatewayProxyResult.
  */
 export const isAPIGatewayProxyResult = (result: object): result is awsLambda.APIGatewayProxyResult =>
-  ("statusCode" in result && "body" in result);
+  (typeof result === "object" && typeof result !== "string" && "statusCode" in result && "body" in result);
 
 export type HeaderProducer<TEvent, TServices> =
   string | ((arg: LambdaArg<TEvent, TServices>, result: any) => Promise<string>);
@@ -48,6 +48,10 @@ export const responseHeaders = <TEvent, TServices>(headers: Record<string, Heade
 export const cors = (origin?: string | Promise<string>) =>
   responseHeaders({ "Access-Control-Allow-Origin": origin ? async () => origin : "*" });
 
+/**
+ * This middleware catch errors and return adapted payload.
+ * If you plan to do error logging, remember to place the log after this middleware.
+ */
 export const httpErrors = <TEvent, TServices>(): Middleware<TEvent, TServices> => {
   return async (arg: LambdaArg<TEvent, TServices>, next: LambdaExecution<TEvent, TServices>): Promise<any> => {
 
@@ -64,5 +68,34 @@ export const httpErrors = <TEvent, TServices>(): Middleware<TEvent, TServices> =
       };
     }
 
+  };
+};
+
+/**
+ * If the body of the response is not a string, serializes the object as JSON.
+ */
+export const responseBodyJSON = <TEvent, TServices>
+  (replacer?: (key: string, value: any) => any, space?: string | number)
+  : Middleware<TEvent, TServices> => {
+  return async (arg: LambdaArg<TEvent, TServices>, next: LambdaExecution<TEvent, TServices>): Promise<any> => {
+
+    const result = await next(arg);
+
+    if (!isAPIGatewayProxyResult(result)) {
+      return result;
+    }
+
+    if (typeof result.body === "string") {
+      return result;
+    }
+
+    return {
+      ... result,
+      body: JSON.stringify(result.body, replacer, space),
+      headers: {
+        ... result.headers,
+        "Content-Type": "application/json",
+      },
+    };
   };
 };

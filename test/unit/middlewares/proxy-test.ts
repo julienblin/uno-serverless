@@ -1,7 +1,8 @@
-import { cors, httpErrors, responseHeaders } from "@middlewares/proxy";
+import { cors, httpErrors, responseBodyJSON, responseHeaders } from "@middlewares/proxy";
 import { lambda } from "@src/builder";
 import { createContainerFactory } from "@src/container";
 import { notFoundError } from "@src/errors";
+import { ok } from "@src/responses";
 import { randomStr } from "@src/utils";
 import { createLambdaContext } from "@test/lambda-helper-test";
 import { APIGatewayProxyResult } from "aws-lambda";
@@ -144,6 +145,42 @@ describe("httpErrors middleware", () => {
     expect(result.statusCode).to.equal(HttpStatusCodes.INTERNAL_SERVER_ERROR);
     expect(result.body.code).to.equal("internalServerError");
     expect(result.body.message).to.equal(message);
+  });
+
+});
+
+describe("responseBodyJSON middleware", () => {
+
+  it("should serialize body.", async () => {
+    const handlerResult = {
+      foo: "bar",
+    };
+
+    const handler = lambda()
+      .use(responseBodyJSON())
+      .handler<any, APIGatewayProxyResult, any>(async () => ok(handlerResult));
+
+    const result = await handler(
+      {},
+      createLambdaContext(),
+      (e, r) => {}) as APIGatewayProxyResult;
+
+    expect(JSON.parse(result.body)).to.deep.equal(handlerResult);
+    expect(result.headers!["Content-Type"]).to.equal("application/json");
+  });
+
+  it("should not serialize if body is a string.", async () => {
+    const handler = lambda()
+      .use(responseBodyJSON())
+      .handler<any, APIGatewayProxyResult, any>(async () => ({ body: "hello" }));
+
+    const result = await handler(
+      {},
+      createLambdaContext(),
+      (e, r) => {}) as APIGatewayProxyResult;
+
+    expect(result.body).to.deep.equal("hello");
+    expect(result.headers).to.be.undefined;
   });
 
 });
