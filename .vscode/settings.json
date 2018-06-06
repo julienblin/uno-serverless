@@ -4,6 +4,7 @@
         "Serverless",
         "cobertura",
         "memoized",
+        "middlewares",
         "opiniated",
         "prebuild"
     ],

@@ -1,4 +1,7 @@
-import { cors, httpErrors, responseBodyJSON, responseHeaders } from "@middlewares/proxy";
+import {
+  cors, httpErrors, PARSE_BODY_METHOD,
+  PARSE_PARAMETERS_METHOD, parseBodyAsFORM, parseBodyAsJSON,
+  parseParameters, responseHeaders, serializeBodyAsJSON } from "@middlewares/proxy";
 import { lambda } from "@src/builder";
 import { createContainerFactory } from "@src/container";
 import { notFoundError } from "@src/errors";
@@ -149,7 +152,7 @@ describe("httpErrors middleware", () => {
 
 });
 
-describe("responseBodyJSON middleware", () => {
+describe("serializeBodyAsJSON middleware", () => {
 
   it("should serialize body.", async () => {
     const handlerResult = {
@@ -157,7 +160,7 @@ describe("responseBodyJSON middleware", () => {
     };
 
     const handler = lambda()
-      .use(responseBodyJSON())
+      .use(serializeBodyAsJSON())
       .handler<any, APIGatewayProxyResult, any>(async () => ok(handlerResult));
 
     const result = await handler(
@@ -171,7 +174,7 @@ describe("responseBodyJSON middleware", () => {
 
   it("should not serialize if body is a string.", async () => {
     const handler = lambda()
-      .use(responseBodyJSON())
+      .use(serializeBodyAsJSON())
       .handler<any, APIGatewayProxyResult, any>(async () => ({ body: "hello" }));
 
     const result = await handler(
@@ -181,6 +184,80 @@ describe("responseBodyJSON middleware", () => {
 
     expect(result.body).to.deep.equal("hello");
     expect(result.headers).to.be.undefined;
+  });
+
+});
+
+describe("parseBodyAsJSON middleware", () => {
+
+  it("should parse body.", async () => {
+    const body = {
+      foo: "bar",
+    };
+
+    const handler = lambda()
+      .use(parseBodyAsJSON())
+      .handler<any, APIGatewayProxyResult, { [PARSE_BODY_METHOD]: () => any }>
+        (async ({ services }) => {
+          expect(services._parseBody()).to.deep.equal(body);
+        });
+
+    await handler(
+      {
+        body: JSON.stringify(body),
+      },
+      createLambdaContext(),
+      (e, r) => {});
+  });
+
+});
+
+describe("parseBodyAsFORM middleware", () => {
+
+  it("should parse body.", async () => {
+    const body = {
+      foo: "bar",
+    };
+
+    const handler = lambda()
+      .use(parseBodyAsFORM())
+      .handler<any, APIGatewayProxyResult, { [PARSE_BODY_METHOD]: () => any }>
+        (async ({ services }) => {
+          expect(services._parseBody()).to.deep.equal(body);
+        });
+
+    await handler(
+      {
+        body: "foo=bar",
+      },
+      createLambdaContext(),
+      (e, r) => {});
+  });
+
+});
+
+describe("parseParameters middleware", () => {
+
+  it("should parse parameters.", async () => {
+    const parameters = {
+      foo: "bar",
+      foobar: "foobar",
+    };
+
+    const handler = lambda()
+      .use(parseParameters())
+      .handler<any, APIGatewayProxyResult, { [PARSE_PARAMETERS_METHOD]: () => any }>
+        (async ({ services }) => {
+          expect(services._parseParameters()).to.deep.equal(parameters);
+        });
+
+    await handler(
+      {
+        pathParameters: { foo: "bar" },
+        queryStringParameters: { foobar: "foobar" },
+      },
+      createLambdaContext(),
+      (e, r) => {});
   });
 
 });

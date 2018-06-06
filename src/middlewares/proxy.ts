@@ -1,6 +1,8 @@
 import { LambdaArg, LambdaExecution, Middleware } from "@src/builder";
-import { internalServerError, isStatusCodeProvider } from "@src/errors";
+import { badRequestError, internalServerError, isStatusCodeProvider } from "@src/errors";
+import { memoize } from "@src/utils";
 import * as awsLambda from "aws-lambda";
+import { parse as parseQS } from "querystring";
 
 /**
  * Determine if result is an APIGatewayProxyResult.
@@ -15,9 +17,12 @@ export type HeaderProducer<TEvent, TServices> =
  * This middleware injects headers into the response if the result is an APIGatewayProxyResult.
  * It does nothing if the result is not an APIGatewayProxyResult.
  */
-export const responseHeaders = <TEvent, TServices>(headers: Record<string, HeaderProducer<TEvent, TServices>>)
-  : Middleware<TEvent, TServices> => {
-  return async (arg: LambdaArg<TEvent, TServices>, next: LambdaExecution<TEvent, TServices>): Promise<any> => {
+export const responseHeaders = <TServices>
+  (headers: Record<string, HeaderProducer<awsLambda.APIGatewayProxyEvent, TServices>>)
+  : Middleware<awsLambda.APIGatewayProxyEvent, TServices> => {
+  return async (
+    arg: LambdaArg<awsLambda.APIGatewayProxyEvent, TServices>,
+    next: LambdaExecution<awsLambda.APIGatewayProxyEvent, TServices>): Promise<any> => {
     const result = await next(arg);
 
     if (isAPIGatewayProxyResult(result)) {
@@ -26,7 +31,8 @@ export const responseHeaders = <TEvent, TServices>(headers: Record<string, Heade
         if (typeof headers[headerKey] === "string") {
           finalHeaders[headerKey] = headers[headerKey] as string;
         } else {
-          const funcHeader = headers[headerKey] as (arg: LambdaArg<TEvent, TServices>, result: any) => Promise<string>;
+          const funcHeader = headers[headerKey] as
+            (arg: LambdaArg<awsLambda.APIGatewayProxyEvent, TServices>, result: any) => Promise<string>;
           finalHeaders[headerKey] = await funcHeader(arg, result);
         }
       }
@@ -52,8 +58,10 @@ export const cors = (origin?: string | Promise<string>) =>
  * This middleware catch errors and return adapted payload.
  * If you plan to do error logging, remember to place the log after this middleware.
  */
-export const httpErrors = <TEvent, TServices>(): Middleware<TEvent, TServices> => {
-  return async (arg: LambdaArg<TEvent, TServices>, next: LambdaExecution<TEvent, TServices>): Promise<any> => {
+export const httpErrors = (): Middleware<awsLambda.APIGatewayProxyEvent, any> => {
+  return async (
+    arg: LambdaArg<awsLambda.APIGatewayProxyEvent, any>,
+    next: LambdaExecution<awsLambda.APIGatewayProxyEvent, any>): Promise<any> => {
 
     try {
       return await next(arg);
@@ -74,28 +82,121 @@ export const httpErrors = <TEvent, TServices>(): Middleware<TEvent, TServices> =
 /**
  * If the body of the response is not a string, serializes the object as JSON.
  */
-export const responseBodyJSON = <TEvent, TServices>
+export const serializeBodyAsJSON =
   (replacer?: (key: string, value: any) => any, space?: string | number)
-  : Middleware<TEvent, TServices> => {
-  return async (arg: LambdaArg<TEvent, TServices>, next: LambdaExecution<TEvent, TServices>): Promise<any> => {
+    : Middleware<awsLambda.APIGatewayProxyEvent, any> => {
+    return async (
+      arg: LambdaArg<awsLambda.APIGatewayProxyEvent, any>,
+      next: LambdaExecution<awsLambda.APIGatewayProxyEvent, any>): Promise<any> => {
 
-    const result = await next(arg);
+      const result = await next(arg);
 
-    if (!isAPIGatewayProxyResult(result)) {
-      return result;
-    }
+      if (!isAPIGatewayProxyResult(result)) {
+        return result;
+      }
 
-    if (typeof result.body === "string") {
-      return result;
-    }
+      if (typeof result.body === "string") {
+        return result;
+      }
 
-    return {
-      ... result,
-      body: JSON.stringify(result.body, replacer, space),
-      headers: {
-        ... result.headers,
-        "Content-Type": "application/json",
-      },
+      return {
+        ...result,
+        body: JSON.stringify(result.body, replacer, space),
+        headers: {
+          ...result.headers,
+          "Content-Type": "application/json",
+        },
+      };
     };
+  };
+
+export const PARSE_BODY_METHOD = "_parseBody";
+
+/**
+ * This middleware exposes a method in the service object to parse the body of a request as JSON.
+ */
+export const parseBodyAsJSON = (reviver?: (key: any, value: any) => any, parseMethod = PARSE_BODY_METHOD)
+  : Middleware<awsLambda.APIGatewayProxyEvent, any> => {
+  return async (
+    arg: LambdaArg<awsLambda.APIGatewayProxyEvent, any>,
+    next: LambdaExecution<awsLambda.APIGatewayProxyEvent, any>): Promise<any> => {
+
+    arg.services[parseMethod] = memoize(() => {
+      if (!arg.event.body) {
+        return undefined;
+      }
+
+      try {
+        return JSON.parse(arg.event.body, reviver);
+      } catch (error) {
+        throw badRequestError(error.message);
+      }
+    });
+
+    return next(arg);
+  };
+};
+
+/**
+ * This middleware exposes a method in the service object to parse the body of a request
+ * as FORM (application/x-www-form-urlencoded).
+ */
+export const parseBodyAsFORM = (reviver?: (key: any, value: any) => any, parseMethod = PARSE_BODY_METHOD)
+  : Middleware<awsLambda.APIGatewayProxyEvent, any> => {
+  return async (
+    arg: LambdaArg<awsLambda.APIGatewayProxyEvent, any>,
+    next: LambdaExecution<awsLambda.APIGatewayProxyEvent, any>): Promise<any> => {
+
+    arg.services[parseMethod] = memoize(() => {
+      if (!arg.event.body) {
+        return undefined;
+      }
+
+      try {
+        return parseQS<any>(arg.event.body);
+      } catch (error) {
+        throw badRequestError(error.message);
+      }
+    });
+
+    return next(arg);
+  };
+};
+
+export const PARSE_PARAMETERS_METHOD = "_parseParameters";
+
+const decodeFromSource = (source: { [name: string]: string }, params: any) => {
+  for (const prop in source) {
+    if (source.hasOwnProperty(prop)) {
+      params[prop] = decodeURIComponent(source[prop]);
+    }
+  }
+};
+
+/**
+ * This middleware exposes a method in the service object to regroup all the parameters
+ * into a cohesive object and URL-decode them.
+ */
+export const parseParameters = (parseMethod = PARSE_PARAMETERS_METHOD)
+  : Middleware<awsLambda.APIGatewayProxyEvent, any> => {
+  return async (
+    arg: LambdaArg<awsLambda.APIGatewayProxyEvent, any>,
+    next: LambdaExecution<awsLambda.APIGatewayProxyEvent, any>): Promise<any> => {
+
+    arg.services[parseMethod] = memoize(() => {
+      const params: any = {};
+
+      if (arg.event && arg.event.pathParameters) {
+        decodeFromSource(arg.event.pathParameters, params);
+      }
+
+      if (arg.event && arg.event.queryStringParameters) {
+        decodeFromSource(arg.event.queryStringParameters, params);
+      }
+
+      return params;
+    });
+
+    return next(arg);
   };
 };
