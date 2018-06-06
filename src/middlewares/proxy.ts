@@ -1,6 +1,6 @@
 import { LambdaArg, LambdaExecution, Middleware } from "@src/builder";
 import { badRequestError, internalServerError, isStatusCodeProvider } from "@src/errors";
-import { memoize } from "@src/utils";
+import { memoize, safeJSONStringify } from "@src/utils";
 import * as awsLambda from "aws-lambda";
 import { parse as parseQS } from "querystring";
 
@@ -83,7 +83,7 @@ export const httpErrors = (): Middleware<awsLambda.APIGatewayProxyEvent, any> =>
  * If the body of the response is not a string, serializes the object as JSON.
  */
 export const serializeBodyAsJSON =
-  (replacer?: (key: string, value: any) => any, space?: string | number)
+  (replacer?: (key: string, value: any) => any, space?: string | number, safe = false)
     : Middleware<awsLambda.APIGatewayProxyEvent, any> => {
     return async (
       arg: LambdaArg<awsLambda.APIGatewayProxyEvent, any>,
@@ -101,7 +101,9 @@ export const serializeBodyAsJSON =
 
       return {
         ...result,
-        body: JSON.stringify(result.body, replacer, space),
+        body: safe
+          ? safeJSONStringify(result.body, replacer, space)
+          : JSON.stringify(result.body, replacer, space),
         headers: {
           ...result.headers,
           "Content-Type": "application/json",
