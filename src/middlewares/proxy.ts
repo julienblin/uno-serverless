@@ -4,6 +4,7 @@ import { LambdaArg, LambdaExecution, Middleware } from "../core/builder";
 import { badRequestError, internalServerError, isStatusCodeProvider, notFoundError } from "../core/errors";
 import { ok } from "../core/responses";
 import { memoize, safeJSONStringify } from "../core/utils";
+import { errorLogging } from "./logging";
 
 /**
  * Determine if result is an APIGatewayProxyResult.
@@ -240,11 +241,12 @@ export const proxy = <TServices = any>(func: ProxyFunc<TServices>)
 
 /**
  * Returns the following suite of middlewares:
- * serializeBodyAsJSON, httpErrors, parseBodyAsJSON, parseParameters
+ * serializeBodyAsJSON, httpErrors, errorLogging, parseBodyAsJSON, parseParameters
  */
 export const defaultProxyMiddlewares = () => [
   serializeBodyAsJSON(),
   httpErrors(),
+  errorLogging(),
   parseBodyAsJSON(),
   parseParameters(),
 ];
