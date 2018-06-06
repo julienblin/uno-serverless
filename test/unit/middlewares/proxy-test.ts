@@ -1,7 +1,7 @@
 import {
-  cors, httpErrors, PARSE_BODY_METHOD,
-  PARSE_PARAMETERS_METHOD, parseBodyAsFORM, parseBodyAsJSON,
-  parseParameters, responseHeaders, serializeBodyAsJSON } from "@middlewares/proxy";
+  cors, httpErrors, parseBodyAsFORM, parseBodyAsJSON,
+  parseParameters, responseHeaders, serializeBodyAsJSON,
+  ServicesWithParseBody, ServicesWithParseParameters } from "@middlewares/proxy";
 import { lambda } from "@src/builder";
 import { createContainerFactory } from "@src/container";
 import { notFoundError } from "@src/errors";
@@ -197,7 +197,7 @@ describe("parseBodyAsJSON middleware", () => {
 
     const handler = lambda()
       .use(parseBodyAsJSON())
-      .handler<any, APIGatewayProxyResult, { [PARSE_BODY_METHOD]: () => any }>
+      .handler<any, APIGatewayProxyResult, ServicesWithParseBody>
         (async ({ services }) => {
           expect(services._parseBody()).to.deep.equal(body);
         });
@@ -221,7 +221,7 @@ describe("parseBodyAsFORM middleware", () => {
 
     const handler = lambda()
       .use(parseBodyAsFORM())
-      .handler<any, APIGatewayProxyResult, { [PARSE_BODY_METHOD]: () => any }>
+      .handler<any, APIGatewayProxyResult, ServicesWithParseBody>
         (async ({ services }) => {
           expect(services._parseBody()).to.deep.equal(body);
         });
@@ -246,7 +246,7 @@ describe("parseParameters middleware", () => {
 
     const handler = lambda()
       .use(parseParameters())
-      .handler<any, APIGatewayProxyResult, { [PARSE_PARAMETERS_METHOD]: () => any }>
+      .handler<any, APIGatewayProxyResult, ServicesWithParseParameters>
         (async ({ services }) => {
           expect(services._parseParameters()).to.deep.equal(parameters);
         });

@@ -114,6 +114,10 @@ export const serializeBodyAsJSON =
 
 export const PARSE_BODY_METHOD = "_parseBody";
 
+export interface ServicesWithParseBody {
+  [PARSE_BODY_METHOD](): any;
+}
+
 /**
  * This middleware exposes a method in the service object to parse the body of a request as JSON.
  */
@@ -166,6 +170,10 @@ export const parseBodyAsFORM = (reviver?: (key: any, value: any) => any, parseMe
 };
 
 export const PARSE_PARAMETERS_METHOD = "_parseParameters";
+
+export interface ServicesWithParseParameters {
+  [PARSE_PARAMETERS_METHOD](): any;
+}
 
 const decodeFromSource = (source: { [name: string]: string }, params: any) => {
   for (const prop in source) {
