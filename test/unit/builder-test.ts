@@ -38,22 +38,23 @@ describe("builder", () => {
     const order: number[] = [];
 
     const handler = lambda()
-      .use(async (arg, next) => {
-        order.push(1);
-        expect(arg.event).to.deep.equal(originalInput);
-        arg.event = alteredInput;
-        const response = await next(arg);
-        order.push(5);
-        return response;
-      })
-      .use(async (arg, next) => {
-        order.push(2);
-        expect(arg.event).to.deep.equal(alteredInput);
-        const response = await next(arg);
-        order.push(4);
-        expect(response).to.equal("hello");
-        return "world";
-      })
+      .use([
+        async (arg, next) => {
+          order.push(1);
+          expect(arg.event).to.deep.equal(originalInput);
+          arg.event = alteredInput;
+          const response = await next(arg);
+          order.push(5);
+          return response;
+        },
+        async (arg, next) => {
+          order.push(2);
+          expect(arg.event).to.deep.equal(alteredInput);
+          const response = await next(arg);
+          order.push(4);
+          expect(response).to.equal("hello");
+          return "world";
+        }])
       .handler(async (arg) => {
         order.push(3);
 

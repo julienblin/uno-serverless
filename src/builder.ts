@@ -12,16 +12,22 @@ export type Middleware<TEvent, TServices> =
 
 export interface LambdaBuilder {
   handler<TEvent, TResult, TServices>(func: LambdaExecution<TEvent, TServices>): awsLambda.Handler<TEvent, TResult>;
-  use<TEvent, TServices>(middleware: Middleware<TEvent, TServices>): LambdaBuilder;
+  use<TEvent, TServices>(middleware: Middleware<TEvent, TServices> | Array<Middleware<TEvent, TServices>>)
+    : LambdaBuilder;
 }
 
 export class LambdaBuildImpl implements LambdaBuilder {
 
   private readonly middlewares: Array<Middleware<any, any>> = [];
 
-  public use<TEvent, TServices>(middleware: Middleware<TEvent, TServices>): LambdaBuilder {
-    this.middlewares.push(middleware);
-    return this;
+  public use<TEvent, TServices>(middleware: Middleware<TEvent, TServices> | Array<Middleware<TEvent, TServices>>)
+    : LambdaBuilder {
+      if (Array.isArray(middleware)) {
+        middleware.forEach((x) => this.middlewares.push(x));
+      } else {
+        this.middlewares.push(middleware);
+      }
+      return this;
   }
 
   public handler<TEvent, TResult, TServices>(func: LambdaExecution<TEvent, TServices>)
