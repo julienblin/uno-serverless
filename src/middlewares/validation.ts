@@ -33,11 +33,11 @@ export const validateBody = (schema: JSONSchema)
     arg: LambdaArg<awsLambda.APIGatewayProxyEvent, ServicesWithParseBody>,
     next: LambdaExecution<any, any>): Promise<any> => {
 
-    if (!arg.services._parseBody) {
+    if (!arg.services.parseBody) {
       throw new Error("Missing parseBody service - did you forget a middleware?");
     }
 
-    const bodyAsObject = arg.services._parseBody();
+    const bodyAsObject = arg.services.parseBody();
 
     if (!bodyAsObject) {
       throw validationError([{ code: "required", message: "Missing body", target: "body" }]);
@@ -62,11 +62,11 @@ export const validateParameters = (schema: JSONSchema)
     arg: LambdaArg<awsLambda.APIGatewayProxyEvent, ServicesWithParseParameters>,
     next: LambdaExecution<any, any>): Promise<any> => {
 
-    if (!arg.services._parseParameters) {
+    if (!arg.services.parseParameters) {
       throw new Error("Missing parseParameters service - did you forget a middleware?");
     }
 
-    const validationErrors = validate(schema, arg.services._parseParameters(), "parameters");
+    const validationErrors = validate(schema, arg.services.parseParameters(), "parameters");
     if (validationErrors.length > 0) {
       throw validationError(validationErrors);
     }

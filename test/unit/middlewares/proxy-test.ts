@@ -199,7 +199,7 @@ describe("parseBodyAsJSON middleware", () => {
       .use(parseBodyAsJSON())
       .handler<any, APIGatewayProxyResult, ServicesWithParseBody>
         (async ({ services }) => {
-          expect(services._parseBody()).to.deep.equal(body);
+          expect(services.parseBody()).to.deep.equal(body);
         });
 
     await handler(
@@ -223,7 +223,7 @@ describe("parseBodyAsFORM middleware", () => {
       .use(parseBodyAsFORM())
       .handler<any, APIGatewayProxyResult, ServicesWithParseBody>
         (async ({ services }) => {
-          expect(services._parseBody()).to.deep.equal(body);
+          expect(services.parseBody()).to.deep.equal(body);
         });
 
     await handler(
@@ -248,7 +248,7 @@ describe("parseParameters middleware", () => {
       .use(parseParameters())
       .handler<any, APIGatewayProxyResult, ServicesWithParseParameters>
         (async ({ services }) => {
-          expect(services._parseParameters()).to.deep.equal(parameters);
+          expect(services.parseParameters()).to.deep.equal(parameters);
         });
 
     await handler(

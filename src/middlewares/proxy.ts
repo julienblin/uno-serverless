@@ -112,7 +112,7 @@ export const serializeBodyAsJSON =
     };
   };
 
-export const PARSE_BODY_METHOD = "_parseBody";
+export const PARSE_BODY_METHOD = "parseBody";
 
 export interface ServicesWithParseBody {
   [PARSE_BODY_METHOD](): any;
@@ -169,7 +169,7 @@ export const parseBodyAsFORM = (reviver?: (key: any, value: any) => any, parseMe
   };
 };
 
-export const PARSE_PARAMETERS_METHOD = "_parseParameters";
+export const PARSE_PARAMETERS_METHOD = "parseParameters";
 
 export interface ServicesWithParseParameters {
   [PARSE_PARAMETERS_METHOD](): any;
