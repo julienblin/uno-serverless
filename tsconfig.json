@@ -6,14 +6,7 @@
     "moduleResolution": "node",
     "sourceMap": true,
     "declaration": true,
-    "noImplicitAny": false,
-    "baseUrl": "./",
-    "paths": {
-      "@middlewares/*": ["./src/middlewares/*"],
-      "@services/*": ["./src/services/*"],
-      "@src/*": ["./src/*"],
-      "@test/*": ["./test/unit/*"]
-    }
+    "noImplicitAny": false
   },
   "exclude": [
     "./test"

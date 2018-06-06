@@ -1,6 +1,6 @@
-import { ErrorData } from "@src/errors";
-import { JSONSchema } from "@src/json-schema";
 import * as Ajv from "ajv";
+import { ErrorData } from "./errors";
+import { JSONSchema } from "./json-schema";
 
 const ajv = new Ajv({
   allErrors: true,

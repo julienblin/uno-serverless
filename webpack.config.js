@@ -1,16 +1,11 @@
 const path = require('path');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
-const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 
 const distFolder = path.join(__dirname, 'dist');
 
 module.exports = {
   context: path.join(__dirname, 'src'),
-  entry: {
-    './index': './index',
-    './middlewares/index': './middlewares/index',
-    './services/index': './services/index',
-  },
+  entry: './index',
   devtool: 'source-map',
   mode: 'production',
   target: 'node',
@@ -19,15 +14,12 @@ module.exports = {
       '.js',
       '.json',
       '.ts'
-    ],
-    plugins: [
-      new TsconfigPathsPlugin()
     ]
   },
   output: {
     libraryTarget: 'commonjs',
     path: distFolder,
-    filename: '[name].js',
+    filename: 'index.js',
   },
   module: {
     rules: [
@@ -38,6 +30,7 @@ module.exports = {
     new CleanWebpackPlugin([distFolder]),
   ],
   externals: {
+    'ajv': 'ajv',
     'aws-sdk': 'aws-sdk',
     'axios': 'axios',
   }

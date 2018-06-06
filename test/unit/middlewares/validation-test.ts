@@ -1,10 +1,11 @@
-import { validateBody, validateEvent } from "@middlewares/validation";
-import { lambda } from "@src/builder";
-import { JSONSchema } from "@src/json-schema";
-import { parseBodyAsJSON, parseParameters, validateParameters } from "@src/middlewares";
-import { randomStr } from "@src/utils";
-import { createLambdaContext } from "@test/lambda-helper-test";
 import { expect } from "chai";
+import { lambda } from "../../../src/core/builder";
+import { JSONSchema } from "../../../src/core/json-schema";
+import { randomStr } from "../../../src/core/utils";
+import { parseBodyAsJSON, parseParameters } from "../../../src/middlewares/proxy";
+import { validateParameters } from "../../../src/middlewares/validation";
+import { validateBody, validateEvent } from "../../../src/middlewares/validation";
+import { createLambdaContext } from "../lambda-helper-test";
 
 describe("validateEvent middleware", () => {
 

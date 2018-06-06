@@ -1,8 +1,9 @@
-import { LambdaArg, LambdaExecution, Middleware } from "@src/builder";
-import { badRequestError, internalServerError, isStatusCodeProvider } from "@src/errors";
-import { memoize, safeJSONStringify } from "@src/utils";
 import * as awsLambda from "aws-lambda";
 import { parse as parseQS } from "querystring";
+import { LambdaArg, LambdaExecution, Middleware } from "../core/builder";
+import { badRequestError, internalServerError, isStatusCodeProvider, notFoundError } from "../core/errors";
+import { ok } from "../core/responses";
+import { memoize, safeJSONStringify } from "../core/utils";
 
 /**
  * Determine if result is an APIGatewayProxyResult.
@@ -115,7 +116,7 @@ export const serializeBodyAsJSON =
 export const PARSE_BODY_METHOD = "parseBody";
 
 export interface ServicesWithParseBody {
-  [PARSE_BODY_METHOD](): any;
+  [PARSE_BODY_METHOD]<T>(): T;
 }
 
 /**
@@ -172,15 +173,13 @@ export const parseBodyAsFORM = (reviver?: (key: any, value: any) => any, parseMe
 export const PARSE_PARAMETERS_METHOD = "parseParameters";
 
 export interface ServicesWithParseParameters {
-  [PARSE_PARAMETERS_METHOD](): any;
+  [PARSE_PARAMETERS_METHOD]<T>(): T;
 }
 
 const decodeFromSource = (source: { [name: string]: string }, params: any) => {
-  for (const prop in source) {
-    if (source.hasOwnProperty(prop)) {
-      params[prop] = decodeURIComponent(source[prop]);
-    }
-  }
+  Object.keys(source).forEach((prop) => {
+    params[prop] = decodeURIComponent(source[prop]);
+  });
 };
 
 /**
@@ -194,19 +193,58 @@ export const parseParameters = (parseMethod = PARSE_PARAMETERS_METHOD)
     next: LambdaExecution<awsLambda.APIGatewayProxyEvent, any>): Promise<any> => {
 
     arg.services[parseMethod] = memoize(() => {
-      const params: any = {};
+      try {
+        const params: any = {};
 
-      if (arg.event && arg.event.pathParameters) {
-        decodeFromSource(arg.event.pathParameters, params);
+        if (arg.event && arg.event.pathParameters) {
+          decodeFromSource(arg.event.pathParameters, params);
+        }
+
+        if (arg.event && arg.event.queryStringParameters) {
+          decodeFromSource(arg.event.queryStringParameters, params);
+        }
+
+        return params;
+      } catch (error) {
+        console.error(error);
       }
-
-      if (arg.event && arg.event.queryStringParameters) {
-        decodeFromSource(arg.event.queryStringParameters, params);
-      }
-
-      return params;
     });
 
     return next(arg);
   };
 };
+
+export type ProxyFunc<TServices> =
+  (
+    lambda: { event: awsLambda.APIGatewayProxyEvent, context: awsLambda.Context },
+    services: TServices & ServicesWithParseBody & ServicesWithParseParameters) => Promise<any>;
+
+export const proxy = <TServices = any>(func: ProxyFunc<TServices>)
+  : LambdaExecution<awsLambda.APIGatewayProxyEvent, TServices> => {
+    return async (arg: LambdaArg<awsLambda.APIGatewayProxyEvent, TServices>) => {
+      const result = await func(
+        { context: arg.context, event: arg.event },
+        arg.services as TServices & ServicesWithParseBody & ServicesWithParseParameters);
+
+      if (result && isAPIGatewayProxyResult(result)) {
+        return result;
+      }
+
+      if (result) {
+        return ok(result);
+      } else {
+        throw notFoundError(arg.event.path);
+      }
+    };
+};
+
+/**
+ * Returns the following suite of middlewares:
+ * serializeBodyAsJSON, httpErrors, parseBodyAsJSON, parseParameters
+ */
+export const defaultProxyMiddlewares = () => [
+  serializeBodyAsJSON(),
+  httpErrors(),
+  parseBodyAsJSON(),
+  parseParameters(),
+];

@@ -1,8 +1,10 @@
-import { HttpClientConfig, HttpClientError, httpClientFactory, mockHttpClientFactory } from "@services/http-client";
-import { randomStr } from "@src/utils";
 import { expect } from "chai";
 import * as HttpStatusCodes from "http-status-codes";
 import { describe, it } from "mocha";
+import { randomStr } from "../../../src/core/utils";
+import {
+  HttpClientConfig, HttpClientError, httpClientFactory,
+  mockHttpClientFactory } from "../../../src/services/http-client";
 
 describe("httpClientFactory", () => {
 

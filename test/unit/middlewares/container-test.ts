@@ -1,10 +1,10 @@
-import { container } from "@middlewares/container";
-import { lambda } from "@src/builder";
-import { createContainerFactory } from "@src/container";
-import { randomStr } from "@src/utils";
-import { createLambdaContext } from "@test/lambda-helper-test";
 import { expect } from "chai";
 import { describe, it } from "mocha";
+import { lambda } from "../../../src/core/builder";
+import { createContainerFactory } from "../../../src/core/container";
+import { randomStr } from "../../../src/core/utils";
+import { container } from "../../../src/middlewares/container";
+import { createLambdaContext } from "../lambda-helper-test";
 
 describe("container middleware", () => {
 

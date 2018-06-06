@@ -1,6 +1,6 @@
-import { LambdaArg, LambdaExecution, Middleware } from "@src/builder";
-import { RootContainer } from "@src/container";
-import { supportDestructuring } from "@src/utils";
+import { LambdaArg, LambdaExecution, Middleware } from "../core/builder";
+import { RootContainer } from "../core/container";
+import { supportDestructuring } from "../core/utils";
 
 export type ContainerInitialization<TEvent, TServices> =
   (arg: LambdaArg<TEvent, TServices>) => RootContainer<TServices>;

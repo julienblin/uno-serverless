@@ -1,9 +1,9 @@
-import { LambdaArg, LambdaExecution, Middleware } from "@src/builder";
-import { validationError } from "@src/errors";
-import { JSONSchema } from "@src/json-schema";
-import { ServicesWithParseBody, ServicesWithParseParameters } from "@src/middlewares";
-import { validate } from "@src/validator";
 import * as awsLambda from "aws-lambda";
+import { LambdaArg, LambdaExecution, Middleware } from "../core/builder";
+import { validationError } from "../core/errors";
+import { JSONSchema } from "../core/json-schema";
+import { validate } from "../core/validator";
+import { ServicesWithParseBody, ServicesWithParseParameters } from "./proxy";
 
 /**
  * This middleware validates the event using JSON Schema.

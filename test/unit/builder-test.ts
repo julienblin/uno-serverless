@@ -1,6 +1,6 @@
-import { lambda } from "@src/builder";
 import { expect } from "chai";
 import { describe, it } from "mocha";
+import { lambda } from "../../src/core/builder";
 import { createLambdaContext } from "./lambda-helper-test";
 
 describe("builder", () => {
