@@ -2,7 +2,7 @@ import * as awsLambda from "aws-lambda";
 import { expect } from "chai";
 import { lambda } from "../../../src/core/builder";
 import { randomStr } from "../../../src/core/utils";
-import { authorizerBearer } from "../../../src/middlewares/authorizer";
+import { authorizerBearer } from "../../../src/handlers/authorizer";
 import { createLambdaContext } from "../lambda-helper-test";
 
 describe("authorizerBearer handler", () => {

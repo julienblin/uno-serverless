@@ -215,30 +215,6 @@ export const parseParameters = (parseMethod = PARSE_PARAMETERS_METHOD)
   };
 };
 
-export type ProxyFunc<TServices> =
-  (
-    lambda: { event: awsLambda.APIGatewayProxyEvent, context: awsLambda.Context },
-    services: TServices & ServicesWithParseBody & ServicesWithParseParameters) => Promise<any>;
-
-export const proxy = <TServices = any>(func: ProxyFunc<TServices>)
-  : LambdaExecution<awsLambda.APIGatewayProxyEvent, TServices> => {
-    return async (arg: LambdaArg<awsLambda.APIGatewayProxyEvent, TServices>) => {
-      const result = await func(
-        { context: arg.context, event: arg.event },
-        arg.services as TServices & ServicesWithParseBody & ServicesWithParseParameters);
-
-      if (result && isAPIGatewayProxyResult(result)) {
-        return result;
-      }
-
-      if (result) {
-        return ok(result);
-      } else {
-        throw notFoundError(arg.event.path);
-      }
-    };
-};
-
 /**
  * Returns the following suite of middlewares:
  * serializeBodyAsJSON, httpErrors, errorLogging, parseBodyAsJSON, parseParameters
