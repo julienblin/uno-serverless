@@ -2,8 +2,8 @@ import { AWSError, Response, SSM } from "aws-sdk";
 import { PromiseResult } from "aws-sdk/lib/request";
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { ConfigService } from "../../../src/services/config";
-import { SSMParameterStoreClient, SSMParameterStoreConfigService } from "../../../src/services/config-aws";
+import { SSMParameterStoreClient, SSMParameterStoreConfigService } from "../../../../src/services/aws/config";
+import { ConfigService } from "../../../../src/services/config";
 
 const path = "/opiniated-lambda/tests";
 

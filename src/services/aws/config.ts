@@ -1,8 +1,8 @@
 import { AWSError, SSM } from "aws-sdk";
 import { GetParametersByPathResult } from "aws-sdk/clients/ssm";
 import { PromiseResult } from "aws-sdk/lib/request";
-import { configurationError } from "../core/errors";
-import { ConfigService } from "./config";
+import { configurationError } from "../../core/errors";
+import { ConfigService } from "../config";
 
 export interface SSMParameterStoreClient {
   getParametersByPath(params: SSM.Types.GetParametersByPathRequest)
