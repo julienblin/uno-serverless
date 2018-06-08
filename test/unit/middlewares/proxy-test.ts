@@ -182,8 +182,27 @@ describe("serializeBodyAsJSON middleware", () => {
       createLambdaContext(),
       (e, r) => {}) as APIGatewayProxyResult;
 
-    expect(result.body).to.deep.equal("hello");
+    expect(result.body).to.equal("hello");
     expect(result.headers).to.be.undefined;
+  });
+
+  it("should serialize safely.", async () => {
+    const obj1: Record<string, any> = {};
+    const obj2 = {
+      obj1,
+    };
+    obj1.obj2 = obj2;
+
+    const handler = lambda()
+      .use(serializeBodyAsJSON({ safe: true }))
+      .handler<any, APIGatewayProxyResult, any>(async () => ({ body: obj1 }));
+
+    const result = await handler(
+      {},
+      createLambdaContext(),
+      (e, r) => {}) as APIGatewayProxyResult;
+
+    expect(result.body).to.not.be.undefined;
   });
 
 });

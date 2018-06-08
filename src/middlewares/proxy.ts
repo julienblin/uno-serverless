@@ -85,8 +85,11 @@ export const httpErrors = (): Middleware<awsLambda.APIGatewayProxyEvent, any> =>
  * If the body of the response is not a string, serializes the object as JSON.
  */
 export const serializeBodyAsJSON =
-  (replacer?: (key: string, value: any) => any, space?: string | number, safe = false)
-    : Middleware<awsLambda.APIGatewayProxyEvent, any> => {
+  (options: {
+    replacer?: (key: string, value: any) => any,
+    space?: string | number,
+    safe?: boolean,
+  } = {}): Middleware<awsLambda.APIGatewayProxyEvent, any> => {
     return async (
       arg: LambdaArg<awsLambda.APIGatewayProxyEvent, any>,
       next: LambdaExecution<awsLambda.APIGatewayProxyEvent, any>): Promise<any> => {
@@ -103,9 +106,9 @@ export const serializeBodyAsJSON =
 
       return {
         ...result,
-        body: safe
-          ? safeJSONStringify(result.body, replacer, space)
-          : JSON.stringify(result.body, replacer, space),
+        body: options.safe
+          ? safeJSONStringify(result.body, options.replacer, options.space)
+          : JSON.stringify(result.body, options.replacer, options.space),
         headers: {
           ...result.headers,
           "Content-Type": "application/json",

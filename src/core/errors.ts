@@ -54,7 +54,7 @@ export const notFoundError = (target: string, message?: string) =>
     buildError(
       {
         code: "notFound",
-        message: message ? message : `The target ${target} could not be found.`,
+        message: message || `The target ${target} could not be found.`,
         target,
       },
       HttpStatusCodes.NOT_FOUND);
@@ -73,7 +73,7 @@ export const validationError = (errors: ErrorData[], message?: string) =>
     {
       code: "validationError",
       details: errors.map((e) => ({ code: e.code, message: e.message, target: e.target, data: e.data })),
-      message: message ? message : "Validation failed",
+      message: message || "Validation failed",
     },
     HttpStatusCodes.BAD_REQUEST);
 
@@ -91,7 +91,7 @@ export const dependencyError = (target: string, error: Error, message?: string) 
     {
       code: "dependencyError",
       details: [{ code: error.name, message: error.message, data: error}],
-      message: message ? message : error.toString(),
+      message: message || error.toString(),
       target,
     },
     HttpStatusCodes.BAD_GATEWAY);

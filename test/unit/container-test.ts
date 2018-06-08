@@ -25,7 +25,7 @@ describe("createContainerFactory", () => {
 
     const createContainer = createContainerFactory<Contract>({
       a: () => new A(),
-      b: () => new B(),
+      b: ({ builder }) => builder.singleton(new B()),
     });
 
     const container = createContainer();
@@ -136,7 +136,7 @@ describe("createContainerFactory", () => {
     const container = createContainer();
 
     expect(container.a()).to.be.instanceOf(A);
-    expect(() => container.b()).to.throw;
+    expect(() => container.b()).to.throw("Cannot instantiate scoped component in root container");
   });
 
   it("should create scope and manage lifetime", () => {

@@ -77,6 +77,41 @@ describe("validateBody middleware", () => {
     }
   });
 
+  it("should validate missing body.", async () => {
+    const handler = lambda()
+      .use([
+        parseBodyAsJSON(),
+        validateBody({}),
+      ])
+      .handler(async () => { });
+
+    try {
+      await handler(
+        {},
+        createLambdaContext(),
+        (e, r) => { });
+      expect(false);
+    } catch (error) {
+      expect(error.code).to.equal("validationError");
+    }
+  });
+
+  it("should throw if missing parseBody.", async () => {
+    const handler = lambda()
+      .use(validateBody({}))
+      .handler(async () => { });
+
+    try {
+      await handler(
+        {},
+        createLambdaContext(),
+        (e, r) => { });
+      expect(false);
+    } catch (error) {
+      expect(error.message).to.contain("parseBody");
+    }
+  });
+
 });
 
 describe("validateParameters middleware", () => {
@@ -110,6 +145,22 @@ describe("validateParameters middleware", () => {
       expect(false);
     } catch (error) {
       expect(error.code).to.equal("validationError");
+    }
+  });
+
+  it("should throw if missing parseParameters.", async () => {
+    const handler = lambda()
+      .use(validateParameters({}))
+      .handler(async () => { });
+
+    try {
+      await handler(
+        {},
+        createLambdaContext(),
+        (e, r) => { });
+      expect(false);
+    } catch (error) {
+      expect(error.message).to.contain("parseParameters");
     }
   });
 
