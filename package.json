@@ -15,6 +15,7 @@
     "build": "webpack --config webpack.config.js",
     "prepare": "npm run build",
     "test": "mocha",
+    "test:watch": "mocha --opts test/mocha.opts --watch",
     "cover": "nyc mocha",
     "coveralls": "nyc report --reporter=text-lcov | coveralls"
   },

@@ -5,16 +5,18 @@ import { ok } from "../core/responses";
 import { isAPIGatewayProxyResult, ServicesWithParseBody, ServicesWithParseParameters } from "../middlewares/proxy";
 
 export type ProxyFunc<TServices> =
-  (
-    lambda: { event: awsLambda.APIGatewayProxyEvent, context: awsLambda.Context },
-    services: TServices & ServicesWithParseBody & ServicesWithParseParameters) => Promise<any>;
+  (arg: {
+    event: awsLambda.APIGatewayProxyEvent,
+    context: awsLambda.Context,
+    services: TServices & ServicesWithParseBody & ServicesWithParseParameters }) => Promise<any>;
 
 export const proxy = <TServices = any>(func: ProxyFunc<TServices>)
   : LambdaExecution<awsLambda.APIGatewayProxyEvent, TServices> => {
     return async (arg: LambdaArg<awsLambda.APIGatewayProxyEvent, TServices>) => {
-      const result = await func(
-        { context: arg.context, event: arg.event },
-        arg.services as TServices & ServicesWithParseBody & ServicesWithParseParameters);
+      const result = await func({
+        context: arg.context,
+        event: arg.event,
+        services: arg.services as TServices & ServicesWithParseBody & ServicesWithParseParameters });
 
       if (result && isAPIGatewayProxyResult(result)) {
         return result;
