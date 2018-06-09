@@ -12,6 +12,7 @@ export interface HealthCheckResult {
   children?: HealthCheckResult[];
   elapsed?: number;
   error?: any;
+  message?: string;
   name: string;
   status: HealthCheckStatus;
   target?: string;
@@ -61,6 +62,10 @@ const runCheck = async (
   };
 
 const evaluateStatus = (children: HealthCheckResult[]): HealthCheckStatus => {
+  if (children.length === 0) {
+    return HealthCheckStatus.Inconclusive;
+  }
+
   if (children.some((x) => x.status === HealthCheckStatus.Error)) {
     return HealthCheckStatus.Error;
   }
