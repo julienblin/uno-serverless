@@ -20,7 +20,11 @@ export interface HealthCheckResult {
 export const isHealthCheckResult = (value: any): value is HealthCheckResult =>
   (typeof value === "object" &&  "name" in value && "status" in value);
 
-export type HealthCheckRun = () => Promise<HealthCheckResult | any>;
+export interface CheckHealth {
+  checkHealth(): Promise<HealthCheckResult>;
+}
+
+export type HealthCheckRun = CheckHealth | (() => Promise<HealthCheckResult | any>);
 
 const runCheck = async (
   name: string,
@@ -28,7 +32,12 @@ const runCheck = async (
   check: HealthCheckRun): Promise<HealthCheckResult> => {
     const start = process.hrtime();
     try {
-      const result = await check();
+      let result;
+      if (typeof check === "function") {
+        result = await check();
+      } else {
+        result = await check.checkHealth();
+      }
       if (isHealthCheckResult(result)) {
         return result;
       }

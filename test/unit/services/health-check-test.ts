@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { randomStr } from "../../../src/core/utils";
-import { checkHealth, HealthCheckStatus } from "../../../src/services/health-check";
+import { checkHealth, HealthCheckStatus, CheckHealth } from "../../../src/services/health-check";
 
 describe("health-checks", () => {
 
@@ -29,6 +29,17 @@ describe("health-checks", () => {
       }));
 
     expect(result.name).to.not.equal(name);
+    expect(result.status).to.equal(HealthCheckStatus.Warning);
+  });
+
+  it("should run a CheckHealth", async () => {
+    const checkHealthInstance: CheckHealth = {
+      checkHealth: async () => ({ name: randomStr(), status: HealthCheckStatus.Warning }),
+    };
+    const name = randomStr();
+    const target = randomStr();
+    const result = await checkHealth(name, target, checkHealthInstance);
+
     expect(result.status).to.equal(HealthCheckStatus.Warning);
   });
 
