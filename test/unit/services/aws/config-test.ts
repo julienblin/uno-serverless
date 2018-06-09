@@ -141,7 +141,7 @@ describe("SSMParameterStoreConfigService", () => {
     const config = new SSMParameterStoreConfigService({
       path,
       ssm: stub,
-      ttl: 100,
+      ttl: 10,
     }) as ConfigService;
 
     await config.get("foo");
@@ -150,7 +150,7 @@ describe("SSMParameterStoreConfigService", () => {
     await config.get("foo");
     expect(stub.currentIteration).to.equal(0);
 
-    await new Promise((r) => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 10));
 
     await config.get("foo");
     expect(stub.currentIteration).to.equal(1);
