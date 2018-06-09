@@ -1,6 +1,18 @@
-import { S3 } from "aws-sdk";
+import { AWSError, S3 } from "aws-sdk";
+import { PromiseResult } from "aws-sdk/lib/request";
 import * as HttpStatusCodes from "http-status-codes";
 import { KeyValueRepository } from "../key-value-repository";
+
+export interface S3Client {
+  deleteObject(params: S3.Types.DeleteObjectRequest)
+    : { promise(): Promise<PromiseResult<S3.Types.DeleteObjectOutput, AWSError>> };
+
+  getObject(params: S3.Types.GetObjectRequest)
+  : { promise(): Promise<PromiseResult<S3.Types.GetObjectOutput, AWSError>> };
+
+  putObject(params: S3.Types.PutObjectRequest)
+  : { promise(): Promise<PromiseResult<S3.Types.PutObjectOutput, AWSError>> };
+}
 
 export interface S3KeyValueRepositoryOptions {
   /** S3 bucket name. */
@@ -13,7 +25,7 @@ export interface S3KeyValueRepositoryOptions {
   path?: string;
 
   /** S3 client to use. */
-  s3?: S3;
+  s3?: S3Client;
 
   /** Custom deserializer. */
   deserialize?<T>(text: string): T;

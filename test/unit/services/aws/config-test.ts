@@ -28,7 +28,7 @@ class SSMParameterStoreClientStub implements SSMParameterStoreClient {
   }
 }
 
-describe("SSMParameterStoreClient", () => {
+describe("SSMParameterStoreConfigService", () => {
 
   it("should return mandatory values", async () => {
     const values = { foo: "bar" };

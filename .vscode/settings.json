@@ -3,6 +3,8 @@
         "Serializer",
         "Serverless",
         "cobertura",
+        "deserialize",
+        "deserializer",
         "memoized",
         "middlewares",
         "opiniated",
