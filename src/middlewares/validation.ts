@@ -33,6 +33,14 @@ export const validateBody = (schema: JSONSchema)
     arg: LambdaArg<awsLambda.APIGatewayProxyEvent, ServicesWithParseBody>,
     next: LambdaExecution<any, any>): Promise<any> => {
 
+    switch (arg.event.httpMethod.toLowerCase()) {
+      case "delete":
+      case "get":
+      case "head":
+      case "options":
+        return next(arg);
+    }
+
     if (!arg.services.parseBody) {
       throw new Error("Missing parseBody service - did you forget a middleware?");
     }

@@ -54,7 +54,7 @@ describe("validateBody middleware", () => {
           type: "number",
         },
       },
-      required: [ "bar" ],
+      required: ["bar"],
     };
 
     const handler = lambda()
@@ -68,6 +68,7 @@ describe("validateBody middleware", () => {
       await handler(
         {
           body: JSON.stringify({ foo: "foo" }),
+          httpMethod: "PUT",
         },
         createLambdaContext(),
         (e, r) => { });
@@ -87,13 +88,32 @@ describe("validateBody middleware", () => {
 
     try {
       await handler(
-        {},
+        {
+          httpMethod: "POST",
+        },
         createLambdaContext(),
         (e, r) => { });
       expect(false);
     } catch (error) {
       expect(error.code).to.equal("validationError");
     }
+  });
+
+  it("should not validate if HTTP method is not compatible.", async () => {
+    const handler = lambda()
+      .use([
+        parseBodyAsJSON(),
+        validateBody({}),
+      ])
+      .handler(async () => { });
+
+    await handler(
+      {
+        httpMethod: "GET",
+      },
+      createLambdaContext(),
+      (e, r) => { });
+    expect(true);
   });
 
   it("should throw if missing parseBody.", async () => {
@@ -103,7 +123,9 @@ describe("validateBody middleware", () => {
 
     try {
       await handler(
-        {},
+        {
+          httpMethod: "PATCH",
+        },
         createLambdaContext(),
         (e, r) => { });
       expect(false);
@@ -124,7 +146,7 @@ describe("validateParameters middleware", () => {
           type: "string",
         },
       },
-      required: [ "bar" ],
+      required: ["bar"],
     };
 
     const handler = lambda()

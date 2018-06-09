@@ -51,13 +51,13 @@ export const unauthorizedError = (target: string, message: string) =>
     HttpStatusCodes.UNAUTHORIZED);
 
 export const notFoundError = (target: string, message?: string) =>
-    buildError(
-      {
-        code: "notFound",
-        message: message || `The target ${target} could not be found.`,
-        target,
-      },
-      HttpStatusCodes.NOT_FOUND);
+  buildError(
+    {
+      code: "notFound",
+      message: message || `The target ${target} could not be found.`,
+      target,
+    },
+    HttpStatusCodes.NOT_FOUND);
 
 export const badRequestError = (message: string, data?: object) =>
   buildError(
@@ -67,6 +67,14 @@ export const badRequestError = (message: string, data?: object) =>
       message,
     },
     HttpStatusCodes.BAD_REQUEST);
+
+export const methodNotAllowedError = (message: string) =>
+  buildError(
+    {
+      code: "methodNotAllowed",
+      message,
+    },
+    HttpStatusCodes.METHOD_NOT_ALLOWED);
 
 export const validationError = (errors: ErrorData[], message?: string) =>
   buildError(
@@ -90,7 +98,7 @@ export const dependencyError = (target: string, error: Error, message?: string) 
   buildError(
     {
       code: "dependencyError",
-      details: [{ code: error.name, message: error.message, data: error}],
+      details: [{ code: error.name, message: error.message, data: error }],
       message: message || error.toString(),
       target,
     },
@@ -101,7 +109,7 @@ export const dependencyErrorProxy = <T extends object>(target: T, targetName: st
   const dependencyHandler: ProxyHandler<T> = {
     get: (proxyTarget, name, receiver) => {
       const prop = proxyTarget[name];
-      if (typeof(prop) !== "function") { return prop; }
+      if (typeof (prop) !== "function") { return prop; }
 
       return (...args) => {
         try {
