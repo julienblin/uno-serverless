@@ -1,6 +1,8 @@
 import { AWSError, S3 } from "aws-sdk";
 import { PromiseResult } from "aws-sdk/lib/request";
 import * as HttpStatusCodes from "http-status-codes";
+import { randomStr } from "../../core/utils";
+import { checkHealth, CheckHealth } from "../health-check";
 import { KeyValueRepository } from "../key-value-repository";
 
 export interface S3Client {
@@ -37,7 +39,7 @@ export interface S3KeyValueRepositoryOptions {
 /**
  * KeyValueRepository that uses S3 as a backing store.
  */
-export class S3KeyValueRepository implements KeyValueRepository {
+export class S3KeyValueRepository implements KeyValueRepository, CheckHealth {
 
   /** Options resolved with default values. */
   private readonly options: Required<S3KeyValueRepositoryOptions>;
@@ -59,6 +61,13 @@ export class S3KeyValueRepository implements KeyValueRepository {
       s3,
       serialize,
     };
+  }
+
+  public async checkHealth() {
+    return checkHealth(
+      "S3KeyValueRepository",
+      `${await this.options.bucket}/${this.options.path}`,
+      async () => this.get(randomStr()));
   }
 
   /** Delete the value associated with the key */

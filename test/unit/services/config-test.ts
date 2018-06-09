@@ -4,6 +4,7 @@ import { randomStr } from "../../../src/core/utils";
 import {
   ConfigService, JSONFileConfigService,
   ProcessEnvConfigService, StaticConfigService } from "../../../src/services/config";
+import { HealthCheckStatus } from "../../../src/services/health-check";
 
 describe("StaticConfigService", () => {
 
@@ -144,5 +145,16 @@ describe("JSONFileConfigService", () => {
     } catch (error) {
       expect(error.message).to.contain(path);
     }
+  });
+
+  it("should check health", async () => {
+    const config = new JSONFileConfigService({
+      path: testConfigFile,
+    });
+
+    const result = await config.checkHealth();
+    expect(result.name).to.equal("JSONFileConfigService");
+    expect(result.target).to.equal(testConfigFile);
+    expect(result.status).to.equal(HealthCheckStatus.Ok);
   });
 });

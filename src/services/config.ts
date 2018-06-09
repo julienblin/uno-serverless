@@ -1,5 +1,6 @@
 import { readFile } from "fs";
 import { configurationError } from "../core/errors";
+import { checkHealth, CheckHealth } from "./health-check";
 
 /** Provides configuration values as string. */
 export interface ConfigService {
@@ -67,7 +68,7 @@ export interface JSONFileConfigServiceOptions {
  * ConfigService implementation that loads a JSON file
  * with key/value pairs.
  */
-export class JSONFileConfigService implements ConfigService {
+export class JSONFileConfigService implements ConfigService, CheckHealth {
 
   /** Cached promise for file content. */
   private fileContent: Promise<Record<string, string>> | undefined;
@@ -75,6 +76,13 @@ export class JSONFileConfigService implements ConfigService {
   public constructor(
     private readonly options: JSONFileConfigServiceOptions,
     private readonly name = "JSONFileConfigService") {}
+
+  public async checkHealth() {
+    return checkHealth(
+      "JSONFileConfigService",
+      this.options.path,
+      async () => this.loadFile());
+  }
 
   public async get(key: string): Promise<string>;
   public async get(key: string, required = true): Promise<string | undefined> {

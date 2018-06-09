@@ -3,6 +3,7 @@ import { GetParametersByPathResult } from "aws-sdk/clients/ssm";
 import { PromiseResult } from "aws-sdk/lib/request";
 import { configurationError } from "../../core/errors";
 import { ConfigService } from "../config";
+import { checkHealth, CheckHealth } from "../health-check";
 
 export interface SSMParameterStoreClient {
   getParametersByPath(params: SSM.Types.GetParametersByPathRequest)
@@ -22,7 +23,7 @@ export interface SSMParameterStoreConfigServiceOptions {
  * ConfigService implementation that uses
  * AWS Systems Manager Parameter Store.
  */
-export class SSMParameterStoreConfigService implements ConfigService {
+export class SSMParameterStoreConfigService implements ConfigService, CheckHealth {
 
   /** Cached promise */
   private cache: {
@@ -49,6 +50,13 @@ export class SSMParameterStoreConfigService implements ConfigService {
     if (!this.options.numberOfIterations) {
       this.options.numberOfIterations = 10;
     }
+  }
+
+  public async checkHealth() {
+    return checkHealth(
+      "SSMParameterStoreConfigService",
+      this.options.path.slice(0, -1),
+      async () => this.getParameters());
   }
 
   public async get(key: string): Promise<string>;

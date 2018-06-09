@@ -3,6 +3,7 @@ import { expect } from "chai";
 import * as HttpStatusCodes from "http-status-codes";
 import { randomStr } from "../../../../src/core/utils";
 import { S3Client, S3KeyValueRepository } from "../../../../src/services/aws/key-value-repository";
+import { HealthCheckStatus } from "../../../../src/services/health-check";
 
 class S3ClientStub implements S3Client {
 
@@ -111,6 +112,23 @@ describe("S3KeyValueRepository", () => {
     await repository.set(key, value);
     expect(stub.lastPut!.Key).to.equal(`${keyPath}/${key}`);
     expect(stub.lastPut!.Body).to.equal(JSON.stringify(value));
+  });
+
+  it("should should check health", async () => {
+    const stub = new S3ClientStub({
+      getErrorStatusCode: HttpStatusCodes.NOT_FOUND,
+    });
+    const key = randomStr();
+    const keyPath = randomStr();
+    const repository = new S3KeyValueRepository({
+      bucket: randomStr(),
+      path: keyPath,
+      s3: stub,
+    });
+
+    const result = await repository.checkHealth();
+    expect(result.name).to.equal("S3KeyValueRepository");
+    expect(result.status).to.equal(HealthCheckStatus.Ok);
   });
 
 });

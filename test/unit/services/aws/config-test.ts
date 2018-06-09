@@ -4,6 +4,7 @@ import { expect } from "chai";
 import { describe, it } from "mocha";
 import { SSMParameterStoreClient, SSMParameterStoreConfigService } from "../../../../src/services/aws/config";
 import { ConfigService } from "../../../../src/services/config";
+import { HealthCheckStatus } from "../../../../src/services/health-check";
 
 const path = "/opiniated-lambda/tests";
 
@@ -154,6 +155,18 @@ describe("SSMParameterStoreConfigService", () => {
 
     await config.get("foo");
     expect(stub.currentIteration).to.equal(1);
+  });
+
+  it("should check health", async () => {
+    const config = new SSMParameterStoreConfigService({
+      path,
+      ssm: new SSMParameterStoreClientStub([[]]),
+    });
+
+    const result = await config.checkHealth();
+    expect(result.name).to.equal("SSMParameterStoreConfigService");
+    expect(result.target).to.equal(path);
+    expect(result.status).to.equal(HealthCheckStatus.Ok);
   });
 
 });
