@@ -73,7 +73,7 @@ describe("health-checks", () => {
       target,
       [
         async () => {  },
-        async () => { throw new Error("foo") },
+        async () => { throw new Error("foo"); },
       ]);
 
     expect(result.name).to.equal(name);

@@ -26,6 +26,15 @@ describe("httpClientFactory", function() {
     expect(response.data.title).to.not.be.undefined;
   });
 
+  it("should head", async () => {
+    const client = httpClientFactory({
+      baseURL: baseURL(),
+    });
+
+    const response = await client.head("/posts/1");
+    expect(response.status).to.equal(HttpStatusCodes.OK);
+  });
+
   it("should post", async () => {
     const client = httpClientFactory({
       baseURL: baseURL(),
@@ -86,6 +95,7 @@ describe("httpClientFactory", function() {
 
   [
     { name: "get", test: (client, data) => client.get(`/posts/${randomStr()}`)},
+    { name: "head", test: (client, data) => client.head(`/posts/${randomStr()}`)},
     { name: "post",  test: (client, data) => client.post(`/posts/${randomStr()}`, data)},
     { name: "put",  test: (client, data) => client.put(`/posts/${randomStr()}`, data)},
     { name: "patch",  test: (client, data) => client.patch(`/posts/${randomStr()}`, data)},

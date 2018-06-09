@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
+import { randomStr } from "../../../src/core/utils";
 import {
   ConfigService, JSONFileConfigService,
   ProcessEnvConfigService, StaticConfigService } from "../../../src/services/config";
@@ -128,6 +129,20 @@ describe("JSONFileConfigService", () => {
       expect(error.code).to.equal("configurationError");
       expect(error.data.key).to.equal("missing");
       expect(error.data.provider).to.equal("JSONFileConfigService");
+    }
+  });
+
+  it("should throw on missing files", async () => {
+    const path = randomStr();
+    const config = new JSONFileConfigService({
+      path,
+    }) as ConfigService;
+
+    try {
+      await config.get("foo", false);
+      expect(false);
+    } catch (error) {
+      expect(error.message).to.contain(path);
     }
   });
 });
