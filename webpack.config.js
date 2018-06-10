@@ -31,7 +31,6 @@ module.exports = {
   ],
   externals: {
     'ajv': 'ajv',
-    'axios-mock-adapter': 'axios-mock-adapter',
     'aws-sdk': 'aws-sdk',
     'axios': 'axios',
   }

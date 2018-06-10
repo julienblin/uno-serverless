@@ -39,7 +39,6 @@
     "ajv": "^6.5.0",
     "aws-sdk": "^2.254.1",
     "axios": "^0.18.0",
-    "axios-mock-adapter": "^1.15.0",
     "chai": "^4.1.2",
     "clean-webpack-plugin": "^0.1.19",
     "coveralls": "^3.0.1",

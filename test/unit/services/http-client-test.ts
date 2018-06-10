@@ -3,9 +3,7 @@ import * as HttpStatusCodes from "http-status-codes";
 import { describe, it } from "mocha";
 import * as nock from "nock";
 import { randomStr } from "../../../src/core/utils";
-import {
-  HttpClientConfig, HttpClientError, httpClientFactory,
-  mockHttpClientFactory } from "../../../src/services/http-client";
+import { HttpClientError, httpClientFactory } from "../../../src/services/http-client";
 
 // tslint:disable-next-line:only-arrow-functions
 describe("httpClientFactory", () => {
@@ -163,38 +161,5 @@ describe("httpClientFactory", () => {
         expect(httpClientError.response!.status).to.equal(HttpStatusCodes.NOT_FOUND);
       }
     });
-  });
-});
-
-describe("mockHttpClientFactory", () => {
-
-  interface Post {
-    body: string;
-    title: string;
-  }
-
-  it("should mock responses", async () => {
-    const { client, mock } = mockHttpClientFactory();
-
-    const mockedPost = { title: randomStr() };
-    mock.onGet("/posts/1").reply(HttpStatusCodes.OK, mockedPost);
-
-    const response = await client.get<Post>("/posts/1");
-    expect(response.data.title).to.equal(mockedPost.title);
-  });
-
-  it("should mock errors", async () => {
-    const { client, mock } = mockHttpClientFactory();
-
-    const mockedPost = { title: randomStr() };
-    mock.onPost("/posts").reply(HttpStatusCodes.BAD_REQUEST, { error: "Invalid data"});
-
-    try {
-      await client.post<Post>("/posts");
-    } catch (error) {
-      const httpClientError = error as HttpClientError;
-      expect(httpClientError.request!.method).to.equal("post");
-      expect(httpClientError.response!.status).to.equal(HttpStatusCodes.BAD_REQUEST);
-    }
   });
 });
