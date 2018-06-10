@@ -1,5 +1,6 @@
 import Axios, * as axios from "axios";
 import MockAdapter from "axios-mock-adapter";
+import { isStatusCodeProvider } from "../core";
 
 export type PossiblePromise<T> = T | Promise<T>;
 
@@ -54,6 +55,9 @@ export interface HttpClientError extends Error {
 }
 
 const httpClientError = (axiosError: axios.AxiosError): HttpClientError => {
+  if (isStatusCodeProvider(axiosError)) {
+    return axiosError;
+  }
   const error = new Error(axiosError.message) as HttpClientError;
 
   error.code = axiosError.code;

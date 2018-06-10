@@ -5,7 +5,7 @@ const distFolder = path.join(__dirname, 'dist');
 
 module.exports = {
   context: path.join(__dirname, 'src'),
-  entry: './index',
+  entry: { index: './index' },
   devtool: 'source-map',
   mode: 'production',
   target: 'node',
@@ -19,7 +19,7 @@ module.exports = {
   output: {
     libraryTarget: 'commonjs',
     path: distFolder,
-    filename: 'index.js',
+    filename: '[name].js',
   },
   module: {
     rules: [
@@ -31,6 +31,7 @@ module.exports = {
   ],
   externals: {
     'ajv': 'ajv',
+    'axios-mock-adapter': 'axios-mock-adapter',
     'aws-sdk': 'aws-sdk',
     'axios': 'axios',
   }

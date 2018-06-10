@@ -70,10 +70,13 @@ export const httpErrors = (): Middleware<awsLambda.APIGatewayProxyEvent, any> =>
     } catch (error) {
       const finalError = isStatusCodeProvider(error)
         ? error
-        : internalServerError(error.message);
+        : internalServerError(error.message) as any;
 
       return {
-        body: finalError,
+        body: {
+          ...finalError,
+          message: finalError.message,
+        },
         statusCode: finalError.getStatusCode(),
       };
     }
