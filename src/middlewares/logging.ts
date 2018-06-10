@@ -12,7 +12,10 @@ export const errorLogging = (errorFunc: (message?: any) => void = console.error)
       } catch (error) {
         const payload = {
           context: arg.context,
-          error,
+          error: {
+            ...error,
+            message: error.message,
+          },
           errorStackTrace: error.stack,
           event: arg.event,
         };
