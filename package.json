@@ -59,7 +59,8 @@
     "webpack-cli": "^2.1.5"
   },
   "dependencies": {
-    "@types/aws-lambda": "^8.10.6"
+    "@types/aws-lambda": "^8.10.6",
+    "path-to-regexp": "^2.2.1"
   },
   "nyc": {
     "extension": [

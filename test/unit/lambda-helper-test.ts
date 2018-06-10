@@ -22,6 +22,7 @@ export const createAPIGatewayProxyEvent =
       headers?:
       { [name: string]: string };
       method?: string;
+      path?: string,
       pathParameters?: { [name: string]: string };
       queryStringParameters?: { [name: string]: string }; } = {}): APIGatewayProxyEvent => ({
       body: args.body
@@ -30,7 +31,7 @@ export const createAPIGatewayProxyEvent =
       headers: args.headers ? args.headers : {},
       httpMethod: args.method ? args.method : "GET",
       isBase64Encoded: false,
-      path: "/unit-tests",
+      path: args.path || "/unit-tests",
       pathParameters: args.pathParameters ? args.pathParameters : null,
       queryStringParameters: args.queryStringParameters ? args.queryStringParameters : null,
       requestContext: {

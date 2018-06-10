@@ -180,7 +180,7 @@ export const parseBodyAsFORM = (reviver?: (key: any, value: any) => any, parseMe
 export const PARSE_PARAMETERS_METHOD = "parseParameters";
 
 export interface ServicesWithParseParameters {
-  [PARSE_PARAMETERS_METHOD]<T>(): T;
+  [PARSE_PARAMETERS_METHOD]<T = any>(): T;
 }
 
 const decodeFromSource = (source: { [name: string]: string }, params: any) => {

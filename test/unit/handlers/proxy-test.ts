@@ -2,8 +2,8 @@ import * as awsLambda from "aws-lambda";
 import { expect } from "chai";
 import * as HttpStatusCode from "http-status-codes";
 import { lambda } from "../../../src/core/builder";
-import { proxy, proxyByMethod } from "../../../src/handlers/proxy";
-import { parseBodyAsJSON } from "../../../src/middlewares/proxy";
+import { proxy, proxyByMethod, proxyRouter } from "../../../src/handlers/proxy";
+import { parseBodyAsJSON, parseParameters } from "../../../src/middlewares/proxy";
 import { createAPIGatewayProxyEvent, createLambdaContext } from "../lambda-helper-test";
 
 describe("proxy handler", () => {
@@ -101,6 +101,45 @@ describe("proxyByMethod handler", () => {
     } catch (error) {
       expect(error.code).to.equal("methodNotAllowed");
       expect(error.getStatusCode()).to.equal(HttpStatusCode.METHOD_NOT_ALLOWED);
+    }
+  });
+
+});
+
+describe("proxyRouter handler", () => {
+
+  it("should do something", async () => {
+
+    const handler = lambda()
+      .use(parseParameters())
+      .handler(proxyRouter<{}>({
+        "/users": {
+          get: async () => "list-method",
+          post: async () => "post-method",
+        },
+        "/users/:id": {
+          get: async ({ services }) => "get-method-" + services.parseParameters().id,
+          put: async ({ services }) => "put-method-" + services.parseParameters().id,
+        },
+      }));
+
+    const tests = [
+      { path: "/users", method: "GET", expected: "list-method" },
+      { path: "/users", method: "POST", expected: "post-method" },
+      { path: "/users/johndoe", method: "GET", expected: "get-method-johndoe" },
+      { path: "/users/dowjones", method: "PUT", expected: "put-method-dowjones" },
+    ];
+
+    for (const test of tests) {
+      const lambdaResult = await handler(
+        createAPIGatewayProxyEvent({
+          method: test.method,
+          path: test.path,
+        }),
+        createLambdaContext(),
+        (e, r) => { }) as awsLambda.APIGatewayProxyResult;
+
+      expect(lambdaResult.body).to.equal(test.expected);
     }
   });
 

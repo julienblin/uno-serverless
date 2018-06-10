@@ -1,4 +1,5 @@
 import * as awsLambda from "aws-lambda";
+import * as pathToRegexp from "path-to-regexp";
 import { LambdaArg, LambdaExecution } from "../core/builder";
 import { methodNotAllowedError, notFoundError } from "../core/errors";
 import { ok } from "../core/responses";
@@ -63,4 +64,52 @@ export const proxyByMethod = <TServices = any>(methods: ProxyMethods<TServices>)
 
     return runProxy(func, arg);
   };
+};
+
+export type ProxyRoutes<TServices> = Record<string, ProxyMethods<TServices>>;
+
+/**
+ * Router for proxy integration.
+ */
+export const proxyRouter = <TServices = any>(router: ProxyRoutes<TServices>)
+  : LambdaExecution<awsLambda.APIGatewayProxyEvent, TServices> => {
+
+  const routerPaths = Object.keys(router).map((spec) => ({
+    methods: router[spec],
+    pathEval: pathToRegexp(spec),
+    pathParameters: pathToRegexp.parse(spec),
+    spec,
+  }));
+
+  return async (arg: LambdaArg<awsLambda.APIGatewayProxyEvent, TServices>) => {
+
+    for (const routerPath of routerPaths) {
+      const pathEvaluation = routerPath.pathEval.exec(arg.event.path);
+      if (!pathEvaluation) {
+        continue;
+      }
+
+      const func = routerPath.methods[arg.event.httpMethod.toLowerCase()] as ProxyFunc<TServices> | undefined;
+
+      if (!func) {
+        throw methodNotAllowedError(`Method ${arg.event.httpMethod.toLowerCase()} is not allowed.`);
+      }
+
+      for (let index = 0; index < pathEvaluation.length; index++) {
+        const element = pathEvaluation[index];
+        const pathParameter = routerPath.pathParameters[index];
+        if (typeof pathParameter === "object") {
+          if (!arg.event.pathParameters) {
+            arg.event.pathParameters = {};
+          }
+          arg.event.pathParameters[pathParameter.name] = element;
+        }
+      }
+
+      return runProxy(func, arg);
+    }
+
+    throw notFoundError(arg.event.path, "No suitable route found.");
+  };
+
 };
