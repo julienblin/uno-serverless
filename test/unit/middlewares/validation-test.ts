@@ -116,7 +116,7 @@ describe("validateBody middleware", () => {
     expect(true);
   });
 
-  it("should throw if missing parseBody.", async () => {
+  it("should throw if missing body.", async () => {
     const handler = lambda()
       .use(validateBody({}))
       .handler(async () => { });
@@ -130,7 +130,7 @@ describe("validateBody middleware", () => {
         (e, r) => { });
       expect(false);
     } catch (error) {
-      expect(error.message).to.contain("parseBody");
+      expect(error.message).to.contain("body");
     }
   });
 
@@ -170,7 +170,7 @@ describe("validateParameters middleware", () => {
     }
   });
 
-  it("should throw if missing parseParameters.", async () => {
+  it("should throw if missing parameters.", async () => {
     const handler = lambda()
       .use(validateParameters({}))
       .handler(async () => { });
@@ -182,7 +182,7 @@ describe("validateParameters middleware", () => {
         (e, r) => { });
       expect(false);
     } catch (error) {
-      expect(error.message).to.contain("parseParameters");
+      expect(error.message).to.contain("parameters");
     }
   });
 

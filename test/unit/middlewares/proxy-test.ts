@@ -10,7 +10,7 @@ import { randomStr } from "../../../src/core/utils";
 import {
   cors, httpErrors, parseBodyAsFORM, parseBodyAsJSON,
   parseParameters, responseHeaders, serializeBodyAsJSON,
-  ServicesWithParseBody, ServicesWithParseParameters } from "../../../src/middlewares/proxy";
+  ServicesWithBody, ServicesWithParameters} from "../../../src/middlewares/proxy";
 import { createLambdaContext } from "../lambda-helper-test";
 
 describe("responseHeaders middleware", () => {
@@ -216,9 +216,9 @@ describe("parseBodyAsJSON middleware", () => {
 
     const handler = lambda()
       .use(parseBodyAsJSON())
-      .handler<any, APIGatewayProxyResult, ServicesWithParseBody>
+      .handler<any, APIGatewayProxyResult, ServicesWithBody>
         (async ({ services }) => {
-          expect(services.parseBody()).to.deep.equal(body);
+          expect(services.body()).to.deep.equal(body);
         });
 
     await handler(
@@ -240,9 +240,9 @@ describe("parseBodyAsFORM middleware", () => {
 
     const handler = lambda()
       .use(parseBodyAsFORM())
-      .handler<any, APIGatewayProxyResult, ServicesWithParseBody>
+      .handler<any, APIGatewayProxyResult, ServicesWithBody>
         (async ({ services }) => {
-          expect(services.parseBody()).to.deep.equal(body);
+          expect(services.body()).to.deep.equal(body);
         });
 
     await handler(
@@ -265,9 +265,9 @@ describe("parseParameters middleware", () => {
 
     const handler = lambda()
       .use(parseParameters())
-      .handler<any, APIGatewayProxyResult, ServicesWithParseParameters>
+      .handler<any, APIGatewayProxyResult, ServicesWithParameters>
         (async ({ services }) => {
-          expect(services.parseParameters()).to.deep.equal(parameters);
+          expect(services.parameters()).to.deep.equal(parameters);
         });
 
     await handler(

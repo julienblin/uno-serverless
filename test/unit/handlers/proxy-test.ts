@@ -13,7 +13,7 @@ describe("proxy handler", () => {
     const testBody = { foo: "bar" };
     const handler = lambda()
       .use(parseBodyAsJSON())
-      .handler(proxy<{}>(async ({ services: { parseBody } }) => parseBody()));
+      .handler(proxy<{}>(async ({ services: { body } }) => body()));
 
     const lambdaResult = await handler(
       createAPIGatewayProxyEvent({
@@ -118,16 +118,16 @@ describe("proxyRouter handler", () => {
           post: async () => "post-method",
         },
         "users/:id": {
-          get: async ({ services }) => "get-method-" + services.parseParameters().id,
-          put: async ({ services }) => "put-method-" + services.parseParameters().id,
+          get: async ({ services }) => "get-method-" + services.parameters().id,
+          put: async ({ services }) => "put-method-" + services.parameters().id,
         },
       }));
 
     const tests = [
       { path: "users", method: "GET", expected: "list-method" },
       { path: "users", method: "POST", expected: "post-method" },
-      { path: "users/johndoe", method: "GET", expected: "get-method-johndoe" },
-      { path: "users/dowjones", method: "PUT", expected: "put-method-dowjones" },
+      { path: "users/foo", method: "GET", expected: "get-method-foo" },
+      { path: "users/bar", method: "PUT", expected: "put-method-bar" },
     ];
 
     for (const test of tests) {

@@ -3,7 +3,7 @@ import { LambdaArg, LambdaExecution, Middleware } from "../core/builder";
 import { validationError } from "../core/errors";
 import { JSONSchema } from "../core/json-schema";
 import { validate } from "../core/validator";
-import { ServicesWithParseBody, ServicesWithParseParameters } from "./proxy";
+import { ServicesWithBody, ServicesWithParameters } from "./proxy";
 
 /**
  * This middleware validates the event using JSON Schema.
@@ -28,9 +28,9 @@ export const validateEvent = (schema: JSONSchema)
  * Requires the addition of a middleware to parse the body before it.
  */
 export const validateBody = (schema: JSONSchema)
-  : Middleware<awsLambda.APIGatewayProxyEvent, ServicesWithParseBody> => {
+  : Middleware<awsLambda.APIGatewayProxyEvent, ServicesWithBody> => {
   return async (
-    arg: LambdaArg<awsLambda.APIGatewayProxyEvent, ServicesWithParseBody>,
+    arg: LambdaArg<awsLambda.APIGatewayProxyEvent, ServicesWithBody>,
     next: LambdaExecution<any, any>): Promise<any> => {
 
     switch (arg.event.httpMethod.toLowerCase()) {
@@ -41,11 +41,11 @@ export const validateBody = (schema: JSONSchema)
         return next(arg);
     }
 
-    if (!arg.services.parseBody) {
-      throw new Error("Missing parseBody service - did you forget a middleware?");
+    if (!arg.services.body) {
+      throw new Error("Missing body service - did you forget a middleware?");
     }
 
-    const bodyAsObject = arg.services.parseBody();
+    const bodyAsObject = arg.services.body();
 
     if (!bodyAsObject) {
       throw validationError([{ code: "required", message: "Missing body", target: "body" }]);
@@ -65,16 +65,16 @@ export const validateBody = (schema: JSONSchema)
  * Requires the addition of a middleware to parse the parameters before it.
  */
 export const validateParameters = (schema: JSONSchema)
-  : Middleware<awsLambda.APIGatewayProxyEvent, ServicesWithParseParameters> => {
+  : Middleware<awsLambda.APIGatewayProxyEvent, ServicesWithParameters> => {
   return async (
-    arg: LambdaArg<awsLambda.APIGatewayProxyEvent, ServicesWithParseParameters>,
+    arg: LambdaArg<awsLambda.APIGatewayProxyEvent, ServicesWithParameters>,
     next: LambdaExecution<any, any>): Promise<any> => {
 
-    if (!arg.services.parseParameters) {
-      throw new Error("Missing parseParameters service - did you forget a middleware?");
+    if (!arg.services.parameters) {
+      throw new Error("Missing parameters service - did you forget a middleware?");
     }
 
-    const validationErrors = validate(schema, arg.services.parseParameters(), "parameters");
+    const validationErrors = validate(schema, arg.services.parameters(), "parameters");
     if (validationErrors.length > 0) {
       throw validationError(validationErrors);
     }

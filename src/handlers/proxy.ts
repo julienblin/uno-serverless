@@ -3,7 +3,7 @@ import * as pathToRegexp from "path-to-regexp";
 import { LambdaArg, LambdaExecution } from "../core/builder";
 import { internalServerError, methodNotAllowedError, notFoundError } from "../core/errors";
 import { ok } from "../core/responses";
-import { isAPIGatewayProxyResult, ServicesWithParseBody, ServicesWithParseParameters } from "../middlewares/proxy";
+import { isAPIGatewayProxyResult, ServicesWithBody, ServicesWithParameters } from "../middlewares/proxy";
 
 const runProxy = async <TServices>(
   func: ProxyFunc<TServices>,
@@ -11,7 +11,7 @@ const runProxy = async <TServices>(
   const result = await func({
     context: arg.context,
     event: arg.event,
-    services: arg.services as TServices & ServicesWithParseBody & ServicesWithParseParameters,
+    services: arg.services as TServices & ServicesWithBody & ServicesWithParameters,
   });
 
   if (result && isAPIGatewayProxyResult(result)) {
@@ -29,13 +29,13 @@ export type ProxyFunc<TServices> =
   (arg: {
     event: awsLambda.APIGatewayProxyEvent,
     context: awsLambda.Context,
-    services: TServices & ServicesWithParseBody & ServicesWithParseParameters,
+    services: TServices & ServicesWithBody & ServicesWithParameters,
   }) => Promise<any>;
 
 /**
  * This handler is for lambda proxy integrations.
  * Allows to return any object as a result, and also passes
- * convenience methods in services for parseBody and parseParameters.
+ * convenience methods in services for body and parameters.
  * Throws notFoundError if result is undefined, or return ok() if result is an object.
  * If returning a APIGatewayProxyResult, just passes it back.
  */

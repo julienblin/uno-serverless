@@ -120,16 +120,16 @@ export const serializeBodyAsJSON =
     };
   };
 
-export const PARSE_BODY_METHOD = "parseBody";
+export const BODY_METHOD = "body";
 
-export interface ServicesWithParseBody {
-  [PARSE_BODY_METHOD]<T>(): T;
+export interface ServicesWithBody {
+  [BODY_METHOD]<T>(): T;
 }
 
 /**
  * This middleware exposes a method in the service object to parse the body of a request as JSON.
  */
-export const parseBodyAsJSON = (reviver?: (key: any, value: any) => any, parseMethod = PARSE_BODY_METHOD)
+export const parseBodyAsJSON = (reviver?: (key: any, value: any) => any, parseMethod = BODY_METHOD)
   : Middleware<awsLambda.APIGatewayProxyEvent, any> => {
   return async (
     arg: LambdaArg<awsLambda.APIGatewayProxyEvent, any>,
@@ -155,7 +155,7 @@ export const parseBodyAsJSON = (reviver?: (key: any, value: any) => any, parseMe
  * This middleware exposes a method in the service object to parse the body of a request
  * as FORM (application/x-www-form-urlencoded).
  */
-export const parseBodyAsFORM = (reviver?: (key: any, value: any) => any, parseMethod = PARSE_BODY_METHOD)
+export const parseBodyAsFORM = (reviver?: (key: any, value: any) => any, parseMethod = BODY_METHOD)
   : Middleware<awsLambda.APIGatewayProxyEvent, any> => {
   return async (
     arg: LambdaArg<awsLambda.APIGatewayProxyEvent, any>,
@@ -177,10 +177,10 @@ export const parseBodyAsFORM = (reviver?: (key: any, value: any) => any, parseMe
   };
 };
 
-export const PARSE_PARAMETERS_METHOD = "parseParameters";
+export const PARAMETERS_METHOD = "parameters";
 
-export interface ServicesWithParseParameters {
-  [PARSE_PARAMETERS_METHOD]<T = any>(): T;
+export interface ServicesWithParameters {
+  [PARAMETERS_METHOD]<T = any>(): T;
 }
 
 const decodeFromSource = (source: { [name: string]: string }, params: any) => {
@@ -193,7 +193,7 @@ const decodeFromSource = (source: { [name: string]: string }, params: any) => {
  * This middleware exposes a method in the service object to regroup all the parameters
  * into a cohesive object and URL-decode them.
  */
-export const parseParameters = (parseMethod = PARSE_PARAMETERS_METHOD)
+export const parseParameters = (parseMethod = PARAMETERS_METHOD)
   : Middleware<awsLambda.APIGatewayProxyEvent, any> => {
   return async (
     arg: LambdaArg<awsLambda.APIGatewayProxyEvent, any>,

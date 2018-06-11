@@ -1,5 +1,5 @@
 import * as awsLambda from "aws-lambda";
-import { isAPIGatewayProxyResult, ServicesWithParseBody, ServicesWithParseParameters } from "../middlewares/proxy";
+import { isAPIGatewayProxyResult, ServicesWithBody, ServicesWithParameters } from "../middlewares/proxy";
 
 export interface LambdaArg<TEvent, TServices> {
   event: TEvent;
