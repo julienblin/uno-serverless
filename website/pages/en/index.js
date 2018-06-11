@@ -26,6 +26,8 @@ function pageUrl(page, language) {
   return siteConfig.baseUrl + (language ? language + '/' : '') + page;
 }
 
+const pre = "```";
+
 class Button extends React.Component {
   render() {
     return (
@@ -76,13 +78,13 @@ class HomeSplash extends React.Component {
     let language = this.props.language || '';
     return (
       <SplashContainer>
-        <Logo img_src={imgUrl('docusaurus.svg')} />
+        {/* <Logo img_src={imgUrl('docusaurus.svg')} /> */}
         <div className="inner">
           <ProjectTitle />
           <PromoSection>
-            <Button href="#try">Try It Out</Button>
-            <Button href={docUrl('doc1.html', language)}>Example Link</Button>
-            <Button href={docUrl('doc2.html', language)}>Example Link 2</Button>
+            <Button href="#get-started">Get started</Button>
+            <Button href="#more-info">More info</Button>
+            <Button href={docUrl('documentation.html', language)}>Documentation</Button>
           </PromoSection>
         </div>
       </SplashContainer>
@@ -103,64 +105,71 @@ const Features = props => (
   <Block layout="fourColumn">
     {[
       {
-        content: 'This is the content of my feature',
+        content: 'Get started quickly',
         image: imgUrl('docusaurus.svg'),
         imageAlign: 'top',
-        title: 'Feature One',
+        title: 'Project generator',
       },
       {
-        content: 'The content of my second feature',
+        content: 'Combine the features you need',
         image: imgUrl('docusaurus.svg'),
         imageAlign: 'top',
-        title: 'Feature Two',
+        title: 'Middlewares & builders',
+      },
+      {
+        content: 'Manage lifetime & instantiations',
+        image: imgUrl('docusaurus.svg'),
+        imageAlign: 'top',
+        title: 'Dependency injection',
+      },
+      {
+        content: 'Common services',
+        image: imgUrl('docusaurus.svg'),
+        imageAlign: 'top',
+        title: 'Services',
+      },
+      {
+        content: 'Push your API to production in 15 min.',
+        image: imgUrl('docusaurus.svg'),
+        imageAlign: 'top',
+        title: 'Deployment ready',
       },
     ]}
   </Block>
 );
 
-const FeatureCallout = props => (
-  <div
-    className="productShowcaseSection paddingBottom"
-    style={{textAlign: 'center'}}>
-    <h2>Feature Callout</h2>
-    <MarkdownBlock>These are features of this project</MarkdownBlock>
-  </div>
-);
+const getStartedContent = `${pre}bash
+npm install -g yo generator-opiniated-lambda
+yo opiniated-lambda
+${pre}
 
-const LearnHow = props => (
-  <Block background="light">
+Then cd into the created project and:
+${pre}bash
+npm start -- local
+${pre}
+`;
+
+const GetStarted = props => (
+  <Block id="get-started">
     {[
       {
-        content: 'Talk about learning how to use this',
-        image: imgUrl('docusaurus.svg'),
-        imageAlign: 'right',
-        title: 'Learn How',
-      },
-    ]}
-  </Block>
-);
-
-const TryOut = props => (
-  <Block id="try">
-    {[
-      {
-        content: 'Talk about trying this out',
+        content: getStartedContent,
         image: imgUrl('docusaurus.svg'),
         imageAlign: 'left',
-        title: 'Try it Out',
+        title: 'Get started',
       },
     ]}
   </Block>
 );
 
-const Description = props => (
-  <Block background="dark">
+const MoreInfo = props => (
+  <Block id="more-info" background="dark">
     {[
       {
-        content: 'This is another description of how this project is useful',
+        content: 'Opiniated lambda starts where AWS Lambda leaves you.',
         image: imgUrl('docusaurus.svg'),
         imageAlign: 'right',
-        title: 'Description',
+        title: 'More info',
       },
     ]}
   </Block>
@@ -205,10 +214,8 @@ class Index extends React.Component {
         <HomeSplash language={language} />
         <div className="mainContainer">
           <Features />
-          <FeatureCallout />
-          <LearnHow />
-          <TryOut />
-          <Description />
+          <GetStarted />
+          <MoreInfo />
           <Showcase language={language} />
         </div>
       </div>

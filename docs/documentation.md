@@ -1,5 +1,5 @@
 ---
-id: doc1
+id: documentation
 title: Latin-ish
 sidebar_label: Example Page
 ---
