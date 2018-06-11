@@ -108,38 +108,119 @@ describe("proxyByMethod handler", () => {
 
 describe("proxyRouter handler", () => {
 
-  it("should do something", async () => {
+  it("should route simple calls and parameters", async () => {
 
     const handler = lambda()
       .use(parseParameters())
       .handler(proxyRouter<{}>({
-        "/users": {
+        "users": {
           get: async () => "list-method",
           post: async () => "post-method",
         },
-        "/users/:id": {
+        "users/:id": {
           get: async ({ services }) => "get-method-" + services.parseParameters().id,
           put: async ({ services }) => "put-method-" + services.parseParameters().id,
         },
       }));
 
     const tests = [
-      { path: "/users", method: "GET", expected: "list-method" },
-      { path: "/users", method: "POST", expected: "post-method" },
-      { path: "/users/johndoe", method: "GET", expected: "get-method-johndoe" },
-      { path: "/users/dowjones", method: "PUT", expected: "put-method-dowjones" },
+      { path: "users", method: "GET", expected: "list-method" },
+      { path: "users", method: "POST", expected: "post-method" },
+      { path: "users/johndoe", method: "GET", expected: "get-method-johndoe" },
+      { path: "users/dowjones", method: "PUT", expected: "put-method-dowjones" },
     ];
 
     for (const test of tests) {
       const lambdaResult = await handler(
         createAPIGatewayProxyEvent({
           method: test.method,
-          path: test.path,
+          path: `/api/${test.path}`,
+          pathParameters: {
+            proxy: encodeURIComponent(test.path),
+          },
         }),
         createLambdaContext(),
         (e, r) => { }) as awsLambda.APIGatewayProxyResult;
 
       expect(lambdaResult.body).to.equal(test.expected);
+    }
+  });
+
+  it("should throw if path parameter not found.", async () => {
+
+    const handler = lambda()
+      .use(parseParameters())
+      .handler(proxyRouter<{}>({
+        users: {
+          get: async () => "list-method",
+        },
+      }));
+
+    try {
+      await handler(
+        createAPIGatewayProxyEvent({
+          method: "GET",
+          path: "/api/users",
+        }),
+        createLambdaContext(),
+        (e, r) => { });
+      expect(false);
+    } catch (error) {
+      expect(error.code).to.equal("internalServerError");
+    }
+  });
+
+  it("should throw if method not found.", async () => {
+
+    const handler = lambda()
+      .use(parseParameters())
+      .handler(proxyRouter<{}>({
+        users: {
+          get: async () => "list-method",
+        },
+      }));
+
+    try {
+      await handler(
+        createAPIGatewayProxyEvent({
+          method: "POST",
+          path: "/api/users",
+          pathParameters: {
+            proxy: "users",
+          },
+        }),
+        createLambdaContext(),
+        (e, r) => { });
+      expect(false);
+    } catch (error) {
+      expect(error.code).to.equal("methodNotAllowed");
+    }
+  });
+
+  it("should throw if route not found.", async () => {
+
+    const handler = lambda()
+      .use(parseParameters())
+      .handler(proxyRouter<{}>({
+        users: {
+          get: async () => "list-method",
+        },
+      }));
+
+    try {
+      await handler(
+        createAPIGatewayProxyEvent({
+          method: "POST",
+          path: "/api/users/foo",
+          pathParameters: {
+            proxy: encodeURIComponent("users/foo"),
+          },
+        }),
+        createLambdaContext(),
+        (e, r) => { });
+      expect(false);
+    } catch (error) {
+      expect(error.code).to.equal("notFound");
     }
   });
 

@@ -1,7 +1,7 @@
 import * as awsLambda from "aws-lambda";
 import * as pathToRegexp from "path-to-regexp";
 import { LambdaArg, LambdaExecution } from "../core/builder";
-import { methodNotAllowedError, notFoundError } from "../core/errors";
+import { internalServerError, methodNotAllowedError, notFoundError } from "../core/errors";
 import { ok } from "../core/responses";
 import { isAPIGatewayProxyResult, ServicesWithParseBody, ServicesWithParseParameters } from "../middlewares/proxy";
 
@@ -70,8 +70,10 @@ export type ProxyRoutes<TServices> = Record<string, ProxyMethods<TServices>>;
 
 /**
  * Router for proxy integration.
+ * @param router The router configuration
+ * @param pathParameterName The name of the pathParameter used for catch all (e.g. users/{proxy+} -> proxy).
  */
-export const proxyRouter = <TServices = any>(router: ProxyRoutes<TServices>)
+export const proxyRouter = <TServices = any>(router: ProxyRoutes<TServices>, pathParameterName = "proxy")
   : LambdaExecution<awsLambda.APIGatewayProxyEvent, TServices> => {
 
   const routerPaths = Object.keys(router).map((spec) => ({
@@ -83,8 +85,15 @@ export const proxyRouter = <TServices = any>(router: ProxyRoutes<TServices>)
 
   return async (arg: LambdaArg<awsLambda.APIGatewayProxyEvent, TServices>) => {
 
+    if (!(arg.event.pathParameters && arg.event.pathParameters[pathParameterName])) {
+      throw internalServerError(
+        `Unable to find path parameter ${pathParameterName} - Did you correctly setup API Gateway integration?`);
+    }
+
+    const subPath = decodeURIComponent(arg.event.pathParameters[pathParameterName]);
+
     for (const routerPath of routerPaths) {
-      const pathEvaluation = routerPath.pathEval.exec(arg.event.path);
+      const pathEvaluation = routerPath.pathEval.exec(subPath);
       if (!pathEvaluation) {
         continue;
       }
@@ -99,9 +108,6 @@ export const proxyRouter = <TServices = any>(router: ProxyRoutes<TServices>)
         const element = pathEvaluation[index];
         const pathParameter = routerPath.pathParameters[index];
         if (typeof pathParameter === "object") {
-          if (!arg.event.pathParameters) {
-            arg.event.pathParameters = {};
-          }
           arg.event.pathParameters[pathParameter.name] = element;
         }
       }
@@ -109,7 +115,7 @@ export const proxyRouter = <TServices = any>(router: ProxyRoutes<TServices>)
       return runProxy(func, arg);
     }
 
-    throw notFoundError(arg.event.path, "No suitable route found.");
+    throw notFoundError(arg.event.path, "No suitable route found.", { [pathParameterName]: subPath });
   };
 
 };

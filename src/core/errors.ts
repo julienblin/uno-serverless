@@ -50,10 +50,11 @@ export const unauthorizedError = (target: string, message: string) =>
     },
     HttpStatusCodes.UNAUTHORIZED);
 
-export const notFoundError = (target: string, message?: string) =>
+export const notFoundError = (target: string, message?: string, data?: object) =>
   buildError(
     {
       code: "notFound",
+      data,
       message: message || `The target ${target} could not be found.`,
       target,
     },

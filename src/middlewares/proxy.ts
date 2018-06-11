@@ -200,21 +200,17 @@ export const parseParameters = (parseMethod = PARSE_PARAMETERS_METHOD)
     next: LambdaExecution<awsLambda.APIGatewayProxyEvent, any>): Promise<any> => {
 
     arg.services[parseMethod] = memoize(() => {
-      try {
-        const params: any = {};
+      const params: any = {};
 
-        if (arg.event && arg.event.pathParameters) {
-          decodeFromSource(arg.event.pathParameters, params);
-        }
-
-        if (arg.event && arg.event.queryStringParameters) {
-          decodeFromSource(arg.event.queryStringParameters, params);
-        }
-
-        return params;
-      } catch (error) {
-        console.error(error);
+      if (arg.event && arg.event.pathParameters) {
+        decodeFromSource(arg.event.pathParameters, params);
       }
+
+      if (arg.event && arg.event.queryStringParameters) {
+        decodeFromSource(arg.event.queryStringParameters, params);
+      }
+
+      return params;
     });
 
     return next(arg);
