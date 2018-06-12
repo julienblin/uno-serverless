@@ -1,7 +1,7 @@
 import { execSync } from "child_process";
 import { createHash } from "crypto";
 import { readFileSync, unlinkSync } from "fs";
-import { createPrivateKey, getPublicKey } from "pem";
+import { getPublicKey } from "pem";
 import { jwk2pem, pem2jwk } from "pem-jwk";
 import { randomStr } from "../../core";
 import { HttpClient } from "../http-client";
@@ -83,9 +83,13 @@ export class JWKSigningKeyService implements SigningKeyService {
  */
 export interface RSSigningKeyServiceOptions {
   /**
+   * The private key algorithm to use. Defaults to RS256.
+   */
+  alg?: string | Promise<string>;
+  /**
    * Base64-encoded PEM private key.
    */
-  privateKey: string;
+  privateKey: string | Promise<string>;
 }
 
 /**
@@ -97,9 +101,9 @@ export class RSSigningKeyService implements SigningKeyService {
    * Generates a new private key.
    * Needs access to file system and uses ssh-keygen (openssl) utility.
    */
-  public static async generatePrivateKey(): Promise<string> {
+  public static async generatePrivateKey(keySize = 2048): Promise<string> {
     const keyId = randomStr();
-    execSync(`ssh-keygen -t rsa -b 2048 -f ${keyId}.key -N ""`);
+    execSync(`ssh-keygen -t rsa -b ${keySize} -f ${keyId}.key -N ""`);
     try {
       return new Buffer(readFileSync(`${keyId}.key`, "utf8")).toString("base64");
     } finally {
@@ -116,8 +120,9 @@ export class RSSigningKeyService implements SigningKeyService {
 
   public async getSecretOrPrivateKey(): Promise<PrivateKeyInfo> {
     if (!this.privateKey) {
-      const privateKeyPem = new Buffer(this.options.privateKey, "base64").toString("utf8");
+      const privateKeyPem = new Buffer(await this.options.privateKey, "base64").toString("utf8");
       this.privateKey = {
+        alg: await this.options.alg || "RS256",
         key: privateKeyPem,
         kid: createHash("md5").update(privateKeyPem).digest("hex"),
       };
@@ -162,6 +167,9 @@ export class RSSigningKeyService implements SigningKeyService {
 }
 
 export interface PrivateKeyInfo {
+  /** The signature algorithm */
+  alg: string;
+
   /** The key id. */
   kid: string;
 

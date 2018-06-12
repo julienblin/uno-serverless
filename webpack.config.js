@@ -33,5 +33,8 @@ module.exports = {
     'ajv': 'ajv',
     'aws-sdk': 'aws-sdk',
     'axios': 'axios',
+    'jsonwebtoken': 'jsonwebtoken',
+    'pem': 'pem',
+    'pem-jwk': 'pem-jwk'
   }
 };
