@@ -26,7 +26,9 @@ describe("JWKSigningKeyService", () => {
   });
 
   it("should retrieve JWK and convert to PEM format", async () => {
-    const result = await provider.getSecretOrPublicKey("TioGywwlhvdFbXZ813WpPay9AlU");
+    let result = await provider.getSecretOrPublicKey("TioGywwlhvdFbXZ813WpPay9AlU");
+    // Let's trigger the cache
+    result = await provider.getSecretOrPublicKey("TioGywwlhvdFbXZ813WpPay9AlU");
     expect(result).to.not.be.undefined;
   });
 
@@ -45,6 +47,15 @@ describe("JWKSigningKeyService", () => {
       expect(false);
     } catch (error) {
       expect(error.message).to.contain("find key");
+    }
+  });
+
+  it("should throw if asked for private key.", async () => {
+    try {
+      await provider.getSecretOrPrivateKey();
+      expect(false);
+    } catch (error) {
+      expect(error.message).to.contain("private");
     }
   });
 

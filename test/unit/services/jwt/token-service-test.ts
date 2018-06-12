@@ -61,13 +61,13 @@ describe("JWTTokenService", () => {
     const token = await service.sign(payload);
 
     const result = await service.decode<typeof payload & TokenClaims>(token);
-    expect(result.claim1).to.equal(payload.claim1);
-    expect(result.sub).to.equal(payload.sub);
+    expect(result!.claim1).to.equal(payload.claim1);
+    expect(result!.sub).to.equal(payload.sub);
 
-    expect(result.exp).to.be.greaterThan(new Date().getTime() / 1000);
-    expect(result.iat).to.be.lessThan(new Date().getTime() / 1000);
-    expect(result.aud).to.equal(options.audience);
-    expect(result.iss).to.equal(options.issuer);
+    expect(result!.exp).to.be.greaterThan(new Date().getTime() / 1000);
+    expect(result!.iat).to.be.lessThan(new Date().getTime() / 1000);
+    expect(result!.aud).to.equal(options.audience);
+    expect(result!.iss).to.equal(options.issuer);
   });
 
   it ("should not verify altered tokens", async () => {
