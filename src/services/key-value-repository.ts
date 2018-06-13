@@ -144,6 +144,8 @@ export class FileKeyValueRepository implements KeyValueRepository {
               resolve();
             }
           });
+        } else {
+          resolve();
         }
       });
     });
