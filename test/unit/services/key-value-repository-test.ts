@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { InMemoryKeyValueRepository } from "../../../src/services/key-value-repository";
+import { FileKeyValueRepository, InMemoryKeyValueRepository } from "../../../src/services/key-value-repository";
 
 describe("InMemoryKeyValueRepository", () => {
 
@@ -42,4 +42,24 @@ describe("InMemoryKeyValueRepository", () => {
     expect(kvr.size).to.equal(0);
   });
 
+});
+
+describe("FileKeyValueRepository", () => {
+
+  it("should get set delete.", async () => {
+    const kvr = new FileKeyValueRepository();
+    const object = {
+      foo: "bar",
+    };
+
+    const key = "key";
+
+    expect(await kvr.get(key)).to.be.undefined;
+    await kvr.set(key, object);
+    expect(await kvr.get(key)).to.not.equal(object); // Because of serialization.
+    expect(await kvr.get(key)).to.deep.equal(object);
+
+    await kvr.delete(key);
+    expect(await kvr.get(key)).to.be.undefined;
+  });
 });
