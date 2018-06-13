@@ -1,4 +1,3 @@
-import * as jwt from "jsonwebtoken";
 import { SigningKeyService } from "./signing-key-service";
 
 /**
@@ -33,12 +32,16 @@ export interface JWTTokenServiceOptions {
  */
 export class JWTTokenService implements TokenService {
 
+  private jwt: Promise<any>;
+
   public constructor(
     private readonly options: JWTTokenServiceOptions,
-    private readonly keyService: SigningKeyService) {}
+    private readonly keyService: SigningKeyService) {
+      this.jwt = import("jsonwebtoken");
+    }
 
   public async decode<T extends object>(token: string): Promise<T | undefined> {
-    const decoded = jwt.decode(token, { complete: true }) as any;
+    const decoded = (await this.jwt).decode(token, { complete: true }) as any;
     return decoded
       ? decoded.payload as T
       : undefined;
@@ -53,7 +56,7 @@ export class JWTTokenService implements TokenService {
 
     const privateKey = await this.keyService.getSecretOrPrivateKey();
 
-    return jwt.sign(
+    return (await this.jwt).sign(
       finalPayload,
       privateKey.key,
       {
@@ -64,13 +67,13 @@ export class JWTTokenService implements TokenService {
   }
 
   public async verify<T>(token: string): Promise<T> {
-    const decodedToken = jwt.decode(token, { complete: true }) as any;
+    const decodedToken = (await this.jwt).decode(token, { complete: true }) as any;
     const keyId = decodedToken && decodedToken.header && decodedToken.header.kid
       ? decodedToken.header.kid
       : undefined;
 
     const publicKey = await this.keyService.getSecretOrPublicKey(keyId);
 
-    return jwt.verify(token, publicKey) as any;
+    return (await this.jwt).verify(token, publicKey) as any;
   }
 }
