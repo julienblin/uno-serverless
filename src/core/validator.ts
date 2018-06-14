@@ -1,5 +1,5 @@
 import * as Ajv from "ajv";
-import { ErrorData } from "./errors";
+import { ErrorData, validationError } from "./errors";
 import { JSONSchema } from "./json-schema";
 
 const ajv = new Ajv({
@@ -26,4 +26,16 @@ export const validate = (schema: JSONSchema, data: any, defaultTarget?: string) 
   }
 
   return validationErrors;
+};
+
+/**
+ * Validates data based on schema, throwing validationError when it does not validate.
+ * @param defaultTarget The default target to use if it cannot be determined.
+ */
+export const validateAndTrow = (schema: JSONSchema, data: any, defaultTarget?: string, errorMessage?: string) => {
+  const validationErrors = validate(schema, data, defaultTarget);
+
+  if (validationErrors.length > 0) {
+    throw validationError(validationErrors, errorMessage);
+  }
 };
