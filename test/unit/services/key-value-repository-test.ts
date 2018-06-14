@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
+import { HealthCheckStatus } from "../../../src/services/health-check";
 import { FileKeyValueRepository, InMemoryKeyValueRepository } from "../../../src/services/key-value-repository";
 
 describe("InMemoryKeyValueRepository", () => {
@@ -42,6 +43,13 @@ describe("InMemoryKeyValueRepository", () => {
     expect(kvr.size).to.equal(0);
   });
 
+  it("should check health.", async () => {
+    const kvr = new InMemoryKeyValueRepository();
+    const result = await kvr.checkHealth();
+    expect(result.status).to.equal(HealthCheckStatus.Ok);
+    expect(result.name).to.equal("InMemoryKeyValueRepository");
+  });
+
 });
 
 describe("FileKeyValueRepository", () => {
@@ -61,5 +69,12 @@ describe("FileKeyValueRepository", () => {
 
     await kvr.delete(key);
     expect(await kvr.get(key)).to.be.undefined;
+  });
+
+  it("should check health.", async () => {
+    const kvr = new FileKeyValueRepository();
+    const result = await kvr.checkHealth();
+    expect(result.status).to.equal(HealthCheckStatus.Ok);
+    expect(result.name).to.equal("FileKeyValueRepository");
   });
 });

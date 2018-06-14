@@ -67,7 +67,11 @@ export class S3KeyValueRepository implements KeyValueRepository, CheckHealth {
     return checkHealth(
       "S3KeyValueRepository",
       `${await this.options.bucket}/${this.options.path}`,
-      async () => this.get(randomStr()));
+      async () => {
+        const testKey = randomStr();
+        await this.set(testKey, { testKey });
+        await this.delete(testKey);
+      });
   }
 
   /** Delete the value associated with the key */

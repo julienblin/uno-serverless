@@ -114,7 +114,7 @@ describe("S3KeyValueRepository", () => {
     expect(stub.lastPut!.Body).to.equal(JSON.stringify(value));
   });
 
-  it("should should check health", async () => {
+  it("should check health", async () => {
     const stub = new S3ClientStub({
       getErrorStatusCode: HttpStatusCodes.NOT_FOUND,
     });

@@ -2,6 +2,7 @@ import * as fs from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { randomStr } from "../core/utils";
+import { checkHealth, CheckHealth } from "./health-check";
 
 /** A repository to store and retrieve objects by keys. */
 export interface KeyValueRepository {
@@ -15,7 +16,7 @@ export interface KeyValueRepository {
  * Useful for unit-testing.
  * Objects are serialized / deserialized to better catch error.
  */
-export class InMemoryKeyValueRepository implements KeyValueRepository {
+export class InMemoryKeyValueRepository implements KeyValueRepository, CheckHealth {
 
   /** The storage. */
   private readonly storage = new Map<string, string>();
@@ -27,6 +28,13 @@ export class InMemoryKeyValueRepository implements KeyValueRepository {
   /** Clear the repository */
   public clear() {
     this.storage.clear();
+  }
+
+  public async checkHealth() {
+    return checkHealth(
+      "InMemoryKeyValueRepository",
+      "in-memory",
+      async () => ({}));
   }
 
   /** Delete the value associated with the key */
@@ -80,7 +88,7 @@ const filenameSanitation = (filename: string) => filename.replace(/[^a-z0-9]/gi,
 /**
  * KeyValueRepository implementation that uses a local file system.
  */
-export class FileKeyValueRepository implements KeyValueRepository {
+export class FileKeyValueRepository implements KeyValueRepository, CheckHealth {
 
   private readonly options: Required<FileKeyValueRepositoryOptions>;
 
@@ -94,6 +102,17 @@ export class FileKeyValueRepository implements KeyValueRepository {
       path,
       serialize,
     };
+  }
+
+  public async checkHealth() {
+    return checkHealth(
+      "FileKeyValueRepository",
+      this.options.path,
+      async () => {
+        const testKey = randomStr();
+        await this.set(testKey, { testKey });
+        await this.delete(testKey);
+      });
   }
 
   public async delete(key: string): Promise<void> {
