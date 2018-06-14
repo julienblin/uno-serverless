@@ -1,3 +1,4 @@
+export * from "./aws/cache";
 export * from "./aws/config";
 export * from "./aws/function-proxy";
 export * from "./aws/key-value-repository";

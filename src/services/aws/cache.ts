@@ -1,11 +1,12 @@
 import { S3 } from "aws-sdk";
 import * as HttpStatusCodes from "http-status-codes";
 import { randomStr } from "../../core/utils";
+import { Cache } from "../cache";
 import { checkHealth, CheckHealth } from "../health-check";
-import { KeyValueRepository } from "../key-value-repository";
 import { S3Client } from "./s3-client";
 
-export interface S3KeyValueRepositoryOptions {
+/** Options fro S3Cache */
+export interface S3CacheOptions {
   /** S3 bucket name. */
   bucket: string | Promise<string>;
 
@@ -22,19 +23,19 @@ export interface S3KeyValueRepositoryOptions {
   serverSideEncryption?: string;
 
   /** Custom deserializer. */
-  deserialize?<T>(text: string): T;
+  deserialize?<T>(text: string): CacheItem<T>;
 
   /** Custom serializer. */
-  serialize?<T>(value: T): string;
+  serialize?<T>(value: CacheItem<T>): string;
 }
 
 /**
- * KeyValueRepository that uses S3 as a backing store.
+ * Cache that uses S3 as a backing store.
  */
-export class S3KeyValueRepository implements KeyValueRepository, CheckHealth {
+export class S3Cache implements Cache, CheckHealth {
 
   /** Options resolved with default values. */
-  private readonly options: Required<S3KeyValueRepositoryOptions>;
+  private readonly options: Required<S3CacheOptions>;
 
   public constructor(
     {
@@ -45,7 +46,7 @@ export class S3KeyValueRepository implements KeyValueRepository, CheckHealth {
       serverSideEncryption = "",
       deserialize = <T>(text: string) => JSON.parse(text),
       serialize = <T>(value: T) => JSON.stringify(value),
-    }: S3KeyValueRepositoryOptions) {
+    }: S3CacheOptions) {
     this.options = {
       bucket,
       contentType,
@@ -59,7 +60,7 @@ export class S3KeyValueRepository implements KeyValueRepository, CheckHealth {
 
   public async checkHealth() {
     return checkHealth(
-      "S3KeyValueRepository",
+      "S3CacheOptions",
       `${await this.options.bucket}/${this.options.path}`,
       async () => {
         const testKey = randomStr();
@@ -87,7 +88,14 @@ export class S3KeyValueRepository implements KeyValueRepository, CheckHealth {
         return undefined;
       }
 
-      return this.options.deserialize<T>(response.Body.toString());
+      const cacheItem = this.options.deserialize<T>(response.Body.toString());
+      if (cacheItem.expiresAt && cacheItem.expiresAt < (new Date().getTime() / 1000)) {
+        await this.delete(key);
+        return undefined;
+      }
+
+      return cacheItem.item;
+
     } catch (error) {
       if (error.statusCode === HttpStatusCodes.NOT_FOUND) {
         return undefined;
@@ -97,10 +105,30 @@ export class S3KeyValueRepository implements KeyValueRepository, CheckHealth {
     }
   }
 
+  public async getOrFetch<T>(key: string, fetch: () => Promise<T>, useCache = true, ttl?: number): Promise<T> {
+    if (ttl === 0) {
+      return fetch();
+    }
+
+    if (useCache) {
+      const cachedValue = await this.get<T>(key);
+      if (cachedValue !== undefined) { return cachedValue; }
+    }
+
+    const value = await fetch();
+    await this.set(key, value, ttl);
+
+    return value;
+  }
+
   /** Set the value associated with the key */
-  public async set<T>(key: string, value: T): Promise<void> {
+  public async set<T>(key: string, value: T, ttl?: number): Promise<void> {
+    const item: CacheItem<T> = {
+      expiresAt: ttl ? (new Date().getTime() / 1000) + ttl : undefined,
+      item: value,
+    };
     await this.options.s3.putObject({
-      Body: this.options.serialize(value),
+      Body: this.options.serialize(item),
       Bucket: await this.options.bucket,
       ContentType: this.options.contentType,
       Key: this.getKey(key),
@@ -110,4 +138,9 @@ export class S3KeyValueRepository implements KeyValueRepository, CheckHealth {
 
   /** Computes the path + key. */
   private getKey(key: string) { return `${this.options.path}/${key}`; }
+}
+
+export interface CacheItem<T> {
+  expiresAt?: number;
+  item: T;
 }
