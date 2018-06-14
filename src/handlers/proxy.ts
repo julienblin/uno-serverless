@@ -79,7 +79,7 @@ export const proxyRouter = <TServices = any>(router: ProxyRoutes<TServices>, pat
   const routerPaths = Object.keys(router).map((spec) => ({
     methods: router[spec],
     pathEval: pathToRegexp(spec),
-    pathParameters: pathToRegexp.parse(spec),
+    pathParameters: pathToRegexp.parse(spec).filter((x) => typeof x === "object"),
     spec,
   }));
 
@@ -105,10 +105,12 @@ export const proxyRouter = <TServices = any>(router: ProxyRoutes<TServices>, pat
       }
 
       for (let index = 0; index < pathEvaluation.length; index++) {
-        const element = pathEvaluation[index];
-        const pathParameter = routerPath.pathParameters[index];
-        if (typeof pathParameter === "object") {
-          arg.event.pathParameters[pathParameter.name] = element;
+        const element = pathEvaluation[index + 1];
+        if (element) {
+          const pathParameter = routerPath.pathParameters[index];
+          if (typeof pathParameter === "object") {
+            arg.event.pathParameters[pathParameter.name] = element;
+          }
         }
       }
 

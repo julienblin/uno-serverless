@@ -113,6 +113,9 @@ describe("proxyRouter handler", () => {
     const handler = lambda()
       .use(parseParameters())
       .handler(proxyRouter<{}>({
+        ":firstParam/another-route": {
+          get: async ({ services }) => "first-param-" + services.parameters().firstParam,
+        },
         "users": {
           get: async () => "list-method",
           post: async () => "post-method",
@@ -124,6 +127,7 @@ describe("proxyRouter handler", () => {
       }));
 
     const tests = [
+      { path: "CA/another-route", method: "GET", expected: "first-param-CA" },
       { path: "users", method: "GET", expected: "list-method" },
       { path: "users", method: "POST", expected: "post-method" },
       { path: "users/foo", method: "GET", expected: "get-method-foo" },
