@@ -29,6 +29,9 @@ export interface S3KeyValueRepositoryOptions {
   /** S3 client to use. */
   s3?: S3Client;
 
+  /** The serverside encryption to use */
+  serverSideEncryption?: string;
+
   /** Custom deserializer. */
   deserialize?<T>(text: string): T;
 
@@ -50,6 +53,7 @@ export class S3KeyValueRepository implements KeyValueRepository, CheckHealth {
       contentType = "application/json",
       path = "",
       s3 = new S3({ maxRetries: 3 }),
+      serverSideEncryption = "",
       deserialize = <T>(text: string) => JSON.parse(text),
       serialize = <T>(value: T) => JSON.stringify(value),
     }: S3KeyValueRepositoryOptions) {
@@ -60,6 +64,7 @@ export class S3KeyValueRepository implements KeyValueRepository, CheckHealth {
       path: path.endsWith("/") ? path.slice(0, -1) : path,
       s3,
       serialize,
+      serverSideEncryption,
     };
   }
 
@@ -110,6 +115,7 @@ export class S3KeyValueRepository implements KeyValueRepository, CheckHealth {
       Bucket: await this.options.bucket,
       ContentType: this.options.contentType,
       Key: this.getKey(key),
+      ServerSideEncryption: this.options.serverSideEncryption ? this.options.serverSideEncryption : undefined,
     }).promise();
   }
 
