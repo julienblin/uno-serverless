@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { createContainerFactory } from "../../src/core/container";
+import { createContainerFactory } from "../../../src/core/container";
 
 interface IA {}
 

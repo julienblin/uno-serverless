@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { dependencyErrorProxy, internalServerError } from "../../src/core/errors";
+import { dependencyErrorProxy, internalServerError } from "../../../src/core/errors";
 
 describe("dependencyErrorProxy", () => {
 
