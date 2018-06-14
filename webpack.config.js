@@ -34,6 +34,7 @@ module.exports = {
     'aws-sdk': 'aws-sdk',
     'axios': 'axios',
     'jsonwebtoken': 'jsonwebtoken',
+    'node-cache': 'node-cache',
     'pem': 'pem',
     'pem-jwk': 'pem-jwk'
   }
