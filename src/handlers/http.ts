@@ -1,8 +1,8 @@
 import * as pathToRegexp from "path-to-regexp";
 import { internalServerError, methodNotAllowedError, notFoundError } from "../core/errors";
-import { ok } from "../core/responses";
-import { HttpMethod, HttpUnoEvent, isHttpUnoResponse, UnoContext } from "../core/schemas";
+import { HttpMethod, HttpUnoEvent, isHttpUnoResponse } from "../core/schemas";
 import { FunctionArg, FunctionExecution } from "../core/uno";
+import { ok } from "./http-responses";
 
 const runHttp = async <TServices>(
   func: HttpFunc<TServices>,

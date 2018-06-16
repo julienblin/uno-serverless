@@ -1,5 +1,6 @@
 import { parse as parseQS } from "querystring";
 import { badRequestError, internalServerError, isStatusCodeProvider } from "../core/errors";
+import { HttpUnoResponse } from "../core/schemas";
 import { HttpUnoEvent, isHttpUnoResponse, UnoEvent } from "../core/schemas";
 import { FunctionArg, FunctionExecution, Middleware } from "../core/uno";
 import { safeJSONStringify } from "../core/utils";
@@ -56,7 +57,7 @@ export const cors = (origin?: string | Promise<string>) =>
 export const httpErrors = (): Middleware<HttpUnoEvent, any> => {
   return async (
     arg: FunctionArg<HttpUnoEvent, any>,
-    next: FunctionExecution<HttpUnoEvent, any>): Promise<any> => {
+    next: FunctionExecution<HttpUnoEvent, any>): Promise<HttpUnoResponse> => {
 
     try {
       return await next(arg);

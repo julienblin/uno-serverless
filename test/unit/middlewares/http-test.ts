@@ -2,10 +2,10 @@ import { expect } from "chai";
 import * as HttpStatusCodes from "http-status-codes";
 import { describe, it } from "mocha";
 import { notFoundError } from "../../../src/core/errors";
-import { ok } from "../../../src/core/responses";
 import { HttpUnoEvent } from "../../../src/core/schemas";
 import { uno } from "../../../src/core/uno";
 import { randomStr } from "../../../src/core/utils";
+import { ok } from "../../../src/handlers/http-responses";
 import {
   cors, httpErrors, parseBodyAsFORM, parseBodyAsJSON,
   responseHeaders, serializeBodyAsJSON} from "../../../src/middlewares/http";

@@ -16,6 +16,27 @@ export const isStatusCodeProvider = (error: any): error is StatusCodeProvider =>
   (typeof error.getStatusCode === "function");
 
 /**
+ * Builds a non-standard error payload that can still be interpreted
+ * with a status code.
+ */
+export const buildNonStandardError = (errorPayload: any, httpStatusCode: number): Error & StatusCodeProvider => {
+  let error: any;
+  if (errorPayload.message) {
+    error = new Error(errorPayload.message);
+  } else {
+    error = new Error();
+  }
+
+  Object.keys(errorPayload).forEach((key) => {
+    error[key] = errorPayload[key];
+  });
+  error.getStatusCode = () => httpStatusCode;
+  Object.freeze(error);
+
+  return error;
+};
+
+/**
  * Builds a custom error with additional data.
  */
 export const buildError = (
