@@ -1,7 +1,7 @@
 import * as awsLambda from "aws-lambda";
 import { expect } from "chai";
 import * as HttpStatusCode from "http-status-codes";
-import { uno } from "../../../src/core/builder";
+import { uno } from "../../../src/core/uno";
 import { http, httpMethodRouter, httpRouter } from "../../../src/handlers/http";
 import { parseBodyAsJSON } from "../../../src/middlewares/http";
 import { awsLambdaAdapter } from "../../../src/providers/aws";

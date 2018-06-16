@@ -1,10 +1,10 @@
 import { expect } from "chai";
 import * as HttpStatusCodes from "http-status-codes";
 import { describe, it } from "mocha";
-import { uno } from "../../../src/core/builder";
 import { notFoundError } from "../../../src/core/errors";
 import { ok } from "../../../src/core/responses";
 import { HttpUnoEvent } from "../../../src/core/schemas";
+import { uno } from "../../../src/core/uno";
 import { randomStr } from "../../../src/core/utils";
 import {
   cors, httpErrors, parseBodyAsFORM, parseBodyAsJSON,

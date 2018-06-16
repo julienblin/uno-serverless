@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { uno } from "../../../src/core/builder";
+import { uno } from "../../../src/core/uno";
 import { bypass } from "../../../src/middlewares/bypass";
 import { awsLambdaAdapter } from "../../../src/providers/aws";
 import { createLambdaContext } from "../lambda-helper-test";

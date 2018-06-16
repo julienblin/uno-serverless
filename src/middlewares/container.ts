@@ -1,6 +1,6 @@
-import { FunctionArg, FunctionExecution, Middleware } from "../core/builder";
 import { RootContainer } from "../core/container";
 import { UnoEvent } from "../core/schemas";
+import { FunctionArg, FunctionExecution, Middleware } from "../core/uno";
 import { supportDestructuring } from "../core/utils";
 
 export type ContainerInitialization<TEvent extends UnoEvent, TServices> =

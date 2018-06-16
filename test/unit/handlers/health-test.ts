@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import * as HttpStatusCodes from "http-status-codes";
-import { uno } from "../../../src/core/builder";
+import { uno } from "../../../src/core/uno";
 import { randomStr } from "../../../src/core/utils";
 import { health } from "../../../src/handlers/health";
 import { awsLambdaAdapter } from "../../../src/providers/aws";

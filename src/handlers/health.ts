@@ -1,6 +1,6 @@
 import * as HttpStatusCodes from "http-status-codes";
-import { FunctionArg, FunctionExecution } from "../core/builder";
 import { UnoContext, UnoEvent } from "../core/schemas";
+import { FunctionArg, FunctionExecution } from "../core/uno";
 import { checkHealth, HealthCheckRun, HealthCheckStatus } from "../services/health-check";
 
 export type HealthFunc<TServices> =

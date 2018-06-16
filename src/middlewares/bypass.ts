@@ -1,5 +1,5 @@
-import { FunctionArg, FunctionExecution, Middleware } from "../core/builder";
 import { UnoEvent } from "../core/schemas";
+import { FunctionArg, FunctionExecution, Middleware } from "../core/uno";
 
 /**
  * This middleware allows bypassing the execution of the rest of the pipeline

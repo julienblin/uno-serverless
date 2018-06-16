@@ -1,7 +1,7 @@
 import { parse as parseQS } from "querystring";
-import { FunctionArg, FunctionExecution, Middleware } from "../core/builder";
 import { badRequestError, internalServerError, isStatusCodeProvider } from "../core/errors";
 import { HttpUnoEvent, isHttpUnoResponse, UnoEvent } from "../core/schemas";
+import { FunctionArg, FunctionExecution, Middleware } from "../core/uno";
 import { safeJSONStringify } from "../core/utils";
 import { errorLogging } from "./logging";
 

@@ -1,6 +1,6 @@
 import { expect } from "chai";
-import { uno } from "../../../src/core/builder";
 import { JSONSchema } from "../../../src/core/json-schema";
+import { uno } from "../../../src/core/uno";
 import { randomStr } from "../../../src/core/utils";
 import { parseBodyAsJSON } from "../../../src/middlewares/http";
 import { validateParameters } from "../../../src/middlewares/validation";

@@ -1,4 +1,4 @@
-import { FunctionArg, FunctionExecution, Middleware } from "../core/builder";
+import { FunctionArg, FunctionExecution, Middleware } from "../core/uno";
 import { defaultConfidentialityReplacer, safeJSONStringify } from "../core/utils";
 
 export const contextErrorLog = (arg: FunctionArg<any, any>, message?: string) => {

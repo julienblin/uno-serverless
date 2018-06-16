@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { uno } from "../../../src/core/builder";
 import { UnoEvent } from "../../../src/core/schemas";
+import { uno } from "../../../src/core/uno";
 import { awsLambdaAdapter } from "../../../src/providers/aws";
 import { createLambdaContext } from "../lambda-helper-test";
 

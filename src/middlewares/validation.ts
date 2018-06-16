@@ -1,7 +1,7 @@
 import { HttpUnoEvent } from "../core";
-import { FunctionArg, FunctionExecution, Middleware } from "../core/builder";
 import { validationError } from "../core/errors";
 import { JSONSchema } from "../core/json-schema";
+import { FunctionArg, FunctionExecution, Middleware } from "../core/uno";
 import { validate } from "../core/validator";
 
 /**

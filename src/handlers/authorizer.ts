@@ -1,6 +1,6 @@
-import { FunctionArg, FunctionExecution } from "../core/builder";
 import { unauthorizedError } from "../core/errors";
 import { UnoContext, UnoEvent } from "../core/schemas";
+import { FunctionArg, FunctionExecution } from "../core/uno";
 
 export type AuthorizerBearerFunc<TServices> =
   (arg: {

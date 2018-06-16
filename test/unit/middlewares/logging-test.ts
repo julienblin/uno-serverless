@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { uno } from "../../../src/core/builder";
+import { uno } from "../../../src/core/uno";
 import { errorLogging } from "../../../src/middlewares/logging";
 import { awsLambdaAdapter } from "../../../src/providers/aws";
 import { createLambdaContext } from "../lambda-helper-test";

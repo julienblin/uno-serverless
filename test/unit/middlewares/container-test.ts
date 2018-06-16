@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { uno } from "../../../src/core/builder";
 import { createContainerFactory } from "../../../src/core/container";
+import { uno } from "../../../src/core/uno";
 import { randomStr } from "../../../src/core/utils";
 import { container } from "../../../src/middlewares/container";
 import { awsLambdaAdapter } from "../../../src/providers/aws";

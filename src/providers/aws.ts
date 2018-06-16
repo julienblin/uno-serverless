@@ -1,5 +1,5 @@
-import { GenericFunctionBuilder, ProviderAdapter } from "../core/builder";
 import { HttpUnoEvent, isHttpUnoResponse, UnoContext, UnoEvent } from "../core/schemas";
+import { GenericFunctionBuilder, ProviderAdapter } from "../core/uno";
 
 const throwBody = () => { throw new Error("Unable to parse body. Did you forget to add a middleware?"); };
 

@@ -1,4 +1,4 @@
-import { ProviderAdapter } from "../core/builder";
+import { ProviderAdapter } from "../core/uno";
 import { awsLambdaAdapter } from "./aws";
 
 export type AdapterDetection = Record<string, () => ProviderAdapter>;
