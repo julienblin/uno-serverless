@@ -1,15 +1,16 @@
-import { LambdaArg, LambdaExecution, Middleware } from "../core/builder";
+import { FunctionArg, FunctionExecution, Middleware } from "../core/builder";
+import { UnoEvent } from "../core/schemas";
 
 /**
  * This middleware allows bypassing the execution of the rest of the pipeline
  * if it evaluates positively.
  * Useful for warm-up events, for example.
  */
-export const bypass = <TEvent, TServices>(
-  shouldBypass: (arg: LambdaArg<TEvent, TServices>) => boolean,
-  executeWhenBypass?: (arg: LambdaArg<TEvent, TServices>) => Promise<any>)
+export const bypass = <TEvent extends UnoEvent, TServices>(
+  shouldBypass: (arg: FunctionArg<TEvent, TServices>) => boolean,
+  executeWhenBypass?: (arg: FunctionArg<TEvent, TServices>) => Promise<any>)
   : Middleware<TEvent, TServices> => {
-    return (arg: LambdaArg<TEvent, TServices>, next: LambdaExecution<TEvent, TServices>): Promise<any> => {
+    return (arg: FunctionArg<TEvent, TServices>, next: FunctionExecution<TEvent, TServices>): Promise<any> => {
       if (shouldBypass(arg)) {
         if (executeWhenBypass) {
           return executeWhenBypass(arg);

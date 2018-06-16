@@ -1,9 +1,9 @@
-import * as awsLambda from "aws-lambda";
-import { LambdaArg, LambdaExecution, Middleware } from "../core/builder";
+import { HttpUnoEvent } from "../core";
+import { FunctionArg, FunctionExecution, Middleware } from "../core/builder";
 import { validationError } from "../core/errors";
 import { JSONSchema } from "../core/json-schema";
 import { validate } from "../core/validator";
-import { ServicesWithBody, ServicesWithParameters } from "./proxy";
+import { ServicesWithBody, ServicesWithParameters } from "./http";
 
 /**
  * This middleware validates the event using JSON Schema.
@@ -11,8 +11,8 @@ import { ServicesWithBody, ServicesWithParameters } from "./proxy";
 export const validateEvent = (schema: JSONSchema)
   : Middleware<any, any> => {
   return async (
-    arg: LambdaArg<any, any>,
-    next: LambdaExecution<any, any>): Promise<any> => {
+    arg: FunctionArg<any, any>,
+    next: FunctionExecution<any, any>): Promise<any> => {
 
     const validationErrors = validate(schema, arg.event, "event");
     if (validationErrors.length > 0) {
@@ -28,12 +28,12 @@ export const validateEvent = (schema: JSONSchema)
  * Requires the addition of a middleware to parse the body before it.
  */
 export const validateBody = (schema: JSONSchema)
-  : Middleware<awsLambda.APIGatewayProxyEvent, ServicesWithBody> => {
+  : Middleware<HttpUnoEvent, ServicesWithBody> => {
   return async (
-    arg: LambdaArg<awsLambda.APIGatewayProxyEvent, ServicesWithBody>,
-    next: LambdaExecution<any, any>): Promise<any> => {
+    arg: FunctionArg<HttpUnoEvent, ServicesWithBody>,
+    next: FunctionExecution<any, any>): Promise<any> => {
 
-    switch (arg.event.httpMethod.toLowerCase()) {
+    switch (arg.event.httpMethod) {
       case "delete":
       case "get":
       case "head":
@@ -65,10 +65,10 @@ export const validateBody = (schema: JSONSchema)
  * Requires the addition of a middleware to parse the parameters before it.
  */
 export const validateParameters = (schema: JSONSchema)
-  : Middleware<awsLambda.APIGatewayProxyEvent, ServicesWithParameters> => {
+  : Middleware<HttpUnoEvent, ServicesWithParameters> => {
   return async (
-    arg: LambdaArg<awsLambda.APIGatewayProxyEvent, ServicesWithParameters>,
-    next: LambdaExecution<any, any>): Promise<any> => {
+    arg: FunctionArg<HttpUnoEvent, ServicesWithParameters>,
+    next: FunctionExecution<any, any>): Promise<any> => {
 
     if (!arg.services.parameters) {
       throw new Error("Missing parameters service - did you forget a middleware?");

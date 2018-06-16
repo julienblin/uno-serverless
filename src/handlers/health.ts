@@ -1,27 +1,21 @@
-import * as awsLambda from "aws-lambda";
 import * as HttpStatusCodes from "http-status-codes";
-import { LambdaArg, LambdaExecution } from "../core/builder";
+import { FunctionArg, FunctionExecution } from "../core/builder";
+import { UnoContext, UnoEvent } from "../core/schemas";
 import { checkHealth, HealthCheckRun, HealthCheckStatus } from "../services/health-check";
 
-export type HealthFunc<TEvent, TServices> =
+export type HealthFunc<TServices> =
   (arg: {
-    context: awsLambda.Context,
-    event: TEvent,
+    context: UnoContext,
+    event: UnoEvent,
     services: TServices,
   }) => Promise<HealthCheckRun[]>;
 
 /**
- * Determine if result is an APIGatewayProxyEvent.
- */
-export const isAPIGatewayProxyEvent = (value: any): value is awsLambda.APIGatewayProxyEvent =>
-  (typeof value === "object" && typeof value !== "string" && "httpMethod" in value);
-
-/**
  * This handlers runs the health checks provided.
  */
-export const health = <TEvent = any, TServices = any>(name: string, func: HealthFunc<TEvent, TServices>)
-  : LambdaExecution<TEvent, TServices> => {
-  return async (arg: LambdaArg<TEvent, TServices>) => {
+export const health = <TServices = any>(name: string, func: HealthFunc<TServices>)
+  : FunctionExecution<UnoEvent, TServices> => {
+  return async (arg: FunctionArg<UnoEvent, TServices>) => {
     let result;
     try {
       const runs = await func(arg);
@@ -35,7 +29,7 @@ export const health = <TEvent = any, TServices = any>(name: string, func: Health
       };
     }
 
-    if (isAPIGatewayProxyEvent(arg.event)) {
+    if (arg.event.eventType === "http") {
       switch (result.status) {
         case HealthCheckStatus.Ok:
         case HealthCheckStatus.Inconclusive:

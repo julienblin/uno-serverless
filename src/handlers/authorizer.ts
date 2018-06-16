@@ -1,30 +1,29 @@
-import * as awsLambda from "aws-lambda";
-import { LambdaArg, LambdaExecution } from "../core/builder";
+import { FunctionArg, FunctionExecution } from "../core/builder";
 import { unauthorizedError } from "../core/errors";
+import { UnoContext, UnoEvent } from "../core/schemas";
 
 export type AuthorizerBearerFunc<TServices> =
   (arg: {
     apiGatewayArn: string,
     apiGatewayStage: string,
-    context: awsLambda.Context,
+    context: UnoContext,
     bearerToken: string,
-    event: awsLambda.CustomAuthorizerEvent,
+    event: UnoEvent,
     services: TServices,
-   }) => Promise<awsLambda.CustomAuthorizerResult>;
+   }) => Promise<any>;
 
 export const authorizerBearer = <TServices = any>(func: AuthorizerBearerFunc<TServices>)
-  : LambdaExecution<awsLambda.CustomAuthorizerEvent, TServices> => {
-    return async (arg: LambdaArg<awsLambda.CustomAuthorizerEvent, TServices>) => {
-
-      const bearerToken = arg.event.authorizationToken
-        ? arg.event.authorizationToken.replace(/\s*bearer\s*/ig, "")
+  : FunctionExecution<UnoEvent, TServices> => {
+    return async (arg: FunctionArg<UnoEvent, TServices>) => {
+      const bearerToken = arg.event.original.authorizationToken
+        ? arg.event.original.authorizationToken.replace(/\s*bearer\s*/ig, "")
         : undefined;
 
       if (!bearerToken) {
         throw unauthorizedError("Authorization header", "Missing bearer token");
       }
 
-      const splitMethodArn = arg.event.methodArn.split("/");
+      const splitMethodArn = arg.event.original.methodArn.split("/");
 
       return func({
         apiGatewayArn: `${splitMethodArn[0]}/${splitMethodArn[1]}`,

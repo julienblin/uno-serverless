@@ -1,28 +1,34 @@
-import * as awsLambda from "aws-lambda";
-import { isAPIGatewayProxyResult, ServicesWithBody, ServicesWithParameters } from "../middlewares/proxy";
+import { UnoContext, UnoEvent } from "./schemas";
 
-export interface LambdaArg<TEvent, TServices> {
+export interface FunctionArg<TEvent extends UnoEvent, TServices> {
   event: TEvent;
-  context: awsLambda.Context;
+  context: UnoContext;
   services: TServices;
 }
 
-export type LambdaExecution<TEvent, TServices> = (arg: LambdaArg<TEvent, TServices>) => Promise<any>;
-export type Middleware<TEvent, TServices> =
-  (arg: LambdaArg<TEvent, TServices>, next: LambdaExecution<TEvent, TServices>) => Promise<any>;
+export type FunctionExecution<TEvent extends UnoEvent, TServices> =
+  (arg: FunctionArg<TEvent, TServices>) => Promise<any>;
+export type Middleware<TEvent extends UnoEvent, TServices> =
+  (arg: FunctionArg<TEvent, TServices>, next: FunctionExecution<TEvent, TServices>) => Promise<any>;
 
-export interface LambdaBuilder {
-  handler<TEvent, TResult, TServices>(func: LambdaExecution<TEvent, TServices>): awsLambda.Handler<TEvent, TResult>;
-  use<TEvent, TServices>(middleware: Middleware<TEvent, TServices> | Array<Middleware<TEvent, TServices>>)
-    : LambdaBuilder;
+export interface FunctionBuilder {
+  handler<TEvent extends UnoEvent, TServices>(func: FunctionExecution<TEvent, TServices>): any;
+  use<TEvent extends UnoEvent, TServices>(
+    middleware: Middleware<TEvent, TServices> | Array<Middleware<TEvent, TServices>>): FunctionBuilder;
 }
 
-export class LambdaBuildImpl implements LambdaBuilder {
+export type ProviderAdapter = () => FunctionBuilder;
 
+export const uno = (adapter: ProviderAdapter): FunctionBuilder => adapter();
+
+export class GenericFunctionBuilder implements FunctionBuilder {
   private readonly middlewares: Array<Middleware<any, any>> = [];
 
-  public use<TEvent, TServices>(middleware: Middleware<TEvent, TServices> | Array<Middleware<TEvent, TServices>>)
-    : LambdaBuilder {
+  public constructor(private readonly adapterBuilder: (invocation: (arg: FunctionArg<any, any>) => any) => any) {}
+
+  public use<TEvent extends UnoEvent, TServices>(
+    middleware: Middleware<TEvent, TServices> | Array<Middleware<TEvent, TServices>>)
+    : FunctionBuilder {
       if (Array.isArray(middleware)) {
         middleware.forEach((x) => this.middlewares.push(x));
       } else {
@@ -31,28 +37,25 @@ export class LambdaBuildImpl implements LambdaBuilder {
       return this;
   }
 
-  public handler<TEvent, TResult, TServices>(func: LambdaExecution<TEvent, TServices>)
-    : awsLambda.Handler<TEvent, TResult> {
+  public handler<TEvent extends UnoEvent, TServices>(func: FunctionExecution<TEvent, TServices>) {
 
-    const innerCircle = async (arg: LambdaArg<TEvent, TServices>) => {
+    const innerCircle = async (arg: FunctionArg<TEvent, TServices>) => {
       return await func(arg);
     };
 
-    let outerCircle = async (arg: LambdaArg<TEvent, TServices>) => {
+    let outerCircle = async (arg: FunctionArg<TEvent, TServices>) => {
       return innerCircle(arg);
     };
 
     this.middlewares.reverse().forEach((middleware) => {
       const currentOuterCircle = outerCircle;
-      outerCircle = async (arg: LambdaArg<TEvent, TServices>) => {
+      outerCircle = async (arg: FunctionArg<TEvent, TServices>) => {
         return middleware(
           arg,
           (nextArg) => currentOuterCircle(nextArg));
       };
     });
 
-    return (event: TEvent, context: awsLambda.Context) => outerCircle({ event, context, services: {} as TServices });
+    return this.adapterBuilder(outerCircle);
   }
 }
-
-export const lambda = (): LambdaBuilder => new LambdaBuildImpl();

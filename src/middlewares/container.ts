@@ -1,19 +1,21 @@
-import { LambdaArg, LambdaExecution, Middleware } from "../core/builder";
+import { FunctionArg, FunctionExecution, Middleware } from "../core/builder";
 import { RootContainer } from "../core/container";
+import { UnoEvent } from "../core/schemas";
 import { supportDestructuring } from "../core/utils";
 
-export type ContainerInitialization<TEvent, TServices> =
-  (arg: LambdaArg<TEvent, TServices>) => RootContainer<TServices>;
+export type ContainerInitialization<TEvent extends UnoEvent, TServices> =
+  (arg: FunctionArg<TEvent, TServices>) => RootContainer<TServices>;
 
 /**
  * This middleware creates and maintains a singleton root container,
  * and inject scoped container in the args.services.
  * @param containerInitialization - The initialization to build the root container on first execution.
  */
-export const container = <TEvent, TServices>(containerInitialization: ContainerInitialization<TEvent, TServices>)
+export const container = <TEvent extends UnoEvent, TServices>(
+  containerInitialization: ContainerInitialization<TEvent, TServices>)
   : Middleware<TEvent, TServices> => {
     let rootContainer: RootContainer<TServices> | undefined;
-    return (arg: LambdaArg<TEvent, TServices>, next: LambdaExecution<TEvent, TServices>): Promise<any> => {
+    return (arg: FunctionArg<TEvent, TServices>, next: FunctionExecution<TEvent, TServices>): Promise<any> => {
       if (!rootContainer) {
         rootContainer = containerInitialization(arg);
       }

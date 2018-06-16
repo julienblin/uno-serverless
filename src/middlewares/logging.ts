@@ -1,12 +1,16 @@
-import { LambdaArg, LambdaExecution, Middleware } from "../core/builder";
+import { FunctionArg, FunctionExecution, Middleware } from "../core/builder";
 import { defaultConfidentialityReplacer, safeJSONStringify } from "../core/utils";
+
+export const contextErrorLog = (arg: FunctionArg<any, any>, message?: any) => {
+  arg.context.log(message);
+};
 
 /**
  * This middleware logs errors & event/context before re-throwing them as-is.
  */
-export const errorLogging = (errorFunc: (message?: any) => void = console.error)
+export const errorLogging = (errorFunc: (arg: FunctionArg<any, any>, message?: any) => void = contextErrorLog)
   : Middleware<any, any> => {
-    return async (arg: LambdaArg<any, any>, next: LambdaExecution<any, any>): Promise<any> => {
+    return async (arg: FunctionArg<any, any>, next: FunctionExecution<any, any>): Promise<any> => {
       try {
         return await next(arg);
       } catch (error) {
@@ -20,7 +24,7 @@ export const errorLogging = (errorFunc: (message?: any) => void = console.error)
           event: arg.event,
         };
 
-        errorFunc(safeJSONStringify(payload, defaultConfidentialityReplacer, 2));
+        errorFunc(arg, safeJSONStringify(payload, defaultConfidentialityReplacer, 2));
         throw error;
       }
     };
