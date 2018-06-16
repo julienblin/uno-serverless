@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { lambda } from "../../../src/core/builder";
+import { uno } from "../../../src/core/builder";
+import { awsLambdaAdapter } from "../../../src/core/builder-aws";
 import { createContainerFactory } from "../../../src/core/container";
 import { randomStr } from "../../../src/core/utils";
 import { container } from "../../../src/middlewares/container";
@@ -22,9 +23,9 @@ describe("container middleware", () => {
       c: ({ builder }) => builder.scoped(randomStr()),
     });
 
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use(container(() => createContainer()))
-      .handler<any, any, ContainerContract>(async ({ services: { a, b, c } }) => ({
+      .handler<any, ContainerContract>(async ({ services: { a, b, c } }) => ({
         scoped1: c(),
         scoped2: c(),
         singleton: a(),

@@ -1,8 +1,9 @@
 import { expect } from "chai";
-import { lambda } from "../../../src/core/builder";
+import { uno } from "../../../src/core/builder";
+import { awsLambdaAdapter } from "../../../src/core/builder-aws";
 import { JSONSchema } from "../../../src/core/json-schema";
 import { randomStr } from "../../../src/core/utils";
-import { parseBodyAsJSON, parseParameters } from "../../../src/middlewares/proxy";
+import { parseBodyAsJSON, parseParameters } from "../../../src/middlewares/http";
 import { validateParameters } from "../../../src/middlewares/validation";
 import { validateBody, validateEvent } from "../../../src/middlewares/validation";
 import { createLambdaContext } from "../lambda-helper-test";
@@ -22,7 +23,7 @@ describe("validateEvent middleware", () => {
       required: ["bar"],
     };
 
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use(validateEvent(schema))
       .handler(async () => { });
 
@@ -57,7 +58,7 @@ describe("validateBody middleware", () => {
       required: ["bar"],
     };
 
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use([
         parseBodyAsJSON(),
         validateBody(schema),
@@ -79,7 +80,7 @@ describe("validateBody middleware", () => {
   });
 
   it("should validate missing body.", async () => {
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use([
         parseBodyAsJSON(),
         validateBody({}),
@@ -100,7 +101,7 @@ describe("validateBody middleware", () => {
   });
 
   it("should not validate if HTTP method is not compatible.", async () => {
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use([
         parseBodyAsJSON(),
         validateBody({}),
@@ -117,7 +118,7 @@ describe("validateBody middleware", () => {
   });
 
   it("should throw if missing body.", async () => {
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use(validateBody({}))
       .handler(async () => { });
 
@@ -149,7 +150,7 @@ describe("validateParameters middleware", () => {
       required: ["bar"],
     };
 
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use([
         parseParameters(),
         validateParameters(schema),
@@ -171,7 +172,7 @@ describe("validateParameters middleware", () => {
   });
 
   it("should throw if missing parameters.", async () => {
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use(validateParameters({}))
       .handler(async () => { });
 

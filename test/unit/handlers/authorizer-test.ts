@@ -1,6 +1,6 @@
-import * as awsLambda from "aws-lambda";
 import { expect } from "chai";
-import { lambda } from "../../../src/core/builder";
+import { uno } from "../../../src/core/builder";
+import { awsLambdaAdapter } from "../../../src/core/builder-aws";
 import { randomStr } from "../../../src/core/utils";
 import { authorizerBearer } from "../../../src/handlers/authorizer";
 import { createLambdaContext } from "../lambda-helper-test";
@@ -9,7 +9,7 @@ describe("authorizerBearer handler", () => {
 
   it("should parse bearerToken", async () => {
 
-    const authorizerResult = (bearerToken: string): awsLambda.CustomAuthorizerResult => ({
+    const authorizerResult = (bearerToken: string) => ({
       policyDocument: {
         Statement: [],
         Version: "2012-10-17",
@@ -19,7 +19,7 @@ describe("authorizerBearer handler", () => {
 
     const inputBearerToken = randomStr();
 
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .handler(authorizerBearer(async ({ bearerToken }) => authorizerResult(bearerToken)));
 
     const lambdaResult = await handler(
@@ -29,14 +29,14 @@ describe("authorizerBearer handler", () => {
         type: randomStr(),
       },
       createLambdaContext(),
-      (e, r) => { }) as awsLambda.CustomAuthorizerResult;
+      (e, r) => { });
 
     expect(lambdaResult.principalId).equal(inputBearerToken);
   });
 
   it("should throw if no bearer token", async () => {
 
-    const authorizerResult = (bearerToken: string): awsLambda.CustomAuthorizerResult => ({
+    const authorizerResult = (bearerToken: string) => ({
       policyDocument: {
         Statement: [],
         Version: "2012-10-17",
@@ -44,7 +44,7 @@ describe("authorizerBearer handler", () => {
       principalId: bearerToken,
     });
 
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .handler(authorizerBearer(async ({ bearerToken }) => authorizerResult(bearerToken)));
 
     try {

@@ -1,13 +1,15 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { lambda } from "../../../src/core/builder";
+import { uno } from "../../../src/core/builder";
+import { awsLambdaAdapter } from "../../../src/core/builder-aws";
+import { UnoEvent } from "../../../src/core/schemas";
 import { createLambdaContext } from "../lambda-helper-test";
 
-describe("builder", () => {
+describe("builder AWS", () => {
 
   it("should run a simple handler.", async () => {
 
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .handler(async () => {});
 
     const result = await handler(
@@ -20,7 +22,7 @@ describe("builder", () => {
 
   it("should return the handler value.", async () => {
 
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .handler(async () => ({ foo: "bar" }));
 
     const result = await handler(
@@ -37,25 +39,28 @@ describe("builder", () => {
 
     const order: number[] = [];
 
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use([
         async (arg, next) => {
           order.push(1);
-          expect(arg.event).to.deep.equal(originalInput);
-          arg.event = alteredInput;
+          expect(arg.event.original.foo).to.equal("bar");
+          arg.event = {
+            ...arg.event,
+            original: alteredInput,
+          } as UnoEvent;
           const response = await next(arg);
           order.push(5);
           return response;
         },
         async (arg, next) => {
           order.push(2);
-          expect(arg.event).to.deep.equal(alteredInput);
+          expect(arg.event.original.bar).to.equal("foo");
           const response = await next(arg);
           order.push(4);
           expect(response).to.equal("hello");
           return "world";
         }])
-      .handler(async (arg) => {
+      .handler(async () => {
         order.push(3);
 
         return "hello";

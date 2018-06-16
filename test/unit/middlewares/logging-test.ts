@@ -1,5 +1,6 @@
 import { expect } from "chai";
-import { lambda } from "../../../src/core/builder";
+import { uno } from "../../../src/core/builder";
+import { awsLambdaAdapter } from "../../../src/core/builder-aws";
 import { errorLogging } from "../../../src/middlewares/logging";
 import { createLambdaContext } from "../lambda-helper-test";
 
@@ -9,8 +10,8 @@ describe("errorLogging middleware", () => {
 
     let logged;
 
-    const handler = lambda()
-      .use(errorLogging((message) => { logged = message; }))
+    const handler = uno(awsLambdaAdapter())
+      .use(errorLogging((_, message) => { logged = message; }))
       .handler(async () => { throw new Error("foo"); });
 
     try {
@@ -32,7 +33,7 @@ describe("errorLogging middleware", () => {
 
     let logged;
 
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use(errorLogging((message) => { logged = message; }))
       .handler(async () => 1);
 

@@ -1,8 +1,8 @@
-import { APIGatewayProxyResult } from "aws-lambda";
 import { expect } from "chai";
 import * as HttpStatusCodes from "http-status-codes";
 import { describe, it } from "mocha";
-import { lambda } from "../../../src/core/builder";
+import { uno } from "../../../src/core/builder";
+import { awsLambdaAdapter } from "../../../src/core/builder-aws";
 import { createContainerFactory } from "../../../src/core/container";
 import { notFoundError } from "../../../src/core/errors";
 import { ok } from "../../../src/core/responses";
@@ -10,7 +10,7 @@ import { randomStr } from "../../../src/core/utils";
 import {
   cors, httpErrors, parseBodyAsFORM, parseBodyAsJSON,
   parseParameters, responseHeaders, serializeBodyAsJSON,
-  ServicesWithBody, ServicesWithParameters} from "../../../src/middlewares/proxy";
+  ServicesWithBody, ServicesWithParameters} from "../../../src/middlewares/http";
 import { createLambdaContext } from "../lambda-helper-test";
 
 describe("responseHeaders middleware", () => {
@@ -23,9 +23,9 @@ describe("responseHeaders middleware", () => {
 
     const time = new Date().getTime();
 
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use(responseHeaders(headers))
-      .handler<any, APIGatewayProxyResult, any>(async () => ({
+      .handler(async () => ({
         body: "",
         headers: {
           "X-Handler-Header": "bar",
@@ -37,7 +37,7 @@ describe("responseHeaders middleware", () => {
     const result = await handler(
       {},
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      (e, r) => {});
 
     expect(result.headers!["X-Handler-Header"]).to.equal("bar");
     expect(result.headers!["X-Header"]).to.equal(headers["X-Header"]);
@@ -46,16 +46,16 @@ describe("responseHeaders middleware", () => {
 
   it("should do nothing if result is not APIGatewayProxyResult", async () => {
     const headers = { "X-Header": "foo" };
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use(responseHeaders(headers))
-      .handler<any, APIGatewayProxyResult, any>(async () => ({
+      .handler(async () => ({
         foo: "bar",
       }));
 
     const result = await handler(
       {},
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      (e, r) => {});
 
     expect(result.headers).to.be.undefined;
   });
@@ -65,9 +65,9 @@ describe("responseHeaders middleware", () => {
 describe("cors middleware", () => {
 
   it("should inject default origin", async () => {
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use(cors())
-      .handler<any, APIGatewayProxyResult, any>(async () => ({
+      .handler(async () => ({
         body: "",
         statusCode: HttpStatusCodes.OK,
       }));
@@ -75,15 +75,15 @@ describe("cors middleware", () => {
     const result = await handler(
       {},
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      (e, r) => {});
 
     expect(result.headers!["Access-Control-Allow-Origin"]).to.equal("*");
   });
 
   it("should inject custom origin", async () => {
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use(cors("example.org"))
-      .handler<any, APIGatewayProxyResult, any>(async () => ({
+      .handler(async () => ({
         body: "",
         statusCode: HttpStatusCodes.OK,
       }));
@@ -91,7 +91,7 @@ describe("cors middleware", () => {
     const result = await handler(
       {},
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      (e, r) => {});
 
     expect(result.headers!["Access-Control-Allow-Origin"]).to.equal("example.org");
   });
@@ -102,23 +102,23 @@ describe("httpErrors middleware", () => {
 
   it("should do nothing when no errors", async () => {
     const handlerResult = {};
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use(httpErrors())
-      .handler<any, APIGatewayProxyResult, any>(async () => handlerResult);
+      .handler(async () => handlerResult);
 
     const result = await handler(
       {},
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      (e, r) => {});
 
     expect(result).to.equal(handlerResult);
   });
 
   it("should transform known errors", async () => {
     const target = "https://example.org";
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use(httpErrors())
-      .handler<any, APIGatewayProxyResult, any>(async () => {
+      .handler(async () => {
         throw notFoundError(target);
       });
 
@@ -128,15 +128,16 @@ describe("httpErrors middleware", () => {
       (e, r) => {}) as any;
 
     expect(result.statusCode).to.equal(HttpStatusCodes.NOT_FOUND);
-    expect(result.body.code).to.equal("notFound");
-    expect(result.body.target).to.equal(target);
+    const body = JSON.parse(result.body);
+    expect(body.code).to.equal("notFound");
+    expect(body.target).to.equal(target);
   });
 
   it("should encapsulate unknown errors", async () => {
     const message = randomStr();
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use(httpErrors())
-      .handler<any, APIGatewayProxyResult, any>(async () => {
+      .handler(async () => {
         throw new Error(message);
       });
 
@@ -146,8 +147,9 @@ describe("httpErrors middleware", () => {
       (e, r) => {}) as any;
 
     expect(result.statusCode).to.equal(HttpStatusCodes.INTERNAL_SERVER_ERROR);
-    expect(result.body.code).to.equal("internalServerError");
-    expect(result.body.message).to.equal(message);
+    const body = JSON.parse(result.body);
+    expect(body.code).to.equal("internalServerError");
+    expect(body.message).to.equal(message);
   });
 
 });
@@ -159,28 +161,28 @@ describe("serializeBodyAsJSON middleware", () => {
       foo: "bar",
     };
 
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use(serializeBodyAsJSON())
-      .handler<any, APIGatewayProxyResult, any>(async () => ok(handlerResult));
+      .handler(async () => ok(handlerResult));
 
     const result = await handler(
       {},
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      (e, r) => {});
 
     expect(JSON.parse(result.body)).to.deep.equal(handlerResult);
     expect(result.headers!["Content-Type"]).to.equal("application/json");
   });
 
   it("should not serialize if body is a string.", async () => {
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use(serializeBodyAsJSON())
-      .handler<any, APIGatewayProxyResult, any>(async () => ({ body: "hello" }));
+      .handler(async () => ({ body: "hello" }));
 
     const result = await handler(
       {},
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      (e, r) => {});
 
     expect(result.body).to.equal("hello");
     expect(result.headers).to.be.undefined;
@@ -193,14 +195,14 @@ describe("serializeBodyAsJSON middleware", () => {
     };
     obj1.obj2 = obj2;
 
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use(serializeBodyAsJSON({ safe: true }))
-      .handler<any, APIGatewayProxyResult, any>(async () => ({ body: obj1 }));
+      .handler(async () => ({ body: obj1 }));
 
     const result = await handler(
       {},
       createLambdaContext(),
-      (e, r) => {}) as APIGatewayProxyResult;
+      (e, r) => {});
 
     expect(result.body).to.not.be.undefined;
   });
@@ -214,9 +216,9 @@ describe("parseBodyAsJSON middleware", () => {
       foo: "bar",
     };
 
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use(parseBodyAsJSON())
-      .handler<any, APIGatewayProxyResult, ServicesWithBody>
+      .handler<any, ServicesWithBody>
         (async ({ services }) => {
           expect(services.body()).to.deep.equal(body);
         });
@@ -224,6 +226,7 @@ describe("parseBodyAsJSON middleware", () => {
     await handler(
       {
         body: JSON.stringify(body),
+        httpMethod: "get",
       },
       createLambdaContext(),
       (e, r) => {});
@@ -238,9 +241,9 @@ describe("parseBodyAsFORM middleware", () => {
       foo: "bar",
     };
 
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use(parseBodyAsFORM())
-      .handler<any, APIGatewayProxyResult, ServicesWithBody>
+      .handler<any, ServicesWithBody>
         (async ({ services }) => {
           expect(services.body()).to.deep.equal(body);
         });
@@ -248,6 +251,7 @@ describe("parseBodyAsFORM middleware", () => {
     await handler(
       {
         body: "foo=bar",
+        httpMethod: "get",
       },
       createLambdaContext(),
       (e, r) => {});
@@ -263,15 +267,16 @@ describe("parseParameters middleware", () => {
       foobar: "foobar",
     };
 
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use(parseParameters())
-      .handler<any, APIGatewayProxyResult, ServicesWithParameters>
+      .handler<any, ServicesWithParameters>
         (async ({ services }) => {
           expect(services.parameters()).to.deep.equal(parameters);
         });
 
     await handler(
       {
+        httpMethod: "get",
         pathParameters: { foo: "bar" },
         queryStringParameters: { foobar: "foobar" },
       },

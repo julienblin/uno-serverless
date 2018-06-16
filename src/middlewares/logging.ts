@@ -1,14 +1,16 @@
 import { FunctionArg, FunctionExecution, Middleware } from "../core/builder";
 import { defaultConfidentialityReplacer, safeJSONStringify } from "../core/utils";
 
-export const contextErrorLog = (arg: FunctionArg<any, any>, message?: any) => {
-  arg.context.log(message);
+export const contextErrorLog = (arg: FunctionArg<any, any>, message?: string) => {
+  if (message) {
+    arg.context.log(message);
+  }
 };
 
 /**
  * This middleware logs errors & event/context before re-throwing them as-is.
  */
-export const errorLogging = (errorFunc: (arg: FunctionArg<any, any>, message?: any) => void = contextErrorLog)
+export const errorLogging = (errorFunc: (arg: FunctionArg<any, any>, message?: string) => void = contextErrorLog)
   : Middleware<any, any> => {
     return async (arg: FunctionArg<any, any>, next: FunctionExecution<any, any>): Promise<any> => {
       try {

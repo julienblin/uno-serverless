@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { lambda } from "../../../src/core/builder";
+import { uno } from "../../../src/core/builder";
+import { awsLambdaAdapter } from "../../../src/core/builder-aws";
 import { bypass } from "../../../src/middlewares/bypass";
 import { createLambdaContext } from "../lambda-helper-test";
 
@@ -9,7 +10,7 @@ describe("bypass middleware", () => {
   it("should let execution through", async () => {
 
     let executed = false;
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use(bypass(() => false))
       .handler(async ({}) => {
         executed = true;
@@ -26,7 +27,7 @@ describe("bypass middleware", () => {
   it("should bypass execution", async () => {
 
     let executed = false;
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use(bypass(() => true))
       .handler(async ({}) => {
         executed = true;
@@ -43,7 +44,7 @@ describe("bypass middleware", () => {
   it("should bypass execution and return alternate", async () => {
 
     let executed = false;
-    const handler = lambda()
+    const handler = uno(awsLambdaAdapter())
       .use(bypass(() => true, async () => 1))
       .handler(async ({}) => {
         executed = true;
