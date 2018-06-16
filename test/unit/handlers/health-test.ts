@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import * as HttpStatusCodes from "http-status-codes";
 import { uno } from "../../../src/core/builder";
-import { awsLambdaAdapter } from "../../../src/core/builder-aws";
 import { randomStr } from "../../../src/core/utils";
 import { health } from "../../../src/handlers/health";
+import { awsLambdaAdapter } from "../../../src/providers/aws";
 import { HealthCheckResult, HealthCheckStatus } from "../../../src/services/health-check";
 import { createAPIGatewayProxyEvent, createLambdaContext } from "../lambda-helper-test";
 

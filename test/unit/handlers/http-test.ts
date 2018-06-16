@@ -2,9 +2,9 @@ import * as awsLambda from "aws-lambda";
 import { expect } from "chai";
 import * as HttpStatusCode from "http-status-codes";
 import { uno } from "../../../src/core/builder";
-import { awsLambdaAdapter } from "../../../src/core/builder-aws";
 import { http, httpMethodRouter, httpRouter } from "../../../src/handlers/http";
-import { parseBodyAsJSON, parseParameters } from "../../../src/middlewares/http";
+import { parseBodyAsJSON } from "../../../src/middlewares/http";
+import { awsLambdaAdapter } from "../../../src/providers/aws";
 import { createAPIGatewayProxyEvent, createLambdaContext } from "../lambda-helper-test";
 
 describe("http handler", () => {
@@ -14,7 +14,7 @@ describe("http handler", () => {
     const testBody = { foo: "bar" };
     const handler = uno(awsLambdaAdapter())
       .use(parseBodyAsJSON())
-      .handler(http(async ({ services: { body } }) => body()));
+      .handler(http(async ({ event }) => event.body()));
 
     const lambdaResult = await handler(
       createAPIGatewayProxyEvent({
@@ -112,18 +112,17 @@ describe("proxyRouter handler", () => {
   it("should route simple calls and parameters", async () => {
 
     const handler = uno(awsLambdaAdapter())
-      .use(parseParameters())
       .handler(httpRouter({
         ":firstParam/another-route": {
-          get: async ({ services }) => "first-param-" + services.parameters().firstParam,
+          get: async ({ event }) => "first-param-" + event.parameters.firstParam,
         },
         "users": {
           get: async () => "list-method",
           post: async () => "post-method",
         },
         "users/:id": {
-          get: async ({ services }) => "get-method-" + services.parameters().id,
-          put: async ({ services }) => "put-method-" + services.parameters().id,
+          get: async ({ event }) => "get-method-" + event.parameters.id,
+          put: async ({ event }) => "put-method-" + event.parameters.id,
         },
       }));
 
@@ -154,7 +153,6 @@ describe("proxyRouter handler", () => {
   it("should throw if path parameter not found.", async () => {
 
     const handler = uno(awsLambdaAdapter())
-      .use(parseParameters())
       .handler(httpRouter({
         users: {
           get: async () => "list-method",
@@ -178,7 +176,6 @@ describe("proxyRouter handler", () => {
   it("should throw if method not found.", async () => {
 
     const handler = uno(awsLambdaAdapter())
-      .use(parseParameters())
       .handler(httpRouter({
         users: {
           get: async () => "list-method",
@@ -205,7 +202,6 @@ describe("proxyRouter handler", () => {
   it("should throw if route not found.", async () => {
 
     const handler = uno(awsLambdaAdapter())
-      .use(parseParameters())
       .handler(httpRouter({
         users: {
           get: async () => "list-method",

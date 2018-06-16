@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { uno } from "../../../src/core/builder";
-import { awsLambdaAdapter } from "../../../src/core/builder-aws";
 import { errorLogging } from "../../../src/middlewares/logging";
+import { awsLambdaAdapter } from "../../../src/providers/aws";
 import { createLambdaContext } from "../lambda-helper-test";
 
 describe("errorLogging middleware", () => {

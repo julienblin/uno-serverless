@@ -16,11 +16,12 @@ export interface UnoContext {
 export type HttpMethod = "get" | "head" | "options" | "post" | "put" | "patch" | "delete" | "trace" | "connect";
 
 export interface HttpUnoEvent extends UnoEvent {
-  body: string;
   headers: Record<string, string>;
   httpMethod: HttpMethod | string;
   parameters: Record<string, string>;
+  rawBody: string;
   url: string;
+  body<T>(): T;
 }
 
 export interface HttpUnoResponse {

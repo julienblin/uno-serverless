@@ -1,8 +1,8 @@
 import { expect } from "chai";
 import { uno } from "../../../src/core/builder";
-import { awsLambdaAdapter } from "../../../src/core/builder-aws";
 import { randomStr } from "../../../src/core/utils";
 import { authorizerBearer } from "../../../src/handlers/authorizer";
+import { awsLambdaAdapter } from "../../../src/providers/aws";
 import { createLambdaContext } from "../lambda-helper-test";
 
 describe("authorizerBearer handler", () => {

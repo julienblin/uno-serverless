@@ -1,5 +1,15 @@
-import { GenericFunctionBuilder, ProviderAdapter } from "./builder";
-import { HttpUnoEvent, isHttpUnoResponse, UnoContext, UnoEvent } from "./schemas";
+import { GenericFunctionBuilder, ProviderAdapter } from "../core/builder";
+import { HttpUnoEvent, isHttpUnoResponse, UnoContext, UnoEvent } from "../core/schemas";
+
+const throwBody = () => { throw new Error("Unable to parse body. Did you forget to add a middleware?"); };
+
+const decodeFromSource = (params: Record<string, string>, source?: Record<string, string>) => {
+  if (source) {
+    Object.keys(source).forEach((prop) => {
+      params[prop] = decodeURIComponent(source[prop]);
+    });
+  }
+};
 
 export const awsLambdaAdapter = (): ProviderAdapter => {
   return () =>  {
@@ -20,13 +30,13 @@ export const awsLambdaAdapter = (): ProviderAdapter => {
         if (typeof event === "object" && typeof event !== "string" && "httpMethod" in event) {
           unoEvent.eventType = "http";
           const unoHttpEvent = unoEvent as HttpUnoEvent;
-          unoHttpEvent.body = event.body;
+          unoHttpEvent.body = throwBody;
           unoHttpEvent.headers = event.headers || {};
           unoHttpEvent.httpMethod = event.httpMethod.toLowerCase(),
-          unoHttpEvent.parameters = {
-            ...event.queryStringParameters,
-            ...event.pathParameters,
-          };
+          unoHttpEvent.parameters = {};
+          decodeFromSource(unoHttpEvent.parameters, event.queryStringParameters);
+          decodeFromSource(unoHttpEvent.parameters, event.pathParameters);
+          unoHttpEvent.rawBody = event.body;
           unoHttpEvent.url = event.path;
         }
 

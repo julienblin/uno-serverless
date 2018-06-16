@@ -1,8 +1,8 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
 import { uno } from "../../../src/core/builder";
-import { awsLambdaAdapter } from "../../../src/core/builder-aws";
 import { UnoEvent } from "../../../src/core/schemas";
+import { awsLambdaAdapter } from "../../../src/providers/aws";
 import { createLambdaContext } from "../lambda-helper-test";
 
 describe("builder AWS", () => {

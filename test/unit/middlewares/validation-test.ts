@@ -1,11 +1,11 @@
 import { expect } from "chai";
 import { uno } from "../../../src/core/builder";
-import { awsLambdaAdapter } from "../../../src/core/builder-aws";
 import { JSONSchema } from "../../../src/core/json-schema";
 import { randomStr } from "../../../src/core/utils";
-import { parseBodyAsJSON, parseParameters } from "../../../src/middlewares/http";
+import { parseBodyAsJSON } from "../../../src/middlewares/http";
 import { validateParameters } from "../../../src/middlewares/validation";
 import { validateBody, validateEvent } from "../../../src/middlewares/validation";
+import { awsLambdaAdapter } from "../../../src/providers/aws";
 import { createLambdaContext } from "../lambda-helper-test";
 
 describe("validateEvent middleware", () => {
@@ -151,10 +151,7 @@ describe("validateParameters middleware", () => {
     };
 
     const handler = uno(awsLambdaAdapter())
-      .use([
-        parseParameters(),
-        validateParameters(schema),
-      ])
+      .use(validateParameters(schema))
       .handler(async () => { });
 
     try {

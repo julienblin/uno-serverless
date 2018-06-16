@@ -2,15 +2,14 @@ import { expect } from "chai";
 import * as HttpStatusCodes from "http-status-codes";
 import { describe, it } from "mocha";
 import { uno } from "../../../src/core/builder";
-import { awsLambdaAdapter } from "../../../src/core/builder-aws";
-import { createContainerFactory } from "../../../src/core/container";
 import { notFoundError } from "../../../src/core/errors";
 import { ok } from "../../../src/core/responses";
+import { HttpUnoEvent } from "../../../src/core/schemas";
 import { randomStr } from "../../../src/core/utils";
 import {
   cors, httpErrors, parseBodyAsFORM, parseBodyAsJSON,
-  parseParameters, responseHeaders, serializeBodyAsJSON,
-  ServicesWithBody, ServicesWithParameters} from "../../../src/middlewares/http";
+  responseHeaders, serializeBodyAsJSON} from "../../../src/middlewares/http";
+import { awsLambdaAdapter } from "../../../src/providers/aws";
 import { createLambdaContext } from "../lambda-helper-test";
 
 describe("responseHeaders middleware", () => {
@@ -218,9 +217,9 @@ describe("parseBodyAsJSON middleware", () => {
 
     const handler = uno(awsLambdaAdapter())
       .use(parseBodyAsJSON())
-      .handler<any, ServicesWithBody>
-        (async ({ services }) => {
-          expect(services.body()).to.deep.equal(body);
+      .handler<HttpUnoEvent, any>
+        (async ({ event }) => {
+          expect(event.body()).to.deep.equal(body);
         });
 
     await handler(
@@ -243,42 +242,15 @@ describe("parseBodyAsFORM middleware", () => {
 
     const handler = uno(awsLambdaAdapter())
       .use(parseBodyAsFORM())
-      .handler<any, ServicesWithBody>
-        (async ({ services }) => {
-          expect(services.body()).to.deep.equal(body);
+      .handler<HttpUnoEvent, any>
+        (async ({ event }) => {
+          expect(event.body()).to.deep.equal(body);
         });
 
     await handler(
       {
         body: "foo=bar",
         httpMethod: "get",
-      },
-      createLambdaContext(),
-      (e, r) => {});
-  });
-
-});
-
-describe("parseParameters middleware", () => {
-
-  it("should parse parameters.", async () => {
-    const parameters = {
-      foo: "bar",
-      foobar: "foobar",
-    };
-
-    const handler = uno(awsLambdaAdapter())
-      .use(parseParameters())
-      .handler<any, ServicesWithParameters>
-        (async ({ services }) => {
-          expect(services.parameters()).to.deep.equal(parameters);
-        });
-
-    await handler(
-      {
-        httpMethod: "get",
-        pathParameters: { foo: "bar" },
-        queryStringParameters: { foobar: "foobar" },
       },
       createLambdaContext(),
       (e, r) => {});

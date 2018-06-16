@@ -3,16 +3,11 @@ import { FunctionArg, FunctionExecution } from "../core/builder";
 import { internalServerError, methodNotAllowedError, notFoundError } from "../core/errors";
 import { ok } from "../core/responses";
 import { HttpMethod, HttpUnoEvent, isHttpUnoResponse, UnoContext } from "../core/schemas";
-import { ServicesWithBody, ServicesWithParameters } from "../middlewares/http";
 
 const runHttp = async <TServices>(
   func: HttpFunc<TServices>,
   arg: FunctionArg<HttpUnoEvent, TServices>) => {
-  const result = await func({
-    context: arg.context,
-    event: arg.event,
-    services: arg.services as TServices & ServicesWithBody & ServicesWithParameters,
-  });
+  const result = await func(arg);
 
   if (result && isHttpUnoResponse(result)) {
     return result;
@@ -25,12 +20,7 @@ const runHttp = async <TServices>(
   }
 };
 
-export type HttpFunc<TServices> =
-  (arg: {
-    event: HttpUnoEvent,
-    context: UnoContext,
-    services: TServices & ServicesWithBody & ServicesWithParameters,
-  }) => Promise<any>;
+export type HttpFunc<TServices> = (arg: FunctionArg<HttpUnoEvent, TServices>) => Promise<any>;
 
 /**
  * This handler is for http integrations.

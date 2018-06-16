@@ -2,7 +2,7 @@ import { parse as parseQS } from "querystring";
 import { FunctionArg, FunctionExecution, Middleware } from "../core/builder";
 import { badRequestError, internalServerError, isStatusCodeProvider } from "../core/errors";
 import { HttpUnoEvent, isHttpUnoResponse, UnoEvent } from "../core/schemas";
-import { memoize, safeJSONStringify } from "../core/utils";
+import { safeJSONStringify } from "../core/utils";
 import { errorLogging } from "./logging";
 
 export type HeaderProducer<TEvent extends UnoEvent, TServices> =
@@ -117,32 +117,26 @@ export const serializeBodyAsJSON =
     };
   };
 
-export const BODY_METHOD = "body";
-
-export interface ServicesWithBody {
-  [BODY_METHOD]<T>(): T;
-}
-
 /**
  * This middleware exposes a method in the service object to parse the body of a request as JSON.
  */
-export const parseBodyAsJSON = (reviver?: (key: any, value: any) => any, parseMethod = BODY_METHOD)
+export const parseBodyAsJSON = (reviver?: (key: any, value: any) => any)
   : Middleware<HttpUnoEvent, any> => {
   return async (
     arg: FunctionArg<HttpUnoEvent, any>,
     next: FunctionExecution<HttpUnoEvent, any>): Promise<any> => {
 
-    arg.services[parseMethod] = memoize(() => {
-      if (!arg.event.body) {
+    arg.event.body = () => {
+      if (!arg.event.rawBody) {
         return undefined;
       }
 
       try {
-        return JSON.parse(arg.event.body, reviver);
+        return JSON.parse(arg.event.rawBody, reviver);
       } catch (error) {
         throw badRequestError(error.message);
       }
-    });
+    };
 
     return next(arg);
   };
@@ -152,59 +146,23 @@ export const parseBodyAsJSON = (reviver?: (key: any, value: any) => any, parseMe
  * This middleware exposes a method in the service object to parse the body of a request
  * as FORM (application/x-www-form-urlencoded).
  */
-export const parseBodyAsFORM = (parseMethod = BODY_METHOD)
+export const parseBodyAsFORM = ()
   : Middleware<HttpUnoEvent, any> => {
   return async (
     arg: FunctionArg<HttpUnoEvent, any>,
     next: FunctionExecution<HttpUnoEvent, any>): Promise<any> => {
 
-    arg.services[parseMethod] = memoize(() => {
+    arg.event.body = () => {
       if (!arg.event.body) {
         return undefined;
       }
 
       try {
-        return parseQS<any>(arg.event.body);
+        return parseQS<any>(arg.event.rawBody);
       } catch (error) {
         throw badRequestError(error.message);
       }
-    });
-
-    return next(arg);
-  };
-};
-
-export const PARAMETERS_METHOD = "parameters";
-
-export interface ServicesWithParameters {
-  [PARAMETERS_METHOD]<T = any>(): T;
-}
-
-const decodeFromSource = (source: { [name: string]: string }, params: any) => {
-  Object.keys(source).forEach((prop) => {
-    params[prop] = decodeURIComponent(source[prop]);
-  });
-};
-
-/**
- * This middleware exposes a method in the service object to regroup all the parameters
- * into a cohesive object and URL-decode them.
- */
-export const parseParameters = (parseMethod = PARAMETERS_METHOD)
-  : Middleware<HttpUnoEvent, any> => {
-  return async (
-    arg: FunctionArg<HttpUnoEvent, any>,
-    next: FunctionExecution<HttpUnoEvent, any>): Promise<any> => {
-
-    arg.services[parseMethod] = memoize(() => {
-      const params: any = {};
-
-      if (arg.event && arg.event.parameters) {
-        decodeFromSource(arg.event.parameters, params);
-      }
-
-      return params;
-    });
+    };
 
     return next(arg);
   };
@@ -212,12 +170,11 @@ export const parseParameters = (parseMethod = PARAMETERS_METHOD)
 
 /**
  * Returns the following suite of middlewares:
- * serializeBodyAsJSON, httpErrors, errorLogging, parseBodyAsJSON, parseParameters
+ * serializeBodyAsJSON, httpErrors, errorLogging, parseBodyAsJSON
  */
 export const defaultProxyMiddlewares = () => [
   serializeBodyAsJSON(),
   httpErrors(),
   errorLogging(),
   parseBodyAsJSON(),
-  parseParameters(),
 ];
