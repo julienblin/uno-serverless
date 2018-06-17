@@ -23,25 +23,33 @@ export const awsLambdaAdapter = (): ProviderAdapter => {
           provider: "AWSLambda",
         };
 
-        const unoEvent: UnoEvent = {
-          eventType: "any",
-          original: event,
-        };
+        let adapterEvent;
 
         if (typeof event === "object" && typeof event !== "string" && "httpMethod" in event) {
-          unoEvent.eventType = "http";
-          const unoHttpEvent = unoEvent as HttpUnoEvent;
-          unoHttpEvent.body = throwBody;
-          unoHttpEvent.headers = event.headers || {};
-          unoHttpEvent.httpMethod = event.httpMethod.toLowerCase(),
-          unoHttpEvent.parameters = {};
-          decodeFromSource(unoHttpEvent.parameters, event.queryStringParameters);
-          decodeFromSource(unoHttpEvent.parameters, event.pathParameters);
-          unoHttpEvent.rawBody = event.body;
-          unoHttpEvent.url = event.path;
+          const httpUnoEvent: HttpUnoEvent = {
+            body: throwBody,
+            headers: event.headers || {},
+            httpMethod: event.httpMethod.toLowerCase(),
+            original: event,
+            parameters: {},
+            rawBody: event.body,
+            unoEventType: "http",
+            url: event.path,
+          };
+          decodeFromSource(httpUnoEvent.parameters, event.queryStringParameters);
+          decodeFromSource(httpUnoEvent.parameters, event.pathParameters);
+
+          adapterEvent = httpUnoEvent;
         }
 
-        const result = await outerCircle({ event: unoEvent, context: unoContext, services: {} });
+        if (!adapterEvent) {
+          adapterEvent = {
+            ...event,
+            unoEventType: "any",
+          };
+        }
+
+        const result = await outerCircle({ event: adapterEvent, context: unoContext, services: {} });
 
         if (isHttpUnoResponse(result)) {
           if (!result.body) {

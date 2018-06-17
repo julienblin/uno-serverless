@@ -1,11 +1,9 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
 import { createContainerFactory } from "../../../src/core/container";
-import { uno } from "../../../src/core/uno";
+import { testAdapter, uno } from "../../../src/core/uno";
 import { randomStr } from "../../../src/core/utils";
 import { container } from "../../../src/middlewares/container";
-import { awsLambdaAdapter } from "../../../src/providers/aws";
-import { createLambdaContext } from "../lambda-helper-test";
 
 describe("container middleware", () => {
 
@@ -23,7 +21,7 @@ describe("container middleware", () => {
       c: ({ builder }) => builder.scoped(randomStr()),
     });
 
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use(container(() => createContainer()))
       .handler<any, ContainerContract>(async ({ services: { a, b, c } }) => ({
         scoped1: c(),
@@ -33,15 +31,9 @@ describe("container middleware", () => {
         transient2: b(),
       }));
 
-    const result1 = await handler(
-      {},
-      createLambdaContext(),
-      (e, r) => {});
+    const result1 = await handler();
 
-    const result2 = await handler(
-      {},
-      createLambdaContext(),
-      (e, r) => {});
+    const result2 = await handler();
 
     expect(result1.singleton).to.be.equal(result2.singleton);
     expect(result1.scoped1).to.not.equal(result2.scoped1);

@@ -1,4 +1,5 @@
 import { UnoContext, UnoEvent } from "./schemas";
+import { randomStr } from "./utils";
 
 export interface FunctionArg<TEvent extends UnoEvent, TServices> {
   event: TEvent;
@@ -59,3 +60,29 @@ export class GenericFunctionBuilder implements FunctionBuilder {
     return this.adapterBuilder(outerCircle);
   }
 }
+
+/**
+ * The test adapter is useful for unit testing.
+ * It returns a handler that takes a UnoEvent and a UnoContext,
+ * and return the results without any transformation.
+ */
+export const testAdapter = (): ProviderAdapter => {
+  return () =>  {
+    return new GenericFunctionBuilder((outerCircle) => {
+      const defaultEvent: UnoEvent = {
+        unoEventType: "any",
+      };
+
+      const defaultContext: UnoContext = {
+        invocationId: randomStr(),
+        log: console.log,
+        original: {},
+        provider: "Test",
+      };
+
+      return async (event: UnoEvent, context: UnoContext) => {
+        return outerCircle({ event: event || defaultEvent, context: context || defaultContext, services: {} });
+      };
+    });
+  };
+};

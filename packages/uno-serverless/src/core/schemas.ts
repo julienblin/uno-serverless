@@ -2,8 +2,7 @@
 export type UnoEventType = "any" | "http";
 
 export interface UnoEvent {
-  eventType: UnoEventType;
-  original: any;
+  unoEventType: UnoEventType;
 }
 
 export interface UnoContext {
@@ -18,6 +17,7 @@ export type HttpMethod = "get" | "head" | "options" | "post" | "put" | "patch" |
 export interface HttpUnoEvent extends UnoEvent {
   headers: Record<string, string>;
   httpMethod: HttpMethod | string;
+  original: any;
   parameters: Record<string, string>;
   rawBody: string;
   url: string;

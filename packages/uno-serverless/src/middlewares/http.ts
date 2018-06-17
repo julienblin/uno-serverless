@@ -173,7 +173,7 @@ export const parseBodyAsFORM = ()
  * Returns the following suite of middlewares:
  * serializeBodyAsJSON, httpErrors, errorLogging, parseBodyAsJSON
  */
-export const defaultProxyMiddlewares = () => [
+export const defaultHttpMiddlewares = () => [
   serializeBodyAsJSON(),
   httpErrors(),
   errorLogging(),

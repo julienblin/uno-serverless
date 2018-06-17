@@ -1,8 +1,6 @@
 import { expect } from "chai";
-import { uno } from "../../../src/core/uno";
+import { testAdapter, uno } from "../../../src/core/uno";
 import { errorLogging } from "../../../src/middlewares/logging";
-import { awsLambdaAdapter } from "../../../src/providers/aws";
-import { createLambdaContext } from "../lambda-helper-test";
 
 describe("errorLogging middleware", () => {
 
@@ -10,7 +8,7 @@ describe("errorLogging middleware", () => {
 
     let logged;
 
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use(errorLogging((_, message) => { logged = message; }))
       .handler(async () => { throw new Error("foo"); });
 
@@ -18,9 +16,7 @@ describe("errorLogging middleware", () => {
       await handler(
         {
           bar: "bar",
-        },
-        createLambdaContext(),
-        (e, r) => { });
+        });
       expect(false);
     } catch (error) {
       expect(logged).to.not.be.undefined;
@@ -33,16 +29,14 @@ describe("errorLogging middleware", () => {
 
     let logged;
 
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use(errorLogging((message) => { logged = message; }))
       .handler(async () => 1);
 
     const result = await handler(
       {
         bar: "bar",
-      },
-      createLambdaContext(),
-      (e, r) => { });
+      });
     expect(logged).to.be.undefined;
     expect(result).to.equal(1);
   });

@@ -1,12 +1,10 @@
 import { expect } from "chai";
 import { JSONSchema } from "../../../src/core/json-schema";
-import { uno } from "../../../src/core/uno";
+import { testAdapter, uno } from "../../../src/core/uno";
 import { randomStr } from "../../../src/core/utils";
 import { parseBodyAsJSON } from "../../../src/middlewares/http";
 import { validateParameters } from "../../../src/middlewares/validation";
 import { validateBody, validateEvent } from "../../../src/middlewares/validation";
-import { awsLambdaAdapter } from "../../../src/providers/aws";
-import { createLambdaContext } from "../lambda-helper-test";
 
 describe("validateEvent middleware", () => {
 
@@ -23,7 +21,7 @@ describe("validateEvent middleware", () => {
       required: ["bar"],
     };
 
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use(validateEvent(schema))
       .handler(async () => { });
 
@@ -31,9 +29,7 @@ describe("validateEvent middleware", () => {
       await handler(
         {
           foo: randomStr(),
-        },
-        createLambdaContext(),
-        (e, r) => { });
+        });
       expect(false);
     } catch (error) {
       expect(error.code).to.equal("validationError");
@@ -58,7 +54,7 @@ describe("validateBody middleware", () => {
       required: ["bar"],
     };
 
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use([
         parseBodyAsJSON(),
         validateBody(schema),
@@ -69,10 +65,8 @@ describe("validateBody middleware", () => {
       await handler(
         {
           body: JSON.stringify({ foo: "foo" }),
-          httpMethod: "PUT",
-        },
-        createLambdaContext(),
-        (e, r) => { });
+          httpMethod: "put",
+        });
       expect(false);
     } catch (error) {
       expect(error.code).to.equal("validationError");
@@ -80,7 +74,7 @@ describe("validateBody middleware", () => {
   });
 
   it("should validate missing body.", async () => {
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use([
         parseBodyAsJSON(),
         validateBody({}),
@@ -90,10 +84,8 @@ describe("validateBody middleware", () => {
     try {
       await handler(
         {
-          httpMethod: "POST",
-        },
-        createLambdaContext(),
-        (e, r) => { });
+          httpMethod: "post",
+        });
       expect(false);
     } catch (error) {
       expect(error.code).to.equal("validationError");
@@ -101,7 +93,7 @@ describe("validateBody middleware", () => {
   });
 
   it("should not validate if HTTP method is not compatible.", async () => {
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use([
         parseBodyAsJSON(),
         validateBody({}),
@@ -110,25 +102,21 @@ describe("validateBody middleware", () => {
 
     await handler(
       {
-        httpMethod: "GET",
-      },
-      createLambdaContext(),
-      (e, r) => { });
+        httpMethod: "get",
+      });
     expect(true);
   });
 
   it("should throw if missing body.", async () => {
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use(validateBody({}))
       .handler(async () => { });
 
     try {
       await handler(
         {
-          httpMethod: "PATCH",
-        },
-        createLambdaContext(),
-        (e, r) => { });
+          httpMethod: "patch",
+        });
       expect(false);
     } catch (error) {
       expect(error.message).to.contain("body");
@@ -150,7 +138,7 @@ describe("validateParameters middleware", () => {
       required: ["bar"],
     };
 
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use(validateParameters(schema))
       .handler(async () => { });
 
@@ -159,9 +147,7 @@ describe("validateParameters middleware", () => {
         {
           pathParameters: { bar: "foo" },
           queryStringParameters: { id: "5" },
-        },
-        createLambdaContext(),
-        (e, r) => { });
+        });
       expect(false);
     } catch (error) {
       expect(error.code).to.equal("validationError");
@@ -169,15 +155,12 @@ describe("validateParameters middleware", () => {
   });
 
   it("should throw if missing parameters.", async () => {
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use(validateParameters({}))
       .handler(async () => { });
 
     try {
-      await handler(
-        {},
-        createLambdaContext(),
-        (e, r) => { });
+      await handler();
       expect(false);
     } catch (error) {
       expect(error.message).to.contain("parameters");

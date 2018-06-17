@@ -35,12 +35,12 @@ export const http = <TServices = any>(func: HttpFunc<TServices>)
     runHttp(func, arg);
 };
 
-export type ProxyMethods<TServices> = Partial<Record<HttpMethod, HttpFunc<TServices>>>;
+export type RouterMethods<TServices> = Partial<Record<HttpMethod, HttpFunc<TServices>>>;
 
 /**
  * Same as http handler, but allow multiple handlers to be defined and segregated by event HTTP methods.
  */
-export const httpMethodRouter = <TServices = any>(methods: ProxyMethods<TServices>)
+export const httpMethodRouter = <TServices = any>(methods: RouterMethods<TServices>)
   : FunctionExecution<HttpUnoEvent, TServices> => {
   return async (arg: FunctionArg<HttpUnoEvent, TServices>) => {
 
@@ -54,7 +54,7 @@ export const httpMethodRouter = <TServices = any>(methods: ProxyMethods<TService
   };
 };
 
-export type HttpRoutes<TServices> = Record<string, ProxyMethods<TServices>>;
+export type HttpRoutes<TServices> = Record<string, RouterMethods<TServices>>;
 
 /**
  * Router for http integration.

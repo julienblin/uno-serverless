@@ -3,14 +3,12 @@ import * as HttpStatusCodes from "http-status-codes";
 import { describe, it } from "mocha";
 import { notFoundError } from "../../../src/core/errors";
 import { HttpUnoEvent } from "../../../src/core/schemas";
-import { uno } from "../../../src/core/uno";
+import { testAdapter, uno } from "../../../src/core/uno";
 import { randomStr } from "../../../src/core/utils";
 import { ok } from "../../../src/handlers/http-responses";
 import {
   cors, httpErrors, parseBodyAsFORM, parseBodyAsJSON,
   responseHeaders, serializeBodyAsJSON} from "../../../src/middlewares/http";
-import { awsLambdaAdapter } from "../../../src/providers/aws";
-import { createLambdaContext } from "../lambda-helper-test";
 
 describe("responseHeaders middleware", () => {
 
@@ -22,7 +20,7 @@ describe("responseHeaders middleware", () => {
 
     const time = new Date().getTime();
 
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use(responseHeaders(headers))
       .handler(async () => ({
         body: "",
@@ -33,10 +31,9 @@ describe("responseHeaders middleware", () => {
         time,
       }));
 
-    const result = await handler(
-      {},
-      createLambdaContext(),
-      (e, r) => {});
+    const result = await handler({
+      unoEventType: "http",
+    });
 
     expect(result.headers!["X-Handler-Header"]).to.equal("bar");
     expect(result.headers!["X-Header"]).to.equal(headers["X-Header"]);
@@ -45,16 +42,16 @@ describe("responseHeaders middleware", () => {
 
   it("should do nothing if result is not APIGatewayProxyResult", async () => {
     const headers = { "X-Header": "foo" };
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use(responseHeaders(headers))
       .handler(async () => ({
         foo: "bar",
       }));
 
     const result = await handler(
-      {},
-      createLambdaContext(),
-      (e, r) => {});
+      {
+        unoEventType: "http",
+      });
 
     expect(result.headers).to.be.undefined;
   });
@@ -64,7 +61,7 @@ describe("responseHeaders middleware", () => {
 describe("cors middleware", () => {
 
   it("should inject default origin", async () => {
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use(cors())
       .handler(async () => ({
         body: "",
@@ -72,15 +69,15 @@ describe("cors middleware", () => {
       }));
 
     const result = await handler(
-      {},
-      createLambdaContext(),
-      (e, r) => {});
+      {
+        unoEventType: "http",
+      });
 
     expect(result.headers!["Access-Control-Allow-Origin"]).to.equal("*");
   });
 
   it("should inject custom origin", async () => {
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use(cors("example.org"))
       .handler(async () => ({
         body: "",
@@ -88,9 +85,9 @@ describe("cors middleware", () => {
       }));
 
     const result = await handler(
-      {},
-      createLambdaContext(),
-      (e, r) => {});
+      {
+        unoEventType: "http",
+      });
 
     expect(result.headers!["Access-Control-Allow-Origin"]).to.equal("example.org");
   });
@@ -101,54 +98,52 @@ describe("httpErrors middleware", () => {
 
   it("should do nothing when no errors", async () => {
     const handlerResult = {};
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use(httpErrors())
       .handler(async () => handlerResult);
 
     const result = await handler(
-      {},
-      createLambdaContext(),
-      (e, r) => {});
+      {
+        unoEventType: "http",
+      });
 
     expect(result).to.equal(handlerResult);
   });
 
   it("should transform known errors", async () => {
     const target = "https://example.org";
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use(httpErrors())
       .handler(async () => {
         throw notFoundError(target);
       });
 
     const result = await handler(
-      {},
-      createLambdaContext(),
-      (e, r) => {}) as any;
+      {
+        unoEventType: "http",
+      });
 
     expect(result.statusCode).to.equal(HttpStatusCodes.NOT_FOUND);
-    const body = JSON.parse(result.body);
-    expect(body.code).to.equal("notFound");
-    expect(body.target).to.equal(target);
+    expect(result.body.code).to.equal("notFound");
+    expect(result.body.target).to.equal(target);
   });
 
   it("should encapsulate unknown errors", async () => {
     const message = randomStr();
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use(httpErrors())
       .handler(async () => {
         throw new Error(message);
       });
 
     const result = await handler(
-      {},
-      createLambdaContext(),
-      (e, r) => {}) as any;
+      {
+        unoEventType: "http",
+      });
 
     expect(result.statusCode).to.equal(HttpStatusCodes.INTERNAL_SERVER_ERROR);
-    const body = JSON.parse(result.body);
-    expect(body.code).to.equal("internalServerError");
-    expect(body.message).to.equal(message);
+    expect(result.body.code).to.equal("internalServerError");
+    expect(result.body.message).to.equal(message);
   });
 
 });
@@ -160,28 +155,28 @@ describe("serializeBodyAsJSON middleware", () => {
       foo: "bar",
     };
 
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use(serializeBodyAsJSON())
       .handler(async () => ok(handlerResult));
 
     const result = await handler(
-      {},
-      createLambdaContext(),
-      (e, r) => {});
+      {
+        unoEventType: "http",
+      });
 
     expect(JSON.parse(result.body)).to.deep.equal(handlerResult);
     expect(result.headers!["Content-Type"]).to.equal("application/json");
   });
 
   it("should not serialize if body is a string.", async () => {
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use(serializeBodyAsJSON())
       .handler(async () => ({ body: "hello" }));
 
     const result = await handler(
-      {},
-      createLambdaContext(),
-      (e, r) => {});
+      {
+        unoEventType: "http",
+      });
 
     expect(result.body).to.equal("hello");
     expect(result.headers).to.be.undefined;
@@ -194,14 +189,14 @@ describe("serializeBodyAsJSON middleware", () => {
     };
     obj1.obj2 = obj2;
 
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use(serializeBodyAsJSON({ safe: true }))
       .handler(async () => ({ body: obj1 }));
 
     const result = await handler(
-      {},
-      createLambdaContext(),
-      (e, r) => {});
+      {
+        unoEventType: "http",
+      });
 
     expect(result.body).to.not.be.undefined;
   });
@@ -215,7 +210,7 @@ describe("parseBodyAsJSON middleware", () => {
       foo: "bar",
     };
 
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use(parseBodyAsJSON())
       .handler<HttpUnoEvent, any>
         (async ({ event }) => {
@@ -224,11 +219,10 @@ describe("parseBodyAsJSON middleware", () => {
 
     await handler(
       {
-        body: JSON.stringify(body),
+        unoEventType: "http",
         httpMethod: "get",
-      },
-      createLambdaContext(),
-      (e, r) => {});
+        rawBody: JSON.stringify(body),
+      });
   });
 
 });
@@ -240,7 +234,7 @@ describe("parseBodyAsFORM middleware", () => {
       foo: "bar",
     };
 
-    const handler = uno(awsLambdaAdapter())
+    const handler = uno(testAdapter())
       .use(parseBodyAsFORM())
       .handler<HttpUnoEvent, any>
         (async ({ event }) => {
@@ -249,11 +243,10 @@ describe("parseBodyAsFORM middleware", () => {
 
     await handler(
       {
-        body: "foo=bar",
+        unoEventType: "http",
         httpMethod: "get",
-      },
-      createLambdaContext(),
-      (e, r) => {});
+        rawBody: "foo=bar",
+      });
   });
 
 });

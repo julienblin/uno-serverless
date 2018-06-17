@@ -29,7 +29,7 @@ export const health = <TServices = any>(name: string, func: HealthFunc<TServices
       };
     }
 
-    if (arg.event.eventType === "http") {
+    if (arg.event.unoEventType === "http") {
       switch (result.status) {
         case HealthCheckStatus.Ok:
         case HealthCheckStatus.Inconclusive:
