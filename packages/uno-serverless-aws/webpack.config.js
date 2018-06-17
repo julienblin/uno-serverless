@@ -30,12 +30,7 @@ module.exports = {
     new CleanWebpackPlugin([distFolder]),
   ],
   externals: {
-    'ajv': 'ajv',
-    'aws-sdk': 'aws-sdk',
-    'axios': 'axios',
-    'jsonwebtoken': 'jsonwebtoken',
-    'node-cache': 'node-cache',
-    'pem': 'pem',
-    'pem-jwk': 'pem-jwk'
+    'uno-serverless-core': 'uno-serverless-core',
+    'aws-sdk': 'aws-sdk'
   }
 };

@@ -1,4 +1,3 @@
-import { autoAdapter } from "../providers/auto";
 import { UnoContext, UnoEvent } from "./schemas";
 
 export interface FunctionArg<TEvent extends UnoEvent, TServices> {
@@ -20,7 +19,7 @@ export interface FunctionBuilder {
 
 export type ProviderAdapter = () => FunctionBuilder;
 
-export const uno = (adapter: ProviderAdapter = autoAdapter()): FunctionBuilder => adapter();
+export const uno = (adapter: ProviderAdapter): FunctionBuilder => adapter();
 
 export class GenericFunctionBuilder implements FunctionBuilder {
   private readonly middlewares: Array<Middleware<any, any>> = [];
