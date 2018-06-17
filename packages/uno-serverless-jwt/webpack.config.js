@@ -30,7 +30,7 @@ module.exports = {
     new CleanWebpackPlugin([distFolder]),
   ],
   externals: {
-    'uno-serverless-core': 'uno-serverless-core',
+    'uno-serverless': 'uno-serverless',
     'jsonwebtoken': 'jsonwebtoken',
     'pem': 'pem',
     'pem-jwk': 'pem-jwk',

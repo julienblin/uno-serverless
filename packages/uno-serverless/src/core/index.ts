@@ -5,5 +5,3 @@ export * from "./schemas";
 export * from "./uno";
 export * from "./utils";
 export * from "./validator";
-import * as StatusCodes from "http-status-codes";
-export const HttpStatusCodes = StatusCodes;

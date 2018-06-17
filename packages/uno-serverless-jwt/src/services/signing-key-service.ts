@@ -1,8 +1,7 @@
 import { execSync } from "child_process";
 import { createHash } from "crypto";
 import { readFileSync, unlinkSync } from "fs";
-import { randomStr } from "../../core";
-import { HttpClient } from "../http-client";
+import { HttpClient, randomStr } from "uno-serverless";
 
 /**
  * A component that can manages signing keys for tokens.

@@ -67,7 +67,7 @@ export class InMemoryCache implements Cache {
       expiresAt = new Date().getTime() + ttl;
     } else {
       const defaultTtl = await this.options.defaultTtl;
-      if(defaultTtl) {
+      if (defaultTtl) {
         expiresAt = new Date().getTime() + defaultTtl;
       }
     }

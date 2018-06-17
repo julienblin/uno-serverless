@@ -48,7 +48,7 @@
     "webpack-cli": "^2.1.5"
   },
   "dependencies": {
-    "uno-serverless-core": "^0.1.0",
+    "uno-serverless": "^0.1.0",
     "jsonwebtoken": "^8.3.0",
     "pem": "^1.12.5",
     "pem-jwk": "^1.5.1"

@@ -30,7 +30,8 @@ module.exports = {
     new CleanWebpackPlugin([distFolder]),
   ],
   externals: {
-    'uno-serverless-core': 'uno-serverless-core',
-    'aws-sdk': 'aws-sdk'
+    'uno-serverless': 'uno-serverless',
+    'aws-sdk': 'aws-sdk',
+    'http-status-codes': 'http-status-codes'
   }
 };

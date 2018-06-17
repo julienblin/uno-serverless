@@ -2,7 +2,7 @@
   "name": "uno-serverless",
   "description": "A Framework to build serverless applications and deploy in any cloud.",
   "scripts": {
-    "postinstall": "lerna bootstrap",
+    "postinstall": "lerna bootstrap"
   },
   "repository": {
     "type": "git",
