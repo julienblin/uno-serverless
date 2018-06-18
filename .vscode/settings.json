@@ -8,7 +8,7 @@
         "lcov",
         "memoized",
         "middlewares",
-        "opiniated",
+        "uno",
         "prebuild"
     ],
     "files.exclude": {

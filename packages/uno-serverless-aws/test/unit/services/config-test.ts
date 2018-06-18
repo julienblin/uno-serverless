@@ -5,7 +5,7 @@ import { describe, it } from "mocha";
 import { ConfigService, HealthCheckStatus } from "uno-serverless";
 import { SSMParameterStoreClient, SSMParameterStoreConfigService } from "../../../src/services/config";
 
-const path = "/opiniated-lambda/tests";
+const path = "/uno-serverless/tests";
 
 class SSMParameterStoreClientStub implements SSMParameterStoreClient {
 

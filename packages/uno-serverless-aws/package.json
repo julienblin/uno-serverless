@@ -18,15 +18,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/julienblin/opiniated-lambda.git"
+    "url": "git+https://github.com/julienblin/uno-serverless.git"
   },
   "keywords": [],
   "author": "Julien Blin <julien.blin@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/julienblin/opiniated-lambda/issues"
+    "url": "https://github.com/julienblin/uno-serverless/issues"
   },
-  "homepage": "https://github.com/julienblin/opiniated-lambda#readme",
+  "homepage": "https://github.com/julienblin/uno-serverless#readme",
   "devDependencies": {
     "@types/aws-lambda": "^8.10.6",
     "@types/chai": "^4.1.3",

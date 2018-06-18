@@ -1,5 +1,5 @@
-[![Travis](https://travis-ci.org/julienblin/opiniated-lambda.svg?branch=master)](https://travis-ci.org/julienblin/opiniated-lambda)
-[![npm](https://img.shields.io/npm/v/opiniated-lambda.svg)](https://www.npmjs.com/package/opiniated-lambda)
+[![Travis](https://travis-ci.org/julienblin/uno-serverless.svg?branch=master)](https://travis-ci.org/julienblin/uno-serverless)
+[![npm](https://img.shields.io/npm/v/uno-serverless.svg)](https://www.npmjs.com/package/uno-serverless)
 
 # uno-serverless
 
