@@ -3,6 +3,8 @@ import {
   HttpUnoResponse, ProviderAdapter, UnoContext, UnoEvent } from "uno-serverless";
 import { AzureFunctionsContext, AzureFunctionsHttpEvent, AzureFunctionsHttpResponse } from "./azure-functions-schemas";
 
+const throwPrincipal = () => { throw new Error("Unable to retrieve principal. Did you forget to add a middleware?"); };
+
 export const azureFunctionAdapter = (): ProviderAdapter => {
   return () => {
     return new GenericFunctionBuilder((outerCircle) => {
@@ -28,6 +30,7 @@ export const azureFunctionAdapter = (): ProviderAdapter => {
                 ...azHttpEvent.query,
                 ...azHttpEvent.params,
               },
+              principal: throwPrincipal,
               rawBody: azHttpEvent.rawBody,
               unoEventType: "http",
               url: azHttpEvent.originalUrl,

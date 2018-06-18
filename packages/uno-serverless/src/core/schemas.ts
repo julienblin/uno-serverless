@@ -2,6 +2,7 @@
 export type UnoEventType = "any" | "http";
 
 export interface UnoEvent {
+  /** Returns the recognized event type. */
   unoEventType: UnoEventType;
 }
 
@@ -22,6 +23,7 @@ export interface HttpUnoEvent extends UnoEvent {
   rawBody: string;
   url: string;
   body<T>(): T;
+  principal<T>(): T;
 }
 
 export interface HttpUnoResponse {
