@@ -1,7 +1,7 @@
 {
   "name": "uno-serverless",
   "description": "A Framework to build serverless applications and deploy in any cloud.",
-  "version": "0.1.0",
+  "version": "0.27.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
@@ -14,15 +14,14 @@
     "prepare": "npm run build",
     "test": "mocha",
     "test:watch": "mocha --opts test/mocha.opts --watch",
-    "cover": "nyc mocha",
-    "coveralls": "nyc report --reporter=text-lcov | coveralls"
+    "cover": "nyc mocha"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/julienblin/opiniated-lambda.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Julien Blin <julien.blin@gmail.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/julienblin/opiniated-lambda/issues"
@@ -36,7 +35,6 @@
     "@types/node": "^10.3.2",
     "chai": "^4.1.2",
     "clean-webpack-plugin": "^0.1.19",
-    "coveralls": "^3.0.1",
     "json-stringify-safe": "^5.0.1",
     "mocha": "^5.2.0",
     "nock": "^9.3.2",
@@ -66,7 +64,7 @@
     ],
     "reporter": [
       "text",
-      "cobertura",
+      "lcov",
       "html"
     ]
   }

@@ -2,7 +2,12 @@
   "name": "uno-serverless",
   "description": "A Framework to build serverless applications and deploy in any cloud.",
   "scripts": {
-    "postinstall": "lerna bootstrap"
+    "postinstall": "lerna bootstrap",
+    "build": "lerna run build",
+    "test": "lerna run test",
+    "clean": "lerna clean --yes && rimraf packages/**/.nyc_output packages/**/coverage packages/**/dist",
+    "cover": "lerna run cover",
+    "coveralls": "lcov-result-merger packages/**/coverage/lcov.info | coveralls"
   },
   "repository": {
     "type": "git",
@@ -10,7 +15,8 @@
   },
   "keywords": [
     "serverless",
-    "typescript"
+    "typescript",
+    "uno"
   ],
   "author": "Julien Blin <julien.blin@gmail.com>",
   "license": "MIT",
@@ -19,6 +25,10 @@
   },
   "homepage": "https://github.com/julienblin/opiniated-lambda#readme",
   "devDependencies": {
-    "lerna": "^2.11.0"
+    "coveralls": "^3.0.1",
+    "lcov-result-merger": "^3.0.0",
+    "lerna": "^2.11.0",
+    "nyc": "^12.0.2",
+    "rimraf": "^2.6.2"
   }
 }
