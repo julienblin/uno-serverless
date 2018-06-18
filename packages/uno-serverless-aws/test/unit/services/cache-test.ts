@@ -1,10 +1,9 @@
 import { AWSError, Response, S3 } from "aws-sdk";
 import { expect } from "chai";
 import * as HttpStatusCodes from "http-status-codes";
-import { randomStr } from "../../../../src/core/utils";
-import { S3Cache } from "../../../../src/services/aws/cache";
-import { S3Client } from "../../../../src/services/aws/s3-client";
-import { InMemoryCache } from "../../../../src/services/cache";
+import { InMemoryCache, randomStr } from "uno-serverless";
+import { S3Cache } from "../../../src/services/cache";
+import { S3Client } from "../../../src/services/s3-client";
 
 class S3ClientStub implements S3Client {
 

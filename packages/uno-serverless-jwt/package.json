@@ -37,6 +37,7 @@
     "clean-webpack-plugin": "^0.1.19",
     "coveralls": "^3.0.1",
     "mocha": "^5.2.0",
+    "nock": "^9.3.3",
     "nyc": "^11.9.0",
     "source-map-support": "^0.5.6",
     "ts-loader": "^4.4.1",

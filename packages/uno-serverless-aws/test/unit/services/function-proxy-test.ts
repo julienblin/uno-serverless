@@ -1,10 +1,10 @@
 import { AWSError, Lambda, Response } from "aws-sdk";
 import { PromiseResult } from "aws-sdk/lib/request";
 import { expect } from "chai";
-import { randomStr } from "../../../../src/core/utils";
+import { randomStr } from "uno-serverless";
 import {
   asyncFunctionProxy, functionProxy,
-  LambdaClient } from "../../../../src/services/aws/function-proxy";
+  LambdaClient } from "../../../src/services/function-proxy";
 
 class LambdaClientStub implements LambdaClient {
 

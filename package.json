@@ -18,7 +18,7 @@
     "url": "https://github.com/julienblin/opiniated-lambda/issues"
   },
   "homepage": "https://github.com/julienblin/opiniated-lambda#readme",
-	"devDependencies": {
-		"lerna": "^2.11.0"
-	}
+  "devDependencies": {
+    "lerna": "^2.11.0"
+  }
 }

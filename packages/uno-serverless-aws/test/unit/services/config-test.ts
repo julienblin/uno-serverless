@@ -2,9 +2,8 @@ import { AWSError, Response, SSM } from "aws-sdk";
 import { PromiseResult } from "aws-sdk/lib/request";
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { SSMParameterStoreClient, SSMParameterStoreConfigService } from "../../../../src/services/aws/config";
-import { ConfigService } from "../../../../src/services/config";
-import { HealthCheckStatus } from "../../../../src/services/health-check";
+import { ConfigService, HealthCheckStatus } from "uno-serverless";
+import { SSMParameterStoreClient, SSMParameterStoreConfigService } from "../../../src/services/config";
 
 const path = "/opiniated-lambda/tests";
 

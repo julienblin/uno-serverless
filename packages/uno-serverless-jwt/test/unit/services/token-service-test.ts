@@ -1,9 +1,9 @@
 import { expect } from "chai";
-import { randomStr } from "../../../../src/core";
-import { RSSigningKeyService, SigningKeyService } from "../../../../src/services/jwt/signing-key-service";
+import { randomStr } from "uno-serverless";
+import { RSSigningKeyService, SigningKeyService } from "../../../src/services/signing-key-service";
 import {
   JWTTokenService, JWTTokenServiceOptions,
-  TokenClaims, TokenService } from "../../../../src/services/jwt/token-service";
+  TokenClaims, TokenService } from "../../../src/services/token-service";
 
 describe("JWTTokenService", () => {
 

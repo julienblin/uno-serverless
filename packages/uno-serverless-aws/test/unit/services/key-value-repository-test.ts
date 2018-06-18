@@ -1,10 +1,9 @@
 import { AWSError, Response, S3 } from "aws-sdk";
 import { expect } from "chai";
 import * as HttpStatusCodes from "http-status-codes";
-import { randomStr } from "../../../../src/core/utils";
-import { S3KeyValueRepository } from "../../../../src/services/aws/key-value-repository";
-import { S3Client } from "../../../../src/services/aws/s3-client";
-import { HealthCheckStatus } from "../../../../src/services/health-check";
+import { HealthCheckStatus, randomStr } from "uno-serverless";
+import { S3KeyValueRepository } from "../../../src/services/key-value-repository";
+import { S3Client } from "../../../src/services/s3-client";
 
 class S3ClientStub implements S3Client {
 

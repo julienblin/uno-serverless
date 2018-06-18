@@ -1,11 +1,10 @@
 import { expect } from "chai";
 import { readFileSync } from "fs";
 import * as nock from "nock";
-import { randomStr } from "../../../../src/core";
-import { httpClientFactory } from "../../../../src/services/http-client";
+import { httpClientFactory, randomStr } from "uno-serverless";
 import {
   JWKSigningKeyService, RSSigningKeyService,
-  SigningKeyService } from "../../../../src/services/jwt/signing-key-service";
+  SigningKeyService } from "../../../src/services/signing-key-service";
 
 describe("JWKSigningKeyService", () => {
 
@@ -15,7 +14,7 @@ describe("JWKSigningKeyService", () => {
     const jwkBasePath = "https://login.microsoftonline.com";
     const jwkUrl = "/common/discovery/v2.0/keys";
 
-    const jwkResponse = readFileSync("./test/unit/services/jwt/jwk-response.json");
+    const jwkResponse = readFileSync("./test/unit/services/jwk-response.json");
     nock(jwkBasePath)
       .get(jwkUrl)
       .reply(200, jwkResponse);
