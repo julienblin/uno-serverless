@@ -1,18 +1,18 @@
 import { BlobService, createBlobService } from "azure-storage";
 import * as HttpStatusCodes from "http-status-codes";
-import { Cache, checkHealth, CheckHealth, randomStr } from "uno-serverless";
+import { checkHealth, CheckHealth, KeyValueRepository, randomStr } from "uno-serverless";
 
-export interface BlobStorageCacheOptionsWithService {
+export interface BlobStorageKeyValueRepositoryOptionsWithService {
   /** The Storage blob service instance */
   blobService: BlobService;
 }
 
-export interface BlobStorageCacheOptionsWithConnectionString {
+export interface BlobStorageKeyValueRepositoryOptionsWithConnectionString {
   /** The Storage connection string */
   connectionString: string | Promise<string>;
 }
 
-export interface BlobStorageCacheCommonOptions {
+export interface BlobStorageKeyValueRepositoryCommonOptions {
   /** Blob storage container name. */
   container: string | Promise<string>;
 
@@ -23,27 +23,25 @@ export interface BlobStorageCacheCommonOptions {
   path?: string;
 
   /** Custom deserializer. */
-  deserialize?<T>(text: string): CacheItem<T>;
+  deserialize?<T>(text: string): T;
 
   /** Custom serializer. */
-  serialize?<T>(value: CacheItem<T>): string;
+  serialize?<T>(value: T): string;
 }
 
 /**
  * Options for BlobStorageCache.
  */
-export type BlobStorageCacheOptions =
-  (BlobStorageCacheOptionsWithService | BlobStorageCacheOptionsWithConnectionString) & BlobStorageCacheCommonOptions;
+export type BlobStorageKeyValueRepositoryOptions =
+  (BlobStorageKeyValueRepositoryOptionsWithService | BlobStorageKeyValueRepositoryOptionsWithConnectionString)
+  & BlobStorageKeyValueRepositoryCommonOptions;
 
-/**
- * Cache implementation using Azure Blob Storage.
- */
-export class BlobStorageCache implements Cache, CheckHealth {
+export class BlobStorageKeyValueRepository implements KeyValueRepository, CheckHealth {
 
-  private readonly options: BlobStorageCacheOptions;
+  private readonly options: BlobStorageKeyValueRepositoryOptions;
   private readonly blobService: Promise<BlobService>;
 
-  public constructor(options: BlobStorageCacheOptions) {
+  public constructor(options: BlobStorageKeyValueRepositoryOptions) {
     this.options = {
       blobService: (options as any).blobService,
       connectionString: (options as any).connectionString,
@@ -57,7 +55,7 @@ export class BlobStorageCache implements Cache, CheckHealth {
 
   public async checkHealth() {
     return checkHealth(
-      "BlobStorageCache",
+      "BlobStorageKeyValueRepository",
       `${await this.options.container}/${this.options.path}`,
       async () => {
         const testKey = randomStr();
@@ -103,47 +101,24 @@ export class BlobStorageCache implements Cache, CheckHealth {
             resolve(undefined); return;
           }
 
-          const cacheItem = this.options.deserialize!<T>(text);
-          if (cacheItem.expiresAt && cacheItem.expiresAt < (new Date().getTime() / 1000)) {
-            // TODO: Manage pruning.
-            // await this.delete(key);
-            return undefined;
+          try {
+            const deserialized = this.options.deserialize!<T>(text);
+            resolve(deserialized); return;
+          } catch (dezerializationError) {
+            reject(dezerializationError); return;
           }
-
-          resolve(cacheItem.item); return;
         });
     });
   }
 
-  public async getOrFetch<T>(key: string, fetch: () => Promise<T>, useCache = true, ttl?: number): Promise<T> {
-    if (ttl === 0) {
-      return fetch();
-    }
-
-    if (useCache) {
-      const cachedValue = await this.get<T>(key);
-      if (cachedValue !== undefined) { return cachedValue; }
-    }
-
-    const value = await fetch();
-    await this.set(key, value, ttl);
-
-    return value;
-  }
-
-  public async set<T>(key: string, value: T, ttl?: number): Promise<void> {
-    const item: CacheItem<T> = {
-      expiresAt: ttl ? (new Date().getTime() / 1000) + ttl : undefined,
-      item: value,
-    };
-
+  public async set<T>(key: string, value: T): Promise<void> {
     const svc = await this.blobService;
     const container = await this.options.container;
     return new Promise<void>((resolve, reject) => {
       svc.createBlockBlobFromText(
         container,
         this.getKey(key),
-        this.options.serialize!(item),
+        this.options.serialize!(value),
         {
           contentSettings: {
             contentType: this.options.contentType!,
@@ -159,7 +134,6 @@ export class BlobStorageCache implements Cache, CheckHealth {
     });
   }
 
-  /** Computes the path + key. */
   private getKey(key: string) { return `${this.options.path ? `${this.options.path}/` : "" }${key}`; }
 
   private async buildBlobService(): Promise<BlobService> {
@@ -169,9 +143,4 @@ export class BlobStorageCache implements Cache, CheckHealth {
 
     return createBlobService(await (this.options as any).connectionString);
   }
-}
-
-export interface CacheItem<T> {
-  expiresAt?: number;
-  item: T;
 }
