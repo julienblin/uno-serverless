@@ -1,7 +1,7 @@
 {
   "name": "uno-serverless",
   "description": "A Framework to build serverless applications and deploy in any cloud.",
-  "version": "0.31.0",
+  "version": "0.33.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
@@ -38,8 +38,8 @@
     "chai": "^4.1.2",
     "clean-webpack-plugin": "^0.1.19",
     "json-stringify-safe": "^5.0.1",
-    "msgpack-lite": "^0.1.26",
     "mocha": "^5.2.0",
+    "msgpack-lite": "^0.1.26",
     "nock": "^9.3.2",
     "nyc": "^11.9.0",
     "path-to-regexp": "^2.2.1",
