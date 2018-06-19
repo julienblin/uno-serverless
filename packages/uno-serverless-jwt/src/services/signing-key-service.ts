@@ -1,6 +1,8 @@
 import { execSync } from "child_process";
 import { createHash } from "crypto";
 import { readFileSync, unlinkSync } from "fs";
+import { getPublicKey } from "pem";
+import { jwk2pem, pem2jwk } from "pem-jwk";
 import { HttpClient, randomStr } from "uno-serverless";
 
 /**
@@ -21,7 +23,7 @@ export interface JWKSigningKeyServiceOptions {
 }
 
 /**
- * SigningKeyService that can retreive public keys
+ * SigningKeyService that can retrieve public keys
  * from a JWK endpoint, to validate signatures.
  */
 export class JWKSigningKeyService implements SigningKeyService {
@@ -53,15 +55,9 @@ export class JWKSigningKeyService implements SigningKeyService {
 
     try {
       const jwks = await this.jwkPromise;
-      let pemJwk;
-      try {
-        pemJwk = await import("pem-jwk");
-      } catch (importError) {
-        throw new Error(`Error while importing pem-jwk: ${importError}. Did you forget to npm install pem-jwk?`);
-      }
 
       jwks.keys.forEach((key) => {
-        this.cachedKeys[key.kid] = pemJwk.jwk2pem(key);
+        this.cachedKeys[key.kid] = jwk2pem(key);
       });
 
       if (this.cachedKeys[keyId]) {
@@ -93,6 +89,10 @@ export interface RSSigningKeyServiceOptions {
    * Base64-encoded PEM private key.
    */
   privateKey: string | Promise<string>;
+  /**
+   * Base64-encoded PEM public key.
+   */
+  publicKey?: string | Promise<string>;
 }
 
 /**
@@ -115,11 +115,27 @@ export class RSSigningKeyService implements SigningKeyService {
     }
   }
 
+  public static async getPublicKeyFromPrivateKey(privateKey: string, privateKeyPem = true) {
+    return new Promise<string>((resolve, reject) => {
+      getPublicKey(
+        privateKeyPem
+          ? new Buffer(privateKey, "base64").toString("utf8")
+          : privateKey,
+        (err, res) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(new Buffer(res.publicKey, "utf8").toString("base64"));
+          }
+      });
+    });
+  }
+
   private privateKey: PrivateKeyInfo | undefined;
   private jwk: JWK | undefined;
   private publicKey: string | undefined;
 
-  public constructor(private readonly options: RSSigningKeyServiceOptions) {}
+  public constructor(private readonly options: RSSigningKeyServiceOptions) { }
 
   public async getSecretOrPrivateKey(): Promise<PrivateKeyInfo> {
     if (!this.privateKey) {
@@ -136,23 +152,14 @@ export class RSSigningKeyService implements SigningKeyService {
 
   public async getSecretOrPublicKey(keyId?: string): Promise<string> {
     if (!this.publicKey) {
-      const privateKey = await this.getSecretOrPrivateKey();
-      this.publicKey = await new Promise<string>((resolve, reject) => {
-        import("pem")
-        .then((pem) => {
-          pem.getPublicKey(privateKey.key, (err, res) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve(res.publicKey);
-            }
-          });
-        },
-        (importError) => {
-          reject(
-            new Error(`Error while importing pem package: ${importError.message}. Did you forget to npm install pem?`));
-        });
-      });
+      if (this.options.publicKey) {
+        this.publicKey = new Buffer(await this.options.publicKey, "base64").toString("utf8");
+      } else {
+        const privateKey = await this.getSecretOrPrivateKey();
+        this.publicKey = new Buffer(
+          await RSSigningKeyService.getPublicKeyFromPrivateKey(privateKey.key, false),
+          "base64").toString("utf8");
+      }
     }
     return this.publicKey;
   }
@@ -162,17 +169,10 @@ export class RSSigningKeyService implements SigningKeyService {
       const privateKey = await this.getSecretOrPrivateKey();
       const publicKey = await this.getSecretOrPublicKey();
 
-      let pemJwk;
-      try {
-        pemJwk = await import("pem-jwk");
-      } catch (importError) {
-        throw new Error(`Error while importing pem-jwk: ${importError}. Did you forget to npm install pem-jwk?`);
-      }
-
       this.jwk = {
         keys: [
           {
-            ... pemJwk.pem2jwk(publicKey),
+            ... pem2jwk(publicKey),
             kid: privateKey.kid,
             use: "sig",
           },

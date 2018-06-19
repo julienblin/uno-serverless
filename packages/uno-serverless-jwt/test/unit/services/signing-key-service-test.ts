@@ -73,6 +73,12 @@ describe("RSSigningKeyService", () => {
     expect(key).to.not.be.undefined;
   });
 
+  it("should get public key from generated private key", async () => {
+    const key = await RSSigningKeyService.generatePrivateKey();
+    const publicKey = await RSSigningKeyService.getPublicKeyFromPrivateKey(key);
+    expect(publicKey).to.not.be.undefined;
+  });
+
   it("should return private key", async () => {
     const service = new RSSigningKeyService({ privateKey });
 
@@ -82,6 +88,24 @@ describe("RSSigningKeyService", () => {
   });
 
   it("should return public key", async () => {
+    const service = new RSSigningKeyService({ privateKey });
+
+    const result = await service.getSecretOrPublicKey();
+    expect(result).to.not.be.undefined;
+  });
+
+  it("should return public key from config", async () => {
+    const publicKey = await RSSigningKeyService.getPublicKeyFromPrivateKey(privateKey);
+    const service = new RSSigningKeyService({ privateKey, publicKey });
+    const service2 = new RSSigningKeyService({ privateKey });
+
+    const result = await service.getSecretOrPublicKey();
+    const result2 = await service2.getSecretOrPublicKey();
+    expect(result).to.not.be.undefined;
+    expect(result).to.equal(result2);
+  });
+
+  it("should return public key when passed as option", async () => {
     const service = new RSSigningKeyService({ privateKey });
 
     const result = await service.getSecretOrPublicKey();
