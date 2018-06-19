@@ -1,8 +1,13 @@
+import * as base58 from "base-58";
+import { encode } from "msgpack-lite";
+import { ContinuationArray } from "../core";
+
 /** Defines an interface for a cache system. */
 export interface Cache {
   delete(key: string): Promise<void>;
   get<T>(key: string): Promise<T | undefined>;
   getOrFetch<T>(key: string, fetch: () => Promise<T>, useCache?: boolean, ttl?: number): Promise<T>;
+  listKeys(nextToken?: string): Promise<ContinuationArray<string>>;
   set<T>(key: string, value: T, ttl?: number): Promise<void>;
 }
 
@@ -60,6 +65,16 @@ export class InMemoryCache implements Cache {
     return value;
   }
 
+  public async listKeys(): Promise<ContinuationArray<string>> {
+    const now = new Date().getTime();
+    return {
+      items: Object.keys(this.cache)
+        .map((key) => ({ key, value: this.cache[key] }))
+        .filter((x) => x.value.expiresAt ? x.value.expiresAt > now : true)
+        .map((x) => x.key),
+    };
+  }
+
   /** Set a value associated with a key. */
   public async set<T>(key: string, value: T, ttl?: number) {
     let expiresAt: number | undefined;
@@ -78,3 +93,12 @@ export class InMemoryCache implements Cache {
     };
   }
 }
+
+/** Creates a unique cache key based on a value object. */
+export const createCacheKey = <T extends object>(value?: T, prefix = ""): string => {
+  if (!value) {
+    return prefix;
+  }
+
+  return `${prefix}${base58.encode(Buffer.from(encode(value)))}`;
+};

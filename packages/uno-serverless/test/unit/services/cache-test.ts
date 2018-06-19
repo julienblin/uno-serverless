@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { InMemoryCache } from "../../../src/services/cache";
+import { createCacheKey, InMemoryCache } from "../../../src/services/cache";
 
 describe("InMemoryCache", () => {
 
@@ -54,6 +54,34 @@ describe("InMemoryCache", () => {
 
     expect(result).equal(0);
     expect(fetched).equal(2);
+  });
+
+  it("should list keys", async () => {
+    const cache = new InMemoryCache({ defaultTtl: 10 });
+    await cache.set("key1", {});
+    await cache.set("key2", {});
+
+    const keys = await cache.listKeys();
+    expect(keys.items).to.have.lengthOf(2);
+  });
+
+});
+
+describe("createCacheKey", () => {
+
+  it("should create unique cache keys", () => {
+
+    const value1 = { foo: "bar" };
+    const value2 = { bar: "foo" };
+
+    const key1 = createCacheKey(value1, "pre");
+    const key2 = createCacheKey(value2, "pre");
+    const key12 = createCacheKey(value1, "pre2");
+    const key13 = createCacheKey(value1, "pre");
+
+    expect(key1).to.not.equal(key2);
+    expect(key12).to.not.equal(key1);
+    expect(key13).to.equal(key1);
   });
 
 });
