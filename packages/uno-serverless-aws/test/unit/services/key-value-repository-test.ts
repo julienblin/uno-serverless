@@ -40,6 +40,16 @@ class S3ClientStub implements S3Client {
     };
   }
 
+  public listObjectsV2(params: S3.Types.ListObjectsV2Output) {
+    return {
+      promise: async () => {
+        return {
+          $response: {} as Response<S3.Types.ListObjectsV2Output, AWSError>,
+        };
+      },
+    };
+  }
+
   public putObject(params: S3.Types.PutObjectRequest) {
     this.lastPut = params;
     return {

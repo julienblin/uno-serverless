@@ -1,6 +1,6 @@
 import { S3 } from "aws-sdk";
 import * as HttpStatusCodes from "http-status-codes";
-import { Cache, checkHealth, CheckHealth, randomStr } from "uno-serverless";
+import { Cache, checkHealth, CheckHealth, ContinuationArray, randomStr } from "uno-serverless";
 import { S3Client } from "./s3-client";
 
 /** Options fro S3Cache */
@@ -10,6 +10,9 @@ export interface S3CacheOptions {
 
   /** The content type for the files. */
   contentType?: string;
+
+  /** The default TTL */
+  defaultTtl?: number | Promise<number>;
 
   /** Base path to use in the bucket. */
   path?: string;
@@ -33,12 +36,13 @@ export interface S3CacheOptions {
 export class S3Cache implements Cache, CheckHealth {
 
   /** Options resolved with default values. */
-  private readonly options: Required<S3CacheOptions>;
+  private readonly options: S3CacheOptions;
 
   public constructor(
     {
       bucket,
       contentType = "application/json",
+      defaultTtl,
       path = "",
       s3 = new S3({ maxRetries: 3 }),
       serverSideEncryption = "",
@@ -48,6 +52,7 @@ export class S3Cache implements Cache, CheckHealth {
     this.options = {
       bucket,
       contentType,
+      defaultTtl,
       deserialize,
       path: path.endsWith("/") ? path.slice(0, -1) : path,
       s3,
@@ -69,7 +74,7 @@ export class S3Cache implements Cache, CheckHealth {
 
   /** Delete the value associated with the key */
   public async delete(key: string): Promise<void> {
-    await this.options.s3.deleteObject({
+    await this.options.s3!.deleteObject({
       Bucket: await this.options.bucket,
       Key: this.getKey(key),
     }).promise();
@@ -78,7 +83,7 @@ export class S3Cache implements Cache, CheckHealth {
   /** Get the value associated with the key */
   public async get<T>(key: string): Promise<T | undefined> {
     try {
-      const response = await this.options.s3.getObject({
+      const response = await this.options.s3!.getObject({
         Bucket: await this.options.bucket,
         Key: this.getKey(key),
       }).promise();
@@ -86,7 +91,7 @@ export class S3Cache implements Cache, CheckHealth {
         return undefined;
       }
 
-      const cacheItem = this.options.deserialize<T>(response.Body.toString());
+      const cacheItem = this.options.deserialize!<T>(response.Body.toString());
       if (cacheItem.expiresAt && cacheItem.expiresAt < (new Date().getTime() / 1000)) {
         await this.delete(key);
         return undefined;
@@ -119,16 +124,40 @@ export class S3Cache implements Cache, CheckHealth {
     return value;
   }
 
+  public async listKeys(nextToken?: string): Promise<ContinuationArray<string>> {
+    const objects = await this.options.s3!.listObjectsV2({
+      Bucket: await this.options.bucket,
+      ContinuationToken: nextToken,
+      Prefix: this.options.path,
+    }).promise();
+
+    return {
+      items: objects.Contents!.map((x) => x.Key!.replace(`${this.options.path}/`, "")),
+      nextToken: objects.NextContinuationToken,
+    };
+  }
+
   /** Set the value associated with the key */
   public async set<T>(key: string, value: T, ttl?: number): Promise<void> {
     const item: CacheItem<T> = {
-      expiresAt: ttl ? (new Date().getTime() / 1000) + ttl : undefined,
+      expiresAt: ttl
+        ? (new Date().getTime() / 1000) + ttl
+        : (this.options.defaultTtl ? ((new Date().getTime() / 1000) + await this.options.defaultTtl) : undefined),
       item: value,
     };
-    await this.options.s3.putObject({
-      Body: this.options.serialize(item),
+
+    const s3expiration = item.expiresAt
+      ? new Date(0)
+      : undefined;
+    if (s3expiration) {
+      s3expiration.setUTCSeconds(item.expiresAt!);
+    }
+
+    await this.options.s3!.putObject({
+      Body: this.options.serialize!(item),
       Bucket: await this.options.bucket,
       ContentType: this.options.contentType,
+      Expires: s3expiration,
       Key: this.getKey(key),
       ServerSideEncryption: this.options.serverSideEncryption ? this.options.serverSideEncryption : undefined,
     }).promise();

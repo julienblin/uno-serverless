@@ -1,6 +1,8 @@
-import { BlobService, createBlobService } from "azure-storage";
+import { BlobService, common, createBlobService } from "azure-storage";
 import * as HttpStatusCodes from "http-status-codes";
-import { Cache, checkHealth, CheckHealth, randomStr } from "uno-serverless";
+import {
+  Cache, checkHealth, CheckHealth, ContinuationArray,
+  decodeNextToken, encodeNextToken, randomStr } from "uno-serverless";
 
 export interface BlobStorageCacheOptionsWithService {
   /** The Storage blob service instance */
@@ -129,6 +131,28 @@ export class BlobStorageCache implements Cache, CheckHealth {
     await this.set(key, value, ttl);
 
     return value;
+  }
+
+  public async listKeys(nextToken?: string): Promise<ContinuationArray<string>> {
+    const svc = await this.blobService;
+    const container = await this.options.container;
+    const path = await this.options.path;
+    return new Promise<ContinuationArray<string>>((resolve, reject) => {
+      svc.listBlobsSegmentedWithPrefix(
+        container,
+        path || "",
+        decodeNextToken<common.ContinuationToken>(nextToken)!,
+        (err, res) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(({
+              items: res.entries.map((x) => x.name),
+              nextToken: encodeNextToken(res.continuationToken),
+            }));
+          }
+        });
+    });
   }
 
   public async set<T>(key: string, value: T, ttl?: number): Promise<void> {
