@@ -1,3 +1,4 @@
+import * as HttpStatusCode from "http-status-codes";
 import {
   GenericFunctionBuilder, HttpUnoEvent,
   HttpUnoResponse, ProviderAdapter, UnoContext, UnoEvent } from "uno-serverless";
@@ -50,17 +51,22 @@ export const azureFunctionAdapter = (): ProviderAdapter => {
 
           switch (adapterEvent!.unoEventType) {
             case "http":
-              const httpUnoResponse = result as HttpUnoResponse;
               let output: AzureFunctionsHttpResponse | undefined;
 
-              if (!result.body) {
+              if (!result) {
+                output = {
+                  status: HttpStatusCode.NO_CONTENT,
+                };
+              }
+
+              if (result && !result.body) {
                 output = {
                   headers: result.headers,
                   status: result.statusCode,
                 };
               }
 
-              if (typeof result.body === "string") {
+              if (result && typeof result.body === "string") {
                 output = {
                   body: result.body,
                   headers: result.headers,
@@ -69,7 +75,7 @@ export const azureFunctionAdapter = (): ProviderAdapter => {
                 };
               }
 
-              if (Buffer.isBuffer(result.body)) {
+              if (result && Buffer.isBuffer(result.body)) {
                 output = {
                   body: result.body.toString("base64"),
                   headers: result.headers,
@@ -78,7 +84,7 @@ export const azureFunctionAdapter = (): ProviderAdapter => {
                 };
               }
 
-              if (!output) {
+              if (!output && result) {
                 // Last resort - we rely on Azure Functions native serialization.
                 output = {
                   body: result.body,

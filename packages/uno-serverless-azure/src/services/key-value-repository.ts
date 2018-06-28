@@ -1,6 +1,6 @@
 import { BlobService, createBlobService } from "azure-storage";
 import * as HttpStatusCodes from "http-status-codes";
-import { checkHealth, CheckHealth, KeyValueRepository, randomStr } from "uno-serverless";
+import { checkHealth, CheckHealth, KeyValueRepository, lazyAsync, randomStr } from "uno-serverless";
 
 export interface BlobStorageKeyValueRepositoryOptionsWithService {
   /** The Storage blob service instance */
@@ -39,7 +39,7 @@ export type BlobStorageKeyValueRepositoryOptions =
 export class BlobStorageKeyValueRepository implements KeyValueRepository, CheckHealth {
 
   private readonly options: BlobStorageKeyValueRepositoryOptions;
-  private readonly blobService: Promise<BlobService>;
+  private readonly blobService = lazyAsync(() => this.buildBlobService());
 
   public constructor(options: BlobStorageKeyValueRepositoryOptions) {
     this.options = {
@@ -50,7 +50,6 @@ export class BlobStorageKeyValueRepository implements KeyValueRepository, CheckH
       deserialize: options.deserialize || (<T>(text: string) => JSON.parse(text)),
       serialize: options.serialize || (<T>(value: T) => JSON.stringify(value)),
     };
-    this.blobService = this.buildBlobService();
   }
 
   public async checkHealth() {
@@ -65,7 +64,7 @@ export class BlobStorageKeyValueRepository implements KeyValueRepository, CheckH
   }
 
   public async delete(key: string): Promise<void> {
-    const svc = await this.blobService;
+    const svc = await this.blobService();
     const container = await this.options.container;
     return new Promise<void>((resolve, reject) => {
       svc.deleteBlobIfExists(
@@ -82,7 +81,7 @@ export class BlobStorageKeyValueRepository implements KeyValueRepository, CheckH
   }
 
   public async get<T>(key: string): Promise<T | undefined> {
-    const svc = await this.blobService;
+    const svc = await this.blobService();
     const container = await this.options.container;
     return new Promise<T | undefined>((resolve, reject) => {
       svc.getBlobToText(
@@ -112,7 +111,7 @@ export class BlobStorageKeyValueRepository implements KeyValueRepository, CheckH
   }
 
   public async set<T>(key: string, value: T): Promise<void> {
-    const svc = await this.blobService;
+    const svc = await this.blobService();
     const container = await this.options.container;
     return new Promise<void>((resolve, reject) => {
       svc.createBlockBlobFromText(
