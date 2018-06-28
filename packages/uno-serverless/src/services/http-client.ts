@@ -1,5 +1,5 @@
 import Axios, * as axios from "axios";
-import { isStatusCodeProvider } from "../core";
+import { isStatusCodeProvider, lazyAsync } from "../core";
 
 export type PossiblePromise<T> = T | Promise<T>;
 
@@ -81,14 +81,14 @@ const httpClientError = (axiosError: axios.AxiosError): HttpClientError => {
 
 class AxiosHttpClient implements HttpClient {
 
-  private clientPromise: Promise<axios.AxiosInstance> | undefined;
+  private readonly lazyClient = lazyAsync(async () => this.clientBuilder());
 
   public constructor(private readonly clientBuilder: () => Promise<axios.AxiosInstance>) {}
 
   public async delete(url: string, config?: axios.AxiosRequestConfig | undefined)
     : Promise<axios.AxiosResponse<any>> {
       try {
-        return await (await this.client).delete(url, config);
+        return await (await this.lazyClient()).delete(url, config);
       } catch (error) {
         throw httpClientError(error);
       }
@@ -97,7 +97,7 @@ class AxiosHttpClient implements HttpClient {
   public async get<T = any>(url: string, config?: axios.AxiosRequestConfig | undefined)
     : Promise<axios.AxiosResponse<T>> {
       try {
-        return await (await this.client).get<T>(url, config);
+        return await (await this.lazyClient()).get<T>(url, config);
       } catch (error) {
         throw httpClientError(error);
       }
@@ -106,7 +106,7 @@ class AxiosHttpClient implements HttpClient {
   public async head(url: string, config?: axios.AxiosRequestConfig | undefined)
     : Promise<axios.AxiosResponse<any>> {
       try {
-        return await (await this.client).head(url, config);
+        return await (await this.lazyClient()).head(url, config);
       } catch (error) {
         throw httpClientError(error);
       }
@@ -115,7 +115,7 @@ class AxiosHttpClient implements HttpClient {
   public async patch<T = any>(url: string, data?: any, config?: axios.AxiosRequestConfig | undefined)
     : Promise<axios.AxiosResponse<T>> {
       try {
-        return await (await this.client).patch<T>(url, data, config);
+        return await (await this.lazyClient()).patch<T>(url, data, config);
       } catch (error) {
         throw httpClientError(error);
       }
@@ -124,7 +124,7 @@ class AxiosHttpClient implements HttpClient {
   public async post<T = any>(url: string, data?: any, config?: axios.AxiosRequestConfig | undefined)
     : Promise<axios.AxiosResponse<T>> {
       try {
-        return await (await this.client).post<T>(url, data, config);
+        return await (await this.lazyClient()).post<T>(url, data, config);
       } catch (error) {
         throw httpClientError(error);
       }
@@ -133,7 +133,7 @@ class AxiosHttpClient implements HttpClient {
   public async put<T = any>(url: string, data?: any, config?: axios.AxiosRequestConfig | undefined)
     : Promise<axios.AxiosResponse<T>> {
       try {
-        return await (await this.client).put<T>(url, data, config);
+        return await (await this.lazyClient()).put<T>(url, data, config);
       } catch (error) {
         throw httpClientError(error);
       }
@@ -142,18 +142,10 @@ class AxiosHttpClient implements HttpClient {
   public async request<T = any>(config: axios.AxiosRequestConfig)
     : Promise<axios.AxiosResponse<T>> {
       try {
-        return await (await this.client).request<T>(config);
+        return await (await this.lazyClient()).request<T>(config);
       } catch (error) {
         throw httpClientError(error);
       }
-  }
-
-  private get client() {
-    if (!this.clientPromise) {
-      this.clientPromise = this.clientBuilder();
-    }
-
-    return this.clientPromise;
   }
 }
 

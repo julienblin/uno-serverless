@@ -71,3 +71,16 @@ export const supportDestructuring = <T extends object>(target: T): T =>
 
 /** Generates a random string of a given length using crypto.randomBytes. */
 export const randomStr = (length = 12) => randomBytes(Math.ceil(length / 2)).toString("hex").slice(0, length);
+
+/** Allows lazy async initialization (the builder will only be called once). */
+export const lazyAsync = <T>(builder: () => Promise<T>) => {
+  let instancePromise: Promise<T> | undefined;
+
+  return () => {
+    if (!instancePromise) {
+      instancePromise = builder();
+    }
+
+    return instancePromise;
+  };
+};

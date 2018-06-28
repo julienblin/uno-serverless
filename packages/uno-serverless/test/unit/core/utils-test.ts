@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { describe, it } from "mocha";
 import {
   convertHrtimeToMs, createConfidentialityReplacer,
-  DEFAULT_CONFIDENTIALITY_REPLACE_BY, memoize, randomStr, safeJSONStringify } from "../../../src/core/utils";
+  DEFAULT_CONFIDENTIALITY_REPLACE_BY, lazyAsync, memoize, randomStr, safeJSONStringify } from "../../../src/core/utils";
 
 describe("convertHrtimeToMs", () => {
 
@@ -24,7 +24,7 @@ describe("createConfidentialityReplacer", () => {
     const obj = {
       _internal: "internal",
       a: "a",
-      password: "thepassword",
+      password: "password",
     };
 
     const result = JSON.parse(JSON.stringify(obj, createConfidentialityReplacer()));
@@ -98,6 +98,24 @@ describe("randomStr", () => {
 
     expect(randomStr(1)).to.have.lengthOf(1);
     expect(randomStr(16)).to.have.lengthOf(16);
+  });
+
+});
+
+describe("lazyAsync", () => {
+
+  it("should initialize once", async () => {
+    let executed = 0;
+    const test = lazyAsync(async () => {
+      ++executed;
+
+      return new Object();
+    });
+
+    const result = await test();
+    const result2 = await test();
+    expect(result).to.equal(result2);
+    expect(executed).to.equal(1);
   });
 
 });
