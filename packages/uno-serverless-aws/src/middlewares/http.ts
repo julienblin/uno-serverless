@@ -9,7 +9,7 @@ export const principalFromRequestAuthorizer = (throwIfUnauthorized = true)
     arg: FunctionArg<HttpUnoEvent, any>,
     next: FunctionExecution<HttpUnoEvent, any>): Promise<any> => {
 
-    arg.event.principal = () => {
+    arg.event.principal = async () => {
       if (!arg.event.original.requestContext.authorizer) {
         if (throwIfUnauthorized) {
           throw unauthorizedError("authorizer", "No authorizer info found on request context.");

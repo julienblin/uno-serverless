@@ -23,7 +23,7 @@ export interface HttpUnoEvent extends UnoEvent {
   rawBody: string;
   url: string;
   body<T>(): T;
-  principal<T>(): T;
+  principal<T>(): Promise<T>;
 }
 
 export interface HttpUnoResponse {
