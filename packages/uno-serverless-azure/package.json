@@ -30,6 +30,7 @@
   "homepage": "https://github.com/julienblin/uno-serverless#readme",
   "devDependencies": {
     "@types/chai": "^4.1.3",
+    "@types/documentdb": "^1.10.4",
     "@types/mocha": "^5.2.4",
     "@types/node": "^10.5.1",
     "@types/pem": "^1.9.3",
@@ -49,6 +50,7 @@
   "dependencies": {
     "azure-keyvault": "^3.0.4",
     "azure-storage": "^2.10.0",
+    "documentdb": "^1.14.4",
     "http-status-codes": "^1.3.0",
     "ms-rest-azure": "^2.5.7",
     "uno-serverless": "^0.38.0"
