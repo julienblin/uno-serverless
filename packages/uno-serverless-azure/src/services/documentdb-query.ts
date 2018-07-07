@@ -10,6 +10,9 @@ export interface DocumentQueryProducer {
   toDocumentQuery(): DocumentQuery;
 }
 
+export const isDocumentQueryProducer = (query: any): query is DocumentQueryProducer =>
+  (typeof query === "object" && typeof query !== "string" && "toDocumentQuery" in query);
+
 export interface DocumentQueryBuilder extends DocumentQueryProducer {
   /** Filters by entity type (e.g. products, users...) */
   entity(value: string): DocumentQueryBuilder;

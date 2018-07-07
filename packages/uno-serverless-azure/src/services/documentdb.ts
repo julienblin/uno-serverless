@@ -2,8 +2,10 @@ import {
   Collection, DocumentClient, DocumentQuery,
   FeedOptions, RequestOptions, RetrievedDocument, UniqueId, UriFactory } from "documentdb";
 import * as HttpStatusCodes from "http-status-codes";
-import { CheckHealth, checkHealth, ContinuationArray, lazyAsync, WithContinuation } from "uno-serverless";
-import { DocumentQueryProducer } from "./documentdb-query";
+import {
+  CheckHealth, checkHealth, ContinuationArray, decodeNextToken,
+  encodeNextToken, lazyAsync, WithContinuation } from "uno-serverless";
+import { DocumentQueryProducer, isDocumentQueryProducer } from "./documentdb-query";
 
 export interface EntityDocument extends UniqueId {
   /** The entity type (e.g. products, users...) */
@@ -165,11 +167,57 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
   }
 
   public async query(query: DocumentQuery | DocumentQueryProducer, options?: any): Promise<ContinuationArray<any>> {
-    throw new Error("Method not implemented.");
+    const client = await this.lazyClient();
+    const collectionUri = await this.collectionUri();
+    const documentQuery = this.getDocumentQuery(query);
+    const continuation = options && options.nextToken ? decodeNextToken(options.nextToken)!.toString() : undefined;
+
+    return new Promise<ContinuationArray<any>>((resolve, reject) => {
+      const queryResult = client.queryDocuments(
+        collectionUri,
+        documentQuery,
+        {
+          continuation,
+          ...(options && options.feedOptions),
+        });
+
+      queryResult.executeNext((err, docs, responseHeaders) => {
+        if (err) {
+          return reject(err);
+        }
+
+        let newNextToken: string | undefined;
+        if (responseHeaders["x-ms-continuation"]) {
+          newNextToken = encodeNextToken(responseHeaders["x-ms-continuation"]);
+        }
+
+        return resolve({
+          items: docs.map((x) => this.process(x, undefined, options && options.additionalProperties)) as any,
+          nextToken: newNextToken,
+        });
+      });
+    });
   }
 
   public async queryAll(query: DocumentQuery | DocumentQueryProducer, options?: any): Promise<any[]> {
-    throw new Error("Method not implemented.");
+    const client = await this.lazyClient();
+    const collectionUri = await this.collectionUri();
+    const documentQuery = this.getDocumentQuery(query);
+
+    return new Promise<any[]>((resolve, reject) => {
+      const queryResult = client.queryDocuments(
+        collectionUri,
+        documentQuery,
+        options && options.feedOptions);
+
+      queryResult.toArray((err, docs) => {
+        if (err) {
+          return reject(err);
+        }
+
+        return resolve(docs.map((x) => this.process(x, undefined, options && options.additionalProperties)) as any);
+      });
+    });
   }
 
   public async set(document: any & EntityDocument, options?: DocumentDbRequestOptions & AdditionalPropertiesOptions)
@@ -216,8 +264,16 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
   private id(entity: string, id: string) { return `${entity}${this.options.entitySeparator}${id}`; }
 
   private process(doc: RetrievedDocument, entity: string | undefined, additionalProperties: boolean | undefined) {
-    if (doc.id && entity) {
-      doc.id = doc.id.slice(entity.length + this.options.entitySeparator!.length);
+    if (doc.id) {
+      if (entity) {
+        doc.id = doc.id.slice(entity.length + this.options.entitySeparator!.length);
+      } else {
+        if (doc._entity) {
+          doc.id = doc.id.slice(doc._entity.length + this.options.entitySeparator!.length);
+        } else {
+          doc.id = doc.id.slice(doc.id.indexOf(this.options.entitySeparator!) + 1);
+        }
+      }
     }
 
     if (!additionalProperties) {
@@ -226,5 +282,13 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
     }
 
     return doc;
+  }
+
+  private getDocumentQuery(query: DocumentQuery | DocumentQueryProducer): DocumentQuery {
+    if (isDocumentQueryProducer(query)) {
+      return query.toDocumentQuery();
+    }
+
+    return query;
   }
 }
