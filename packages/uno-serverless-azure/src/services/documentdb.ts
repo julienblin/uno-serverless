@@ -1,5 +1,8 @@
-import { DocumentQuery, FeedOptions, RetrievedDocument, UniqueId } from "documentdb";
-import { CheckHealth, ContinuationArray, WithContinuation } from "uno-serverless";
+import {
+  Collection, DocumentClient, DocumentQuery,
+  FeedOptions, RequestOptions, RetrievedDocument, UniqueId, UriFactory } from "documentdb";
+import * as HttpStatusCodes from "http-status-codes";
+import { CheckHealth, checkHealth, ContinuationArray, lazyAsync, WithContinuation } from "uno-serverless";
 import { DocumentQueryProducer } from "./documentdb-query";
 
 export interface EntityDocument extends UniqueId {
@@ -7,63 +10,221 @@ export interface EntityDocument extends UniqueId {
   _entity: string;
 }
 
-export interface DocumentDbOperationOptions {
+export interface DocumentDbRequestOptions {
+  requestOptions?: RequestOptions;
+}
+
+export interface DocumentDbFeedOptions {
   /** DocumentDb feed options */
   feedOptions?: FeedOptions;
 }
 
-export interface EntityOptions {
-  /**
-   * The entity type (e.g. products, users...).
-   * If not provided, the id will need to include the entity type prefix.
-   */
-  entity?: string;
+export interface AdditionalPropertiesOptions {
+  /** True keep all properties starting with _ (owned by DocumentDb) */
+  additionalProperties: true;
 }
 
-export interface StrippedOptions {
-  /** True to strip all properties starting with _ (owned by DocumentDb) */
-  stripped: true;
-}
+export interface DocumentDb {
+  /** Delete a document by entity type and id. */
+  delete(entity: string, id: string, options?: DocumentDbRequestOptions): Promise<void>;
 
-export interface DocumentDb extends CheckHealth {
-  /** Delete a document by id. */
-  delete(id: string, options?: EntityOptions & DocumentDbOperationOptions): Promise<void>;
-
-  /** Get a document by id. */
-  get<T>(id: string, options?: EntityOptions & DocumentDbOperationOptions)
-    : Promise<T & RetrievedDocument & EntityDocument | undefined>;
-  /** Get a document by id. */
-  get<T>(id: string, options: EntityOptions & DocumentDbOperationOptions & StrippedOptions)
+  /** Get a document by entity type and id. */
+  get<T>(entity: string, id: string, options?: DocumentDbRequestOptions)
     : Promise<T | undefined>;
+  /** Get a document by entity type and id. */
+  get<T>(entity: string, id: string, options: DocumentDbRequestOptions & AdditionalPropertiesOptions)
+    : Promise<T & RetrievedDocument & EntityDocument | undefined>;
 
   /** Paginated query. */
   query<T>(
     query: DocumentQuery | DocumentQueryProducer,
-    options?: EntityOptions & WithContinuation & DocumentDbOperationOptions)
-    : Promise<ContinuationArray<T & RetrievedDocument & EntityDocument>>;
-  /** Paginated query. */
-  query<T>(
-    query: DocumentQuery | DocumentQueryProducer,
-    options: EntityOptions & WithContinuation & StrippedOptions & DocumentDbOperationOptions)
+    options?: WithContinuation & DocumentDbFeedOptions)
     : Promise<ContinuationArray<T>>;
+  /** Paginated query. */
+  query<T>(
+    query: DocumentQuery | DocumentQueryProducer,
+    options: WithContinuation & DocumentDbFeedOptions & AdditionalPropertiesOptions)
+    : Promise<ContinuationArray<T & RetrievedDocument & EntityDocument>>;
 
   /** Non-paginated query - all results returned. */
   queryAll<T>(
     query: DocumentQuery | DocumentQueryProducer,
-    options?: EntityOptions & DocumentDbOperationOptions)
-    : Promise<Array<T & RetrievedDocument & EntityDocument>>;
-  /** Non-paginated query - all results returned. */
-  queryAll<T>(
-    query: DocumentQuery | DocumentQueryProducer,
-    options: EntityOptions & StrippedOptions & DocumentDbOperationOptions)
+    options?: DocumentDbFeedOptions)
     : Promise<T[]>;
+  /** Non-paginated query - all results returned. */
+  queryAll<T>(
+    query: DocumentQuery | DocumentQueryProducer,
+    options: DocumentDbFeedOptions & AdditionalPropertiesOptions)
+    : Promise<Array<T & RetrievedDocument & EntityDocument>>;
 
   /** Create or update a document. */
-  set<T>(document: T & EntityDocument, options?: DocumentDbOperationOptions)
-    : Promise<T & RetrievedDocument & EntityDocument>;
+  set<T>(document: T & EntityDocument, options?: DocumentDbRequestOptions): Promise<T>;
   /** Create or update a document. */
-  set<T>(document: T & EntityDocument, options: DocumentDbOperationOptions & StrippedOptions): Promise<T>;
+  set<T>(document: T & EntityDocument, options: DocumentDbRequestOptions & AdditionalPropertiesOptions)
+    : Promise<T & RetrievedDocument & EntityDocument>;
 }
 
 /** Default id for singleton entities. */
 export const single = "single";
+
+export interface DocumentDbImplOptions {
+  endpoint: string | Promise<string>;
+  primaryKey: string | Promise<string>;
+  databaseId: string | Promise<string>;
+  collectionId: string | Promise<string>;
+  entitySeparator?: string;
+  collectionCreationOptions?: Partial<Collection>;
+}
+
+export class DocumentDbImpl implements DocumentDb, CheckHealth {
+
+  private readonly lazyClient = lazyAsync(
+    async () => {
+      const endpoint = await this.options.endpoint;
+
+      return new DocumentClient(
+        await this.options.endpoint,
+        {
+          masterKey: await this.options.primaryKey,
+        });
+    });
+
+  public constructor(private readonly options: DocumentDbImplOptions) {
+    if (!this.options.entitySeparator) {
+      this.options.entitySeparator = "-";
+    }
+  }
+
+  public async checkHealth() {
+    const databaseId = await this.options.databaseId;
+    const collectionId = await this.options.collectionId;
+    return checkHealth(
+      "DocumentDb",
+      `${databaseId}/${collectionId}`,
+      async () => {
+        const client = await this.lazyClient();
+        return new Promise((resolve, reject) => {
+          client.createDatabase({ id: databaseId }, (dbErr) => {
+            if (dbErr && dbErr.code !== HttpStatusCodes.CONFLICT) {
+              return reject(dbErr);
+            }
+
+            const databaseLink = UriFactory.createDatabaseUri(databaseId);
+            client.createCollection(
+              databaseLink, { ...this.options.collectionCreationOptions, id: collectionId }, (collErr) => {
+              if (collErr && collErr.code !== HttpStatusCodes.CONFLICT) {
+                return reject(collErr);
+              }
+
+              resolve();
+            });
+          });
+        });
+      });
+  }
+
+  public async delete(entity: string, id: string, options?: DocumentDbRequestOptions): Promise<void> {
+    const client = await this.lazyClient();
+    const documentUri = await this.documentUri(entity, id);
+
+    return new Promise<void>((resolve, reject) => {
+      client.deleteDocument(
+        documentUri,
+        options && options.requestOptions ? options.requestOptions : {},
+        (err) => {
+          if (err) {
+            return reject(err);
+          }
+
+          return resolve();
+        });
+    });
+  }
+
+  public async get(entity: string, id: string, options?: DocumentDbRequestOptions & AdditionalPropertiesOptions)
+    : Promise<any> {
+    const client = await this.lazyClient();
+    const documentUri = await this.documentUri(entity, id);
+
+    return new Promise<any>((resolve, reject) => {
+      client.readDocument(
+        documentUri,
+        options && options.requestOptions ? options.requestOptions : {},
+        (err, doc) => {
+        if (err) {
+          if (err.code === HttpStatusCodes.NOT_FOUND) {
+            return resolve(undefined);
+          } else {
+            return reject(err);
+          }
+        }
+
+        return resolve(this.process(doc, entity, options && options.additionalProperties) as any);
+      });
+    });
+  }
+
+  public async query(query: DocumentQuery | DocumentQueryProducer, options?: any): Promise<ContinuationArray<any>> {
+    throw new Error("Method not implemented.");
+  }
+
+  public async queryAll(query: DocumentQuery | DocumentQueryProducer, options?: any): Promise<any[]> {
+    throw new Error("Method not implemented.");
+  }
+
+  public async set(document: any & EntityDocument, options?: DocumentDbRequestOptions & AdditionalPropertiesOptions)
+    : Promise<any> {
+    const client = await this.lazyClient();
+    const collectionUri = await this.collectionUri();
+
+    if (!document.id.startsWith(document._entity)) {
+      document.id = this.id(document._entity, document.id);
+    }
+
+    return new Promise<any>((resolve, reject) => {
+      client.upsertDocument(
+        collectionUri,
+        document,
+        {
+          ...(options && options.requestOptions ? options.requestOptions : {}),
+          disableAutomaticIdGeneration: true,
+        },
+        (err, doc) => {
+        if (err) {
+          return reject(err);
+        }
+
+        return resolve(this.process(doc, document._entity, options && options.additionalProperties));
+      });
+    });
+  }
+
+  private async collectionUri() {
+    const databaseId = await this.options.databaseId;
+    const collectionId = await this.options.collectionId;
+
+    return UriFactory.createDocumentCollectionUri(databaseId, collectionId);
+  }
+
+  private async documentUri(entity: string, id: string) {
+    const databaseId = await this.options.databaseId;
+    const collectionId = await this.options.collectionId;
+
+    return UriFactory.createDocumentUri(databaseId, collectionId, this.id(entity, id));
+  }
+
+  private id(entity: string, id: string) { return `${entity}${this.options.entitySeparator}${id}`; }
+
+  private process(doc: RetrievedDocument, entity: string | undefined, additionalProperties: boolean | undefined) {
+    if (doc.id && entity) {
+      doc.id = doc.id.slice(entity.length + this.options.entitySeparator!.length);
+    }
+
+    if (!additionalProperties) {
+      delete doc.ttl;
+      Object.keys(doc).filter((k) => k.startsWith("_")).forEach((k) => { delete doc[k]; });
+    }
+
+    return doc;
+  }
+}
