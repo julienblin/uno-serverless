@@ -1,10 +1,16 @@
 import * as HttpStatusCode from "http-status-codes";
 import {
   GenericFunctionBuilder, HttpUnoEvent,
-  HttpUnoResponse, ProviderAdapter, UnoContext, UnoEvent } from "uno-serverless";
+  ProviderAdapter, UnoContext, UnoEvent } from "uno-serverless";
 import { AzureFunctionsContext, AzureFunctionsHttpEvent, AzureFunctionsHttpResponse } from "./azure-functions-schemas";
 
-const throwPrincipal = () => { throw new Error("Unable to retrieve principal. Did you forget to add a middleware?"); };
+const defaultPrincipal = async (throwIfEmpty = true) => {
+  if (throwIfEmpty) {
+    throw new Error("Unable to retrieve principal. Did you forget to add a middleware?");
+  }
+
+  return undefined;
+};
 
 export const azureFunctionAdapter = (): ProviderAdapter => {
   return () => {
@@ -30,7 +36,7 @@ export const azureFunctionAdapter = (): ProviderAdapter => {
                 ...azHttpEvent.query,
                 ...azHttpEvent.params,
               },
-              principal: throwPrincipal,
+              principal: defaultPrincipal,
               rawBody: azHttpEvent.rawBody,
               unoEventType: "http",
               url: azHttpEvent.originalUrl,

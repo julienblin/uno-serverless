@@ -24,6 +24,7 @@ export interface HttpUnoEvent extends UnoEvent {
   url: string;
   body<T>(): T;
   principal<T>(): Promise<T>;
+  principal<T>(throwIfEmpty: false): Promise<T | undefined>;
 }
 
 export interface HttpUnoResponse {

@@ -3,15 +3,23 @@ import { FunctionArg, FunctionExecution, HttpUnoEvent, Middleware, unauthorizedE
 /**
  * This middleware exposes the requestContext.authorizer as the event principal.
  */
-export const principalFromRequestAuthorizer = (throwIfUnauthorized = true)
+export const principalFromRequestAuthorizer = ()
   : Middleware<HttpUnoEvent, any> => {
   return async (
     arg: FunctionArg<HttpUnoEvent, any>,
     next: FunctionExecution<HttpUnoEvent, any>): Promise<any> => {
 
-    arg.event.principal = async () => {
+    const previousPrincipal = arg.event.principal;
+    arg.event.principal = async (throwIfEmpty = true) => {
+      if (previousPrincipal) {
+        const previousPrincipalResult = await previousPrincipal(false);
+        if (previousPrincipalResult) {
+          return previousPrincipalResult;
+        }
+      }
+
       if (!arg.event.original.requestContext.authorizer) {
-        if (throwIfUnauthorized) {
+        if (throwIfEmpty) {
           throw unauthorizedError("authorizer", "No authorizer info found on request context.");
         }
 

@@ -44,24 +44,32 @@ describe("principalFromBearerToken", () => {
   });
 
   it("should memoize", async () => {
-    const token = randomStr();
+    const token1 = randomStr();
+    const token2 = randomStr();
     let executions = 0;
     const handler = uno(testAdapter())
       .use(principalFromBearerToken(async (arg, bearerToken) => { ++executions; return bearerToken; }))
       .handler<HttpUnoEvent, any>(async ({ event }) => {
-        const result1 = await event.principal();
-        const result2 = await event.principal();
-        expect(result1).to.equal(result2).to.equal(token);
-        return result2;
+        const principalResult1 = await event.principal();
+        const principalResult2 = await event.principal();
+        expect(principalResult2).to.equal(principalResult1);
+        return principalResult2;
       });
 
     const result = await handler({
       headers: {
-        authorization: `bearer ${token}`,
+        authorization: `bearer ${token1}`,
       },
     });
 
-    expect(executions).to.equal(1);
+    const result2 = await handler({
+      headers: {
+        authorization: `bearer ${token2}`,
+      },
+    });
 
+    expect(executions).to.equal(2);
+    expect(result).to.equal(token1);
+    expect(result2).to.equal(token2);
   });
 });

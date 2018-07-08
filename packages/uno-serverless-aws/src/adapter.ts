@@ -3,7 +3,13 @@ import {
   ProviderAdapter, UnoContext } from "uno-serverless";
 
 const throwBody = () => { throw new Error("Unable to parse body. Did you forget to add a middleware?"); };
-const throwPrincipal = () => { throw new Error("Unable to retrieve principal. Did you forget to add a middleware?"); };
+const defaultPrincipal = async (throwIfEmpty = true) => {
+  if (throwIfEmpty) {
+    throw new Error("Unable to retrieve principal. Did you forget to add a middleware?");
+  }
+
+  return undefined;
+};
 
 const decodeFromSource = (params: Record<string, string>, source?: Record<string, string>) => {
   if (source) {
@@ -33,7 +39,7 @@ export const awsLambdaAdapter = (): ProviderAdapter => {
             httpMethod: event.httpMethod.toLowerCase(),
             original: event,
             parameters: {},
-            principal: throwPrincipal,
+            principal: defaultPrincipal,
             rawBody: event.body,
             unoEventType: "http",
             url: event.path,
