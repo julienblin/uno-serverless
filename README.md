@@ -3,4 +3,11 @@
 
 # uno-serverless
 
-TODO.
+## Get started
+
+```shell
+npm i -g yo
+npm i -g generator-uno-serverless
+
+yo uno-serverless
+```
