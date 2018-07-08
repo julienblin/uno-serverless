@@ -1,0 +1,21 @@
+{
+  "proxies": {
+    "info": {
+      "matchCondition": {
+        "methods": [
+          "GET"
+        ],
+        "route": "/info"
+      },
+      "responseOverrides": {
+        "response.statusCode": "200",
+        "response.headers.Content-Type": "application/json",
+        "response.body": {
+          "name": "<%= projectName %>",
+          "version": "{{version}}",
+          "timestamp": "{{timestamp}}"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+node_modules
+dist
+.cache-loader
+.nyc_output
+coverage
+test-results.xml

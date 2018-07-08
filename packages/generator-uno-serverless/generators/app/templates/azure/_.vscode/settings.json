@@ -1,0 +1,11 @@
+{
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.cache-loader": true,
+    "**/.nyc_output": true,
+    "**/coverage": true,
+    ".yo-rc.json": true,
+  },
+  "typescript.tsdk": "node_modules\\typescript\\lib"
+}

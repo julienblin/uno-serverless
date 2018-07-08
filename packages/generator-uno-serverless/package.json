@@ -1,0 +1,33 @@
+{
+  "name": "generator-uno-serverless",
+  "version": "0.38.0",
+  "description": "A Yeoman generator for uno-serverless projects.",
+  "files": [
+    "generators"
+  ],
+  "scripts": {
+    "build": "",
+    "test": "",
+    "cover": ""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/julienblin/uno-serverless.git"
+  },
+  "keywords": [
+    "yeoman-generator",
+    "uno-serverless"
+  ],
+  "author": "Julien Blin<julien.blin@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/julienblin/uno-serverless/issues"
+  },
+  "homepage": "https://github.com/julienblin/uno-serverless#readme",
+  "dependencies": {
+    "change-case": "^3.0.2",
+    "figlet": "^1.2.0",
+    "js-yaml": "^3.11.0",
+    "yeoman-generator": "^2.0.5"
+  }
+}

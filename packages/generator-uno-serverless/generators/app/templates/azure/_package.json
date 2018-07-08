@@ -1,0 +1,30 @@
+{
+  "name": "<%= projectName %>",
+  "version": "0.1.0",
+  "description": "<%= projectDescription %>",
+  "private": true,
+  "scripts": {
+    "postinstall": "rimraf .cache-loader",
+    "lint": "tslint --project tsconfig.json",
+    "clean": "rimraf dist",
+    "prebuild": "npm run clean",
+    "build": "webpack",
+    "start": "npm run build -- --env=development && concurrently -k -r \"webpack --env=development --watch\" \"cd dist && func host start\"",
+    "test": "mocha --opts test/mocha.opts test/unit/**/*-test.ts",
+    "test:watch": "mocha --opts test/mocha.opts --watch test/unit/**/*-test.ts",
+    "test:integration": "mocha --opts test/mocha.opts test/integration/**/*-test.ts",
+    "test:e2e": "newman run test/e2e/e2e.collection.json",
+    "cover": "nyc mocha --reporter mocha-junit-reporter test/unit/**/*-test.ts",
+    "package": "npm run build && cd dist && jszip . -o <%= projectName %>.zip"
+  },
+  "keywords": [],
+  "nyc": {
+    "extension": [
+      ".ts"
+    ],
+    "reporter": [
+      "cobertura",
+      "html"
+    ]
+  }
+}
