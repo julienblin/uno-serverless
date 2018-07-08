@@ -5,12 +5,7 @@ import * as HttpStatusCodes from "http-status-codes";
 import {
   CheckHealth, checkHealth, ContinuationArray, decodeNextToken,
   encodeNextToken, lazyAsync, WithContinuation } from "uno-serverless";
-import { DocumentQueryProducer, isDocumentQueryProducer } from "./documentdb-query";
-
-export interface EntityDocument extends UniqueId {
-  /** The entity type (e.g. products, users...) */
-  _entity: string;
-}
+import { DocumentQueryProducer, EntityDocument, isDocumentQueryProducer } from "./documentdb-query";
 
 export interface DocumentDbRequestOptions {
   requestOptions?: RequestOptions;
