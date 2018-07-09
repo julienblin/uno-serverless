@@ -124,8 +124,9 @@ describe("httpErrors middleware", () => {
       });
 
     expect(result.statusCode).to.equal(HttpStatusCodes.NOT_FOUND);
-    expect(result.body.code).to.equal("notFound");
-    expect(result.body.target).to.equal(target);
+    expect(result.body.error).to.not.be.undefined;
+    expect(result.body.error.code).to.equal("notFound");
+    expect(result.body.error.target).to.equal(target);
   });
 
   it("should encapsulate unknown errors", async () => {
@@ -142,8 +143,28 @@ describe("httpErrors middleware", () => {
       });
 
     expect(result.statusCode).to.equal(HttpStatusCodes.INTERNAL_SERVER_ERROR);
-    expect(result.body.code).to.equal("internalServerError");
-    expect(result.body.message).to.equal(message);
+    expect(result.body.error).to.not.be.undefined;
+    expect(result.body.error.code).to.equal("internalServerError");
+    expect(result.body.error.message).to.equal(message);
+  });
+
+  it("should force status codes", async () => {
+    const message = randomStr();
+    const handler = uno(testAdapter())
+      .use(httpErrors(() => HttpStatusCodes.BAD_GATEWAY))
+      .handler(async () => {
+        throw new Error(message);
+      });
+
+    const result = await handler(
+      {
+        unoEventType: "http",
+      });
+
+    expect(result.statusCode).to.equal(HttpStatusCodes.BAD_GATEWAY);
+    expect(result.body.error).to.not.be.undefined;
+    expect(result.body.error.code).to.equal("internalServerError");
+    expect(result.body.error.message).to.equal(message);
   });
 
 });

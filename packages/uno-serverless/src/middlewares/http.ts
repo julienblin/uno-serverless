@@ -53,8 +53,9 @@ export const cors = (origin?: string | Promise<string>) =>
 /**
  * This middleware catch errors and return adapted payload.
  * If you plan to do error logging, remember to place the log after this middleware.
+ * @param forceStatusCode - Allows to override the status code provided by the caught error.
  */
-export const httpErrors = (): Middleware<HttpUnoEvent, any> => {
+export const httpErrors = (forceStatusCode?: (error: any) => number): Middleware<HttpUnoEvent, any> => {
   return async (
     arg: FunctionArg<HttpUnoEvent, any>,
     next: FunctionExecution<HttpUnoEvent, any>): Promise<HttpUnoResponse> => {
@@ -68,10 +69,14 @@ export const httpErrors = (): Middleware<HttpUnoEvent, any> => {
 
       return {
         body: {
-          ...finalError,
-          message: finalError.message,
+          error: {
+            ...finalError,
+            message: finalError.message,
+          },
         },
-        statusCode: finalError.getStatusCode(),
+        statusCode: forceStatusCode
+          ? forceStatusCode(finalError)
+          : finalError.getStatusCode(),
       };
     }
 
