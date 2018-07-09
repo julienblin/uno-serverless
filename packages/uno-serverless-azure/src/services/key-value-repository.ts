@@ -57,6 +57,7 @@ export class BlobStorageKeyValueRepository implements KeyValueRepository, CheckH
       "BlobStorageKeyValueRepository",
       `${await this.options.container}/${this.options.path}`,
       async () => {
+        await this.createContainerIfNotExists();
         const testKey = randomStr();
         await this.set(testKey, { testKey });
         await this.delete(testKey);
@@ -72,10 +73,10 @@ export class BlobStorageKeyValueRepository implements KeyValueRepository, CheckH
         this.getKey(key),
         (err) => {
           if (err) {
-            reject(err);
-          } else {
-            resolve(err);
+            return reject(err);
           }
+
+          return resolve(err);
         });
     });
   }
@@ -89,22 +90,22 @@ export class BlobStorageKeyValueRepository implements KeyValueRepository, CheckH
         this.getKey(key),
         (err, text, result, response) => {
           if (response && response.statusCode === HttpStatusCodes.NOT_FOUND) {
-            resolve(undefined); return;
+            return resolve(undefined);
           }
 
           if (err) {
-            reject(err); return;
+            return reject(err);
           }
 
           if (!text) {
-            resolve(undefined); return;
+            return resolve(undefined);
           }
 
           try {
             const deserialized = this.options.deserialize!<T>(text);
-            resolve(deserialized); return;
+            return resolve(deserialized);
           } catch (dezerializationError) {
-            reject(dezerializationError); return;
+            return reject(dezerializationError);
           }
         });
     });
@@ -125,11 +126,25 @@ export class BlobStorageKeyValueRepository implements KeyValueRepository, CheckH
         },
         (err) => {
           if (err) {
-            reject(err);
-          } else {
-            resolve();
+            return reject(err);
           }
+
+          return resolve();
         });
+    });
+  }
+
+  public async createContainerIfNotExists() {
+    const svc = await this.blobService();
+    const container = await this.options.container;
+    return new Promise<void>((resolve, reject) => {
+      svc.createContainerIfNotExists(container, (err) => {
+        if (err) {
+          return reject(err);
+        }
+
+        return resolve();
+      });
     });
   }
 

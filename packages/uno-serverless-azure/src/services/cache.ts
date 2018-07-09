@@ -2,7 +2,7 @@ import { BlobService, common, createBlobService } from "azure-storage";
 import * as HttpStatusCodes from "http-status-codes";
 import {
   Cache, checkHealth, CheckHealth, ContinuationArray,
-  decodeNextToken, encodeNextToken, randomStr } from "uno-serverless";
+  decodeNextToken, encodeNextToken, lazyAsync, randomStr } from "uno-serverless";
 
 export interface BlobStorageCacheOptionsWithService {
   /** The Storage blob service instance */
@@ -43,7 +43,7 @@ export type BlobStorageCacheOptions =
 export class BlobStorageCache implements Cache, CheckHealth {
 
   private readonly options: BlobStorageCacheOptions;
-  private readonly blobService: Promise<BlobService>;
+  private readonly blobService = lazyAsync(() => this.buildBlobService());
 
   public constructor(options: BlobStorageCacheOptions) {
     this.options = {
@@ -54,7 +54,6 @@ export class BlobStorageCache implements Cache, CheckHealth {
       deserialize: options.deserialize || (<T>(text: string) => JSON.parse(text)),
       serialize: options.serialize || (<T>(value: T) => JSON.stringify(value)),
     };
-    this.blobService = this.buildBlobService();
   }
 
   public async checkHealth() {
@@ -62,6 +61,7 @@ export class BlobStorageCache implements Cache, CheckHealth {
       "BlobStorageCache",
       `${await this.options.container}/${this.options.path}`,
       async () => {
+        await this.createContainerIfNotExists();
         const testKey = randomStr();
         await this.set(testKey, { testKey });
         await this.delete(testKey);
@@ -69,7 +69,7 @@ export class BlobStorageCache implements Cache, CheckHealth {
   }
 
   public async delete(key: string): Promise<void> {
-    const svc = await this.blobService;
+    const svc = await this.blobService();
     const container = await this.options.container;
     return new Promise<void>((resolve, reject) => {
       svc.deleteBlobIfExists(
@@ -86,7 +86,7 @@ export class BlobStorageCache implements Cache, CheckHealth {
   }
 
   public async get<T>(key: string): Promise<T | undefined> {
-    const svc = await this.blobService;
+    const svc = await this.blobService();
     const container = await this.options.container;
     return new Promise<T | undefined>((resolve, reject) => {
       svc.getBlobToText(
@@ -134,7 +134,7 @@ export class BlobStorageCache implements Cache, CheckHealth {
   }
 
   public async listKeys(nextToken?: string): Promise<ContinuationArray<string>> {
-    const svc = await this.blobService;
+    const svc = await this.blobService();
     const container = await this.options.container;
     const path = await this.options.path;
     return new Promise<ContinuationArray<string>>((resolve, reject) => {
@@ -161,7 +161,7 @@ export class BlobStorageCache implements Cache, CheckHealth {
       item: value,
     };
 
-    const svc = await this.blobService;
+    const svc = await this.blobService();
     const container = await this.options.container;
     return new Promise<void>((resolve, reject) => {
       svc.createBlockBlobFromText(
@@ -180,6 +180,20 @@ export class BlobStorageCache implements Cache, CheckHealth {
             resolve();
           }
         });
+    });
+  }
+
+  public async createContainerIfNotExists() {
+    const svc = await this.blobService();
+    const container = await this.options.container;
+    return new Promise<void>((resolve, reject) => {
+      svc.createContainerIfNotExists(container, (err) => {
+        if (err) {
+          return reject(err);
+        }
+
+        return resolve();
+      });
     });
   }
 
