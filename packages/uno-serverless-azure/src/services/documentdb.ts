@@ -16,9 +16,9 @@ export interface DocumentDbFeedOptions {
   feedOptions?: FeedOptions;
 }
 
-export interface AdditionalPropertiesOptions {
+export interface MetadataOptions {
   /** True keep all properties starting with _ (owned by DocumentDb) */
-  additionalProperties: true;
+  metadata: true;
 }
 
 export interface DocumentDb {
@@ -29,7 +29,7 @@ export interface DocumentDb {
   get<T>(entity: string, id: string, options?: DocumentDbRequestOptions)
     : Promise<T | undefined>;
   /** Get a document by entity type and id. */
-  get<T>(entity: string, id: string, options: DocumentDbRequestOptions & AdditionalPropertiesOptions)
+  get<T>(entity: string, id: string, options: DocumentDbRequestOptions & MetadataOptions)
     : Promise<T & RetrievedDocument & EntityDocument | undefined>;
 
   /** Paginated query. */
@@ -40,7 +40,7 @@ export interface DocumentDb {
   /** Paginated query. */
   query<T>(
     query: DocumentQuery | DocumentQueryProducer,
-    options: WithContinuation & DocumentDbFeedOptions & AdditionalPropertiesOptions)
+    options: WithContinuation & DocumentDbFeedOptions & MetadataOptions)
     : Promise<ContinuationArray<T & RetrievedDocument & EntityDocument>>;
 
   /** Non-paginated query - all results returned. */
@@ -51,13 +51,13 @@ export interface DocumentDb {
   /** Non-paginated query - all results returned. */
   queryAll<T>(
     query: DocumentQuery | DocumentQueryProducer,
-    options: DocumentDbFeedOptions & AdditionalPropertiesOptions)
+    options: DocumentDbFeedOptions & MetadataOptions)
     : Promise<Array<T & RetrievedDocument & EntityDocument>>;
 
   /** Create or update a document. */
   set<T>(document: T & EntityDocument, options?: DocumentDbRequestOptions): Promise<T>;
   /** Create or update a document. */
-  set<T>(document: T & EntityDocument, options: DocumentDbRequestOptions & AdditionalPropertiesOptions)
+  set<T>(document: T & EntityDocument, options: DocumentDbRequestOptions & MetadataOptions)
     : Promise<T & RetrievedDocument & EntityDocument>;
 }
 
@@ -138,7 +138,7 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
     });
   }
 
-  public async get(entity: string, id: string, options?: DocumentDbRequestOptions & AdditionalPropertiesOptions)
+  public async get(entity: string, id: string, options?: DocumentDbRequestOptions & MetadataOptions)
     : Promise<any> {
     const client = await this.lazyClient();
     const documentUri = await this.documentUri(entity, id);
@@ -156,7 +156,7 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
           }
         }
 
-        return resolve(this.process(doc, entity, options && options.additionalProperties) as any);
+        return resolve(this.process(doc, entity, options && options.metadata) as any);
       });
     });
   }
@@ -187,7 +187,7 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
         }
 
         return resolve({
-          items: docs.map((x) => this.process(x, undefined, options && options.additionalProperties)) as any,
+          items: docs.map((x) => this.process(x, undefined, options && options.metadata)) as any,
           nextToken: newNextToken,
         });
       });
@@ -210,12 +210,12 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
           return reject(err);
         }
 
-        return resolve(docs.map((x) => this.process(x, undefined, options && options.additionalProperties)) as any);
+        return resolve(docs.map((x) => this.process(x, undefined, options && options.metadata)) as any);
       });
     });
   }
 
-  public async set(document: any & EntityDocument, options?: DocumentDbRequestOptions & AdditionalPropertiesOptions)
+  public async set(document: any & EntityDocument, options?: DocumentDbRequestOptions & MetadataOptions)
     : Promise<any> {
     const client = await this.lazyClient();
     const collectionUri = await this.collectionUri();
@@ -237,7 +237,7 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
           return reject(err);
         }
 
-        return resolve(this.process(doc, document._entity, options && options.additionalProperties));
+        return resolve(this.process(doc, document._entity, options && options.metadata));
       });
     });
   }
@@ -258,7 +258,7 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
 
   private id(entity: string, id: string) { return `${entity}${this.options.entitySeparator}${id}`; }
 
-  private process(doc: RetrievedDocument, entity: string | undefined, additionalProperties: boolean | undefined) {
+  private process(doc: RetrievedDocument, entity: string | undefined, metadata: boolean | undefined) {
     if (doc.id) {
       if (entity) {
         doc.id = doc.id.slice(entity.length + this.options.entitySeparator!.length);
@@ -271,7 +271,7 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
       }
     }
 
-    if (!additionalProperties) {
+    if (!metadata) {
       delete doc.ttl;
       Object.keys(doc).filter((k) => k.startsWith("_")).forEach((k) => { delete doc[k]; });
     }
