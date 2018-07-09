@@ -145,7 +145,8 @@ class DocumentQueryBuilderImpl implements DocumentQueryBuilder {
 
   public sort(value: string): DocumentQueryBuilder {
     const isDESC = value.startsWith("-");
-    return this.orderBy(isDESC ? value.slice(1) : value, isDESC ? Direction.DESC : Direction.ASC);
+    const propertyName = isDESC ? value.slice(1) : value;
+    return this.orderBy(`${this.from}.${propertyName}`, isDESC ? Direction.DESC : Direction.ASC);
   }
 
   public toDocumentQuery(): DocumentQuery {

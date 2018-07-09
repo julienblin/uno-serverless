@@ -69,11 +69,11 @@ describe("DocumentQueryBuilderImpl", () => {
       result: `SELECT * FROM root ORDER BY root.name DESC`,
     },
     {
-      query: select().sort("root.name"),
+      query: select().sort("name"),
       result: `SELECT * FROM root ORDER BY root.name ASC`,
     },
     {
-      query: select().sort("-root.name"),
+      query: select().sort("-name"),
       result: `SELECT * FROM root ORDER BY root.name DESC`,
     },
     {
