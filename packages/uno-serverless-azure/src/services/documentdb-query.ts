@@ -152,7 +152,7 @@ class DocumentQueryBuilderImpl implements DocumentQueryBuilder {
   public toDocumentQuery(): DocumentQuery {
     let query = `SELECT ${this.selectValue} FROM ${this.from}`;
     if (this.whereConditions.length > 0) {
-      query += ` WHERE ${this.whereConditions.join(" AND ")}`;
+      query += ` WHERE ${this.whereConditions.map((x) => `(${x})`).join(" AND ")}`;
     }
     if (this.orderByConditions.length > 0) {
       query += ` ORDER BY ${this.orderByConditions.join(", ")}`;

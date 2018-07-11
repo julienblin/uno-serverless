@@ -31,16 +31,16 @@ describe("DocumentQueryBuilderImpl", () => {
         parameters: [
           { name: "@_entity", value: "orders" },
         ],
-        query: `SELECT * FROM root WHERE root._entity = @_entity`,
+        query: `SELECT * FROM root WHERE (root._entity = @_entity)`,
       },
     },
     {
       query: select().where(`root.name = "foobar"`),
-      result: `SELECT * FROM root WHERE root.name = "foobar"`,
+      result: `SELECT * FROM root WHERE (root.name = "foobar")`,
     },
     {
       query: select().where(`root.name = "foobar"`).where(`root._ts > 12345`),
-      result: `SELECT * FROM root WHERE root.name = "foobar" AND root._ts > 12345`,
+      result: `SELECT * FROM root WHERE (root.name = "foobar") AND (root._ts > 12345)`,
     },
     {
       query: select().where(`root.name = @param1`, { param1: "foobar" }).where(`root._ts > @param2`, { param2: 12345 }),
@@ -49,7 +49,7 @@ describe("DocumentQueryBuilderImpl", () => {
           { name: "@param1", value: "foobar" },
           { name: "@param2", value: 12345 },
         ],
-        query: `SELECT * FROM root WHERE root.name = @param1 AND root._ts > @param2`,
+        query: `SELECT * FROM root WHERE (root.name = @param1) AND (root._ts > @param2)`,
       },
     },
     {
@@ -82,7 +82,7 @@ describe("DocumentQueryBuilderImpl", () => {
         parameters: [
           { name: "@name", value: "foobar" },
         ],
-        query: `SELECT * FROM root WHERE root.name = @name`,
+        query: `SELECT * FROM root WHERE (root.name = @name)`,
       },
     },
     {
@@ -92,7 +92,7 @@ describe("DocumentQueryBuilderImpl", () => {
           { name: "@name0", value: "foo" },
           { name: "@name1", value: "bar" },
         ],
-        query: `SELECT * FROM root WHERE root.name IN (@name0, @name1)`,
+        query: `SELECT * FROM root WHERE (root.name IN (@name0, @name1))`,
       },
     },
     {
@@ -101,7 +101,7 @@ describe("DocumentQueryBuilderImpl", () => {
         parameters: [
           { name: "@name", value: "foo" },
         ],
-        query: `SELECT * FROM root WHERE CONTAINS(root.name, @name)`,
+        query: `SELECT * FROM root WHERE (CONTAINS(root.name, @name))`,
       },
     },
     {
@@ -110,7 +110,7 @@ describe("DocumentQueryBuilderImpl", () => {
         parameters: [
           { name: "@name", value: "foo" },
         ],
-        query: `SELECT * FROM root WHERE STARTSWITH(root.name, @name)`,
+        query: `SELECT * FROM root WHERE (STARTSWITH(root.name, @name))`,
       },
     },
     {
@@ -119,7 +119,7 @@ describe("DocumentQueryBuilderImpl", () => {
         parameters: [
           { name: "@name", value: "foo" },
         ],
-        query: `SELECT * FROM root WHERE ENDSWITH(root.name, @name)`,
+        query: `SELECT * FROM root WHERE (ENDSWITH(root.name, @name))`,
       },
     },
     {
@@ -130,7 +130,8 @@ describe("DocumentQueryBuilderImpl", () => {
           { name: "@name", value: "foobar" },
           { name: "@createdAt", value: 12345 },
         ],
-        query: `SELECT * FROM root WHERE root._entity = @_entity AND root.name = @name AND root.createdAt = @createdAt`,
+        // tslint:disable-next-line:max-line-length
+        query: `SELECT * FROM root WHERE (root._entity = @_entity) AND (root.name = @name) AND (root.createdAt = @createdAt)`,
       },
     },
     {
@@ -141,7 +142,8 @@ describe("DocumentQueryBuilderImpl", () => {
           { name: "@name", value: "foobar" },
           { name: "@createdAt", value: 12345 },
         ],
-        query: `SELECT * FROM root WHERE root._entity = @_entity AND root.name = @name AND root.createdAt = @createdAt`,
+        // tslint:disable-next-line:max-line-length
+        query: `SELECT * FROM root WHERE (root._entity = @_entity) AND (root.name = @name) AND (root.createdAt = @createdAt)`,
       },
     },
     {
@@ -150,7 +152,7 @@ describe("DocumentQueryBuilderImpl", () => {
         parameters: [
           { name: "@createdAt", value: 12345 },
         ],
-        query: `SELECT * FROM root WHERE root.createdAt > @createdAt`,
+        query: `SELECT * FROM root WHERE (root.createdAt > @createdAt)`,
       },
     },
     {
@@ -159,7 +161,7 @@ describe("DocumentQueryBuilderImpl", () => {
         parameters: [
           { name: "@states", value: "florida" },
         ],
-        query: `SELECT * FROM root WHERE ARRAY_CONTAINS(root.states, @states)`,
+        query: `SELECT * FROM root WHERE (ARRAY_CONTAINS(root.states, @states))`,
       },
     },
   ].forEach((x: any) => {
