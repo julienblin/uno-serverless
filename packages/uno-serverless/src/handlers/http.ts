@@ -72,12 +72,6 @@ export const httpRouter = <TServices = any>(router: HttpRoutes<TServices>, param
   }));
 
   return async (arg: FunctionArg<HttpUnoEvent, TServices>) => {
-
-    if (!(arg.event.parameters && arg.event.parameters[parameterName])) {
-      throw internalServerError(
-        `Unable to find parameter ${parameterName} - Did you correctly setup API Gateway integration?`);
-    }
-
     const subPath = decodeURIComponent(arg.event.parameters[parameterName]);
 
     for (const routerPath of routerPaths) {

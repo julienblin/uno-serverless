@@ -98,6 +98,9 @@ describe("httpRouter handler", () => {
 
     const handler = uno(testAdapter())
       .handler(httpRouter({
+        "": {
+          get: async () => "empty",
+        },
         ":firstParam/another-route": {
           get: async ({ event }) => "first-param-" + event.parameters.firstParam,
         },
@@ -112,6 +115,7 @@ describe("httpRouter handler", () => {
       }));
 
     const tests = [
+      { path: "", method: "get", expected: "empty" },
       { path: "CA/another-route", method: "get", expected: "first-param-CA" },
       { path: "users", method: "get", expected: "list-method" },
       { path: "users", method: "post", expected: "post-method" },
@@ -130,27 +134,6 @@ describe("httpRouter handler", () => {
         });
 
       expect(lambdaResult.body).to.equal(test.expected);
-    }
-  });
-
-  it("should throw if path parameter not found.", async () => {
-
-    const handler = uno(testAdapter())
-      .handler(httpRouter({
-        users: {
-          get: async () => "list-method",
-        },
-      }));
-
-    try {
-      await handler(
-        {
-          httpMethod: "GET",
-          url: "/api/users",
-        });
-      expect(false);
-    } catch (error) {
-      expect(error.code).to.equal("internalServerError");
     }
   });
 
