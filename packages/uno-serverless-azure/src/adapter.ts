@@ -66,7 +66,9 @@ export const azureFunctionAdapter = (): ProviderAdapter => {
 
                   if (result && !result.body) {
                     output = {
+                      body: "",
                       headers: result.headers,
+                      isRaw: true,
                       status: result.statusCode,
                     };
                   }
