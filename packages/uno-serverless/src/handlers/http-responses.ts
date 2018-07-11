@@ -2,12 +2,12 @@ import * as HttpStatusCodes from "http-status-codes";
 import { HttpUnoResponse } from "../core/schemas";
 
 /**
- * 200 OK or 204 NO CONTENT (if body is falsy).
+ * 200 OK
  */
 export const ok = (body?: {}, headers?: Record<string, string>): HttpUnoResponse => ({
   body,
   headers,
-  statusCode: body ? HttpStatusCodes.OK : HttpStatusCodes.NO_CONTENT,
+  statusCode: HttpStatusCodes.OK,
 });
 
 /**
@@ -29,6 +29,14 @@ export const accepted = (body?: {}, headers?: Record<string, string>): HttpUnoRe
   body,
   headers,
   statusCode: HttpStatusCodes.ACCEPTED,
+});
+
+/**
+ * 204 NO CONTENT
+ */
+export const noContent = (headers?: Record<string, string>): HttpUnoResponse => ({
+  headers,
+  statusCode: HttpStatusCodes.NO_CONTENT,
 });
 
 /**
