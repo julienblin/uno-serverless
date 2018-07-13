@@ -14,8 +14,7 @@
     "test:watch": "mocha --opts test/mocha.opts --watch test/unit/**/*-test.ts",
     "test:integration": "mocha --opts test/mocha.opts test/integration/**/*-test.ts",
     "test:e2e": "newman run test/e2e/e2e.collection.json",
-    "cover": "nyc mocha --reporter mocha-junit-reporter test/unit/**/*-test.ts",
-    "package": "npm run build && cd dist && jszip . -o <%= projectName %>.zip"
+    "cover": "nyc mocha --reporter mocha-junit-reporter test/unit/**/*-test.ts"
   },
   "keywords": [],
   "nyc": {

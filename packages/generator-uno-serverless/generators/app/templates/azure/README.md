@@ -33,7 +33,7 @@ az group deployment create \
 ## Build app deployment package
 
 ```cmd
-npm run package
+npm run build
 ```
 
 ## Deploy app deployment package in target environment

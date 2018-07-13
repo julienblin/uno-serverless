@@ -2,10 +2,10 @@ const path = require('path');
 const fs = require('fs');
 const childProcess = require('child_process');
 const yaml = require('js-yaml');
-const webpack = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const ZipPlugin = require('zip-webpack-plugin');
 
 const handlersPath = 'src/handlers';
 
@@ -39,23 +39,10 @@ const entries = fs.readdirSync(handlersPath).reduce((acc, cur) => {
 
 const distFolder = path.join(__dirname, 'dist');
 
-module.exports = (env) => ({
-  entry: entries,
-  devtool: (env || 'production') === 'production' ? 'source-map' : 'eval-source-map',
-  mode: env || 'production',
-  target: 'node',
-  stats: 'normal',
-  resolve: {
-    extensions: [
-      '.js',
-      '.json',
-      '.ts'
-    ],
-    plugins: [
-      new TsconfigPathsPlugin()
-    ]
-  },
-  plugins: [
+module.exports = (env) => {
+  env = env || 'production';
+
+  const plugins = [
     new ForkTsCheckerWebpackPlugin({ checkSyntacticErrors: true }),
     new CopyWebpackPlugin([
       { from: 'src/handlers/*.json', to: '[name]/function.json' },
@@ -79,24 +66,50 @@ module.exports = (env) => ({
           openApiContent.info.version = apiVersion;
           return Buffer.from(JSON.stringify(openApiContent));
         }
-      },
-    ])
-  ],
-  output: {
-    libraryTarget: 'commonjs',
-    path: path.join(distFolder),
-    filename: '[name]/index.js',
-  },
-  module: {
-    rules: [
-      {
-        test: /\.tsx?$/,
-        use: [
-          { loader: 'cache-loader' },
-          { loader: 'thread-loader', options: { workers: require('os').cpus().length - 1 } },
-          { loader: 'ts-loader', options: { happyPackMode: true } }
-        ]
       }
-    ],
+    ])
+  ];
+
+  if (env === 'production') {
+    plugins.push(
+      new ZipPlugin({
+        filename: '<%= projectName %>.zip'
+      }));
   }
-});
+
+  return ({
+    entry: entries,
+    devtool: env === 'production' ? 'source-map' : 'eval-source-map',
+    mode: env,
+    target: 'node',
+    stats: 'normal',
+    resolve: {
+      extensions: [
+        '.js',
+        '.json',
+        '.ts'
+      ],
+      plugins: [
+        new TsconfigPathsPlugin()
+      ]
+    },
+    plugins,
+    output: {
+      libraryTarget: 'commonjs',
+      path: path.join(distFolder),
+      filename: '[name]/index.js',
+    },
+    module: {
+      rules: [
+        {
+          test: /\.ts$/,
+          use: [
+            { loader: 'cache-loader' },
+            { loader: 'thread-loader', options: { workers: require('os').cpus().length - 1 } },
+            { loader: 'ts-loader', options: { happyPackMode: true } }
+          ]
+        }
+      ],
+    }
+  });
+};

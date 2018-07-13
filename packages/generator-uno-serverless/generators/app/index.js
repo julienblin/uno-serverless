@@ -95,7 +95,6 @@ module.exports = class extends Generator {
       "file-loader@latest",
       "fork-ts-checker-webpack-plugin@latest",
       "js-yaml@latest",
-      "jszip-cli@latest",
       "mocha@latest",
       "mocha-junit-reporter@latest",
       "nock@latest",
@@ -111,7 +110,8 @@ module.exports = class extends Generator {
       "tslint-no-unused-expression-chai@latest",
       "typescript@latest",
       "webpack@latest",
-      "webpack-cli@latest"
+      "webpack-cli@latest",
+      "zip-webpack-plugin@latest"
     ],
     { "save-dev": true });
   }
