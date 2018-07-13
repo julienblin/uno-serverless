@@ -2,7 +2,8 @@ import { expect } from "chai";
 import { describe, it } from "mocha";
 import {
   convertHrtimeToMs, createConfidentialityReplacer,
-  DEFAULT_CONFIDENTIALITY_REPLACE_BY, lazyAsync, memoize, randomStr, safeJSONStringify } from "../../../src/core/utils";
+  DEFAULT_CONFIDENTIALITY_REPLACE_BY, duration, lazyAsync,
+  memoize, randomStr, safeJSONStringify } from "../../../src/core/utils";
 
 describe("convertHrtimeToMs", () => {
 
@@ -116,6 +117,22 @@ describe("lazyAsync", () => {
     const result2 = await test();
     expect(result).to.equal(result2);
     expect(executed).to.equal(1);
+  });
+
+});
+
+describe("duration", () => {
+
+  it("should parse duration", () => {
+    expect(duration(undefined)).to.equal(undefined);
+    expect(duration("")).to.equal(undefined);
+    expect(duration("1d")).to.equal(86400000);
+  });
+
+  it("should parse duration async", async () => {
+    expect(await duration(Promise.resolve(undefined))).to.equal(undefined);
+    expect(await duration(Promise.resolve(""))).to.equal(undefined);
+    expect(await duration(Promise.resolve("1d"))).to.equal(86400000);
   });
 
 });

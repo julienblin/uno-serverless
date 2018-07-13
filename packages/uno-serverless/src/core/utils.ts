@@ -1,5 +1,6 @@
 import { randomBytes } from "crypto";
 import * as stringify from "json-stringify-safe";
+import * as ms from "ms";
 
 /**
  * Converts the result of process.hrtime into milliseconds.
@@ -84,3 +85,24 @@ export const lazyAsync = <T>(builder: () => Promise<T>) => {
     return instancePromise;
   };
 };
+
+/**
+ * Parses a string and returns a duration (e.g. '1 d', '1 h', etc.).
+ * Uses the ms package under the cover, please refer to
+ * https://github.com/zeit/ms for more info on formats.
+ */
+export function duration(value: string): number;
+export function duration(value: string | undefined): number | undefined;
+export function duration(value: Promise<string>): Promise<number>;
+export function duration(value: Promise<string | undefined>): Promise<number | undefined>;
+export function duration(value: any): any {
+  if (!value) {
+    return undefined;
+  }
+
+  if (typeof value.then === "function") {
+    return value.then((x) => duration(x));
+  }
+
+  return ms(value);
+}
