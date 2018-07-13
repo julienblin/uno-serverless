@@ -3,8 +3,8 @@ import {
   FeedOptions, RequestOptions, RetrievedDocument, UniqueId, UriFactory } from "documentdb";
 import * as HttpStatusCodes from "http-status-codes";
 import {
-  CheckHealth, checkHealth, ContinuationArray, decodeNextToken,
-  encodeNextToken, lazyAsync, WithContinuation } from "uno-serverless";
+  CheckHealth, checkHealth, conflictError, ContinuationArray,
+  decodeNextToken, encodeNextToken, lazyAsync, WithContinuation } from "uno-serverless";
 import { DocumentQueryProducer, EntityDocument, isDocumentQueryProducer } from "./documentdb-query";
 
 export interface DocumentDbRequestOptions {
@@ -19,6 +19,11 @@ export interface DocumentDbFeedOptions {
 export interface MetadataOptions {
   /** True keep all properties starting with _ (owned by DocumentDb) */
   metadata: true;
+}
+
+export interface ETagDocument {
+  /** The document ETag, if any. */
+  _etag?: string;
 }
 
 export interface DocumentDb {
@@ -54,10 +59,16 @@ export interface DocumentDb {
     options: DocumentDbFeedOptions & MetadataOptions)
     : Promise<Array<T & RetrievedDocument & EntityDocument>>;
 
-  /** Create or update a document. */
-  set<T>(document: T & EntityDocument, options?: DocumentDbRequestOptions): Promise<T>;
-  /** Create or update a document. */
-  set<T>(document: T & EntityDocument, options: DocumentDbRequestOptions & MetadataOptions)
+  /**
+   * Create or update a document.
+   * Will honor ETag concurrency validation if document has an _etag property.
+   */
+  set<T>(document: T & EntityDocument & ETagDocument, options?: DocumentDbRequestOptions): Promise<T>;
+  /**
+   * Create or update a document.
+   * Will honor ETag concurrency validation if document has an _etag property.
+   */
+  set<T>(document: T & EntityDocument & ETagDocument, options: DocumentDbRequestOptions & MetadataOptions)
     : Promise<T & RetrievedDocument & EntityDocument>;
 }
 
@@ -109,12 +120,12 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
             const databaseLink = UriFactory.createDatabaseUri(databaseId);
             client.createCollection(
               databaseLink, { ...this.options.collectionCreationOptions, id: collectionId }, (collErr) => {
-              if (collErr && collErr.code !== HttpStatusCodes.CONFLICT) {
-                return reject(collErr);
-              }
+                if (collErr && collErr.code !== HttpStatusCodes.CONFLICT) {
+                  return reject(collErr);
+                }
 
-              resolve();
-            });
+                resolve();
+              });
           });
         });
       });
@@ -148,16 +159,16 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
         documentUri,
         options && options.requestOptions ? options.requestOptions : {},
         (err, doc) => {
-        if (err) {
-          if (err.code === HttpStatusCodes.NOT_FOUND) {
-            return resolve(undefined);
-          } else {
-            return reject(err);
+          if (err) {
+            if (err.code === HttpStatusCodes.NOT_FOUND) {
+              return resolve(undefined);
+            } else {
+              return reject(err);
+            }
           }
-        }
 
-        return resolve(this.process(doc, entity, options && options.metadata) as any);
-      });
+          return resolve(this.process(doc, entity, options && options.metadata) as any);
+        });
     });
   }
 
@@ -181,7 +192,7 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
           return reject(err);
         }
 
-        let newNextToken: string | undefined;
+        let newNextToken: string |  undefined;
         if (responseHeaders["x-ms-continuation"]) {
           newNextToken = encodeNextToken(responseHeaders["x-ms-continuation"]);
         }
@@ -215,7 +226,7 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
     });
   }
 
-  public async set(document: any & EntityDocument, options?: DocumentDbRequestOptions & MetadataOptions)
+  public async set(document: any & EntityDocument & ETagDocument, options?: DocumentDbRequestOptions & MetadataOptions)
     : Promise<any> {
     const client = await this.lazyClient();
     const collectionUri = await this.collectionUri();
@@ -224,21 +235,35 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
       document.id = this.id(document._entity, document.id);
     }
 
+    const etagOptions = document._etag
+      ? { accessCondition: { condition: document._etag!, type: "IfMatch" } }
+      : {};
+
     return new Promise<any>((resolve, reject) => {
       client.upsertDocument(
         collectionUri,
         document,
         {
-          ...(options && options.requestOptions ? options.requestOptions : {}),
+          ...etagOptions,
           disableAutomaticIdGeneration: true,
+          ...(options && options.requestOptions ? options.requestOptions : {}),
         },
         (err, doc) => {
-        if (err) {
-          return reject(err);
-        }
+          if (err) {
+            if (err.code === HttpStatusCodes.PRECONDITION_FAILED) {
+              return reject(
+                conflictError(
+                  `There has been a conflict while updating document ${document.id}. The ETag did not match.`,
+                  {
+                    etag: document._etag,
+                  }));
+            } else {
+              return reject(err);
+            }
+          }
 
-        return resolve(this.process(doc, document._entity, options && options.metadata));
-      });
+          return resolve(this.process(doc, document._entity, options && options.metadata));
+        });
     });
   }
 

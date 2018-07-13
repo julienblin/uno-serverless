@@ -107,6 +107,15 @@ export const validationError = (errors: ErrorData[], message?: string) =>
     },
     HttpStatusCodes.BAD_REQUEST);
 
+export const conflictError = (message: string, data?: object) =>
+  buildError(
+    {
+      code: "conflict",
+      data,
+      message,
+    },
+    HttpStatusCodes.CONFLICT);
+
 export const configurationError = (data: any, message: string) =>
   buildError(
     {
