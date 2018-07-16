@@ -48,6 +48,7 @@ export class BlobStorageKeyValueRepository implements KeyValueRepository, CheckH
       container: options.container,
       contentType: options.contentType || "application/json",
       deserialize: options.deserialize || (<T>(text: string) => JSON.parse(text)),
+      path: options.path,
       serialize: options.serialize || (<T>(value: T) => JSON.stringify(value)),
     };
   }
