@@ -12,7 +12,7 @@
     "paths": {
       "@config": ["./src/config"],
       "@common": ["./src/handlers/common"],
-      "@handlers/*": ["./src/handlers/handlers/*"],
+      "@handlers/*": ["./src/handlers/*"],
       "@services/*": ["./src/services/*"],
       "@test/*": ["./test/unit/*"]
     }
