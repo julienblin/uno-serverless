@@ -3,3 +3,4 @@ export * from "./config";
 export * from "./health-check";
 export * from "./http-client";
 export * from "./key-value-repository";
+export * from "./template-engine";
