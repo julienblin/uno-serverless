@@ -59,13 +59,8 @@ export class BlobStorageCache implements Cache, CheckHealth {
   public async checkHealth() {
     return checkHealth(
       "BlobStorageCache",
-      `${await this.options.container}/${this.options.path}`,
-      async () => {
-        await this.createContainerIfNotExists();
-        const testKey = randomStr();
-        await this.set(testKey, { testKey });
-        await this.delete(testKey);
-      });
+      `${await this.options.container}${this.options.path ? "/" + this.options.path : ""}`,
+      async () => this.createContainerIfNotExists());
   }
 
   public async delete(key: string): Promise<void> {
