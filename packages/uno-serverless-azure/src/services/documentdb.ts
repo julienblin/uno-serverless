@@ -1,10 +1,9 @@
 import {
   Collection, DocumentClient, DocumentQuery,
   FeedOptions, RequestOptions, RetrievedDocument, UniqueId, UriFactory } from "documentdb";
-import * as HttpStatusCodes from "http-status-codes";
 import {
   CheckHealth, checkHealth, conflictError, ContinuationArray,
-  decodeNextToken, encodeNextToken, lazyAsync, WithContinuation } from "uno-serverless";
+  decodeNextToken, encodeNextToken, HttpStatusCodes, lazyAsync, WithContinuation } from "uno-serverless";
 import { DocumentQueryProducer, EntityDocument, isDocumentQueryProducer } from "./documentdb-query";
 
 export interface DocumentDbRequestOptions {

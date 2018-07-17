@@ -1,4 +1,4 @@
-import * as HttpStatusCodes from "http-status-codes";
+import { HttpStatusCodes } from "../core/http-status-codes";
 import { UnoContext, UnoEvent } from "../core/schemas";
 import { FunctionArg, FunctionExecution } from "../core/uno";
 import { checkHealth, HealthCheckRun, HealthCheckStatus } from "../services/health-check";

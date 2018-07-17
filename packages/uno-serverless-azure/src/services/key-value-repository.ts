@@ -1,6 +1,5 @@
 import { BlobService, createBlobService } from "azure-storage";
-import * as HttpStatusCodes from "http-status-codes";
-import { checkHealth, CheckHealth, KeyValueRepository, lazyAsync, randomStr } from "uno-serverless";
+import { checkHealth, CheckHealth, HttpStatusCodes, KeyValueRepository, lazyAsync, randomStr } from "uno-serverless";
 
 export interface BlobStorageKeyValueRepositoryOptionsWithService {
   /** The Storage blob service instance */

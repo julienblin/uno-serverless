@@ -32,6 +32,5 @@ module.exports = {
   externals: {
     'ajv': 'ajv',
     'axios': 'axios',
-    'http-status-codes': 'http-status-codes',
   }
 };

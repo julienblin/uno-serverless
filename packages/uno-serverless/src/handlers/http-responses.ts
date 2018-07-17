@@ -1,4 +1,4 @@
-import * as HttpStatusCodes from "http-status-codes";
+import { HttpStatusCodes } from "../core/http-status-codes";
 import { HttpUnoResponse } from "../core/schemas";
 
 /**

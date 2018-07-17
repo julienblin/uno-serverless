@@ -1,7 +1,7 @@
 import { expect } from "chai";
-import * as HttpStatusCodes from "http-status-codes";
 import { describe, it } from "mocha";
 import * as nock from "nock";
+import { HttpStatusCodes } from "../../../src/core/http-status-codes";
 import { randomStr } from "../../../src/core/utils";
 import { HttpClientError, httpClientFactory } from "../../../src/services/http-client";
 

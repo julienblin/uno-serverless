@@ -1,8 +1,7 @@
 import { BlobService, common, createBlobService } from "azure-storage";
-import * as HttpStatusCodes from "http-status-codes";
 import {
   Cache, checkHealth, CheckHealth, ContinuationArray,
-  decodeNextToken, encodeNextToken, lazyAsync, randomStr } from "uno-serverless";
+  decodeNextToken, encodeNextToken, HttpStatusCodes, lazyAsync, randomStr } from "uno-serverless";
 
 export interface BlobStorageCacheOptionsWithService {
   /** The Storage blob service instance */

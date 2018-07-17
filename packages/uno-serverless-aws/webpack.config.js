@@ -32,6 +32,5 @@ module.exports = {
   externals: {
     'uno-serverless': 'uno-serverless',
     'aws-sdk': 'aws-sdk',
-    'http-status-codes': 'http-status-codes'
   }
 };

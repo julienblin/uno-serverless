@@ -1,6 +1,5 @@
-import * as HttpStatusCode from "http-status-codes";
 import {
-  GenericFunctionBuilder, HttpUnoEvent,
+  GenericFunctionBuilder, HttpStatusCodes, HttpUnoEvent,
   ProviderAdapter, UnoContext, UnoEvent } from "uno-serverless";
 import { AzureFunctionsContext, AzureFunctionsHttpEvent, AzureFunctionsHttpResponse } from "./azure-functions-schemas";
 
@@ -60,7 +59,7 @@ export const azureFunctionAdapter = (): ProviderAdapter => {
 
                   if (!result) {
                     output = {
-                      status: HttpStatusCode.NO_CONTENT,
+                      status: HttpStatusCodes.NO_CONTENT,
                     };
                   }
 

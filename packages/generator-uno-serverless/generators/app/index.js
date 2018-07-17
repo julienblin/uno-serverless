@@ -77,7 +77,6 @@ module.exports = class extends Generator {
 
   _dependenciesAzure() {
     this.npmInstall([
-      "http-status-codes@latest",
       "source-map-support@latest",
       "uno-serverless@latest",
       "uno-serverless-azure@latest",

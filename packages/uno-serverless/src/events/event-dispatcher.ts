@@ -1,5 +1,5 @@
-import * as HttpStatusCode from "http-status-codes";
 import { buildError } from "../core/errors";
+import { HttpStatusCodes } from "../core/http-status-codes";
 import { Event } from "./event";
 import { EventPublisher } from "./event-publisher";
 
@@ -54,7 +54,7 @@ export class LocalEventDispatcher implements EventPublisher, EventDispatcher {
           code: "aggregateError",
           details: allErrors.map((x) => ({ code: x.code, message: x.message })),
           message: "Several errors occured while running LocalEventDispatcher.",
-        }, HttpStatusCode.INTERNAL_SERVER_ERROR);
+        }, HttpStatusCodes.INTERNAL_SERVER_ERROR);
       }
     }
   }

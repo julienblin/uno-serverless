@@ -51,7 +51,6 @@
     "azure-keyvault": "^3.0.4",
     "azure-storage": "^2.10.0",
     "documentdb": "^1.14.4",
-    "http-status-codes": "^1.3.0",
     "ms-rest-azure": "^2.5.7",
     "uno-serverless": "^0.41.0"
   },

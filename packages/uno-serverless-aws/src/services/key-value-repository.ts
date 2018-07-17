@@ -1,6 +1,5 @@
 import { S3 } from "aws-sdk";
-import * as HttpStatusCodes from "http-status-codes";
-import { checkHealth, CheckHealth, KeyValueRepository, randomStr } from "uno-serverless";
+import { checkHealth, CheckHealth, HttpStatusCodes, KeyValueRepository, randomStr } from "uno-serverless";
 import { S3Client } from "./s3-client";
 
 export interface S3KeyValueRepositoryOptions {

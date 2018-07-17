@@ -29,12 +29,13 @@ export type QueueStorageEventPublisherOptions =
 /** EventPublisher implementation that sends event to a Azure Storage Queue. */
 export class QueueStorageEventPublisher implements EventPublisher, CheckHealth {
 
+  private readonly options: QueueStorageEventPublisherOptions;
   private readonly queueService = lazyAsync(() => this.buildQueueService());
 
   public constructor(options: QueueStorageEventPublisherOptions) {
     this.options = {
       ...options,
-      serialize: options.serialize || ((evt: Event) => JSON.stringify(value)),
+      serialize: options.serialize || ((evt: Event) => JSON.stringify(evt)),
     };
   }
 

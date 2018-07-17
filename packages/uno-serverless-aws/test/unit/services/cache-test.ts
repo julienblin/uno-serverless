@@ -1,7 +1,6 @@
 import { AWSError, Response, S3 } from "aws-sdk";
 import { expect } from "chai";
-import * as HttpStatusCodes from "http-status-codes";
-import { InMemoryCache, randomStr } from "uno-serverless";
+import { HttpStatusCodes, InMemoryCache, randomStr } from "uno-serverless";
 import { S3Cache } from "../../../src/services/cache";
 import { S3Client } from "../../../src/services/s3-client";
 

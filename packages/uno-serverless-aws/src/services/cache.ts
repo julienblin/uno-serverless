@@ -1,6 +1,5 @@
 import { S3 } from "aws-sdk";
-import * as HttpStatusCodes from "http-status-codes";
-import { Cache, checkHealth, CheckHealth, ContinuationArray, randomStr } from "uno-serverless";
+import { Cache, checkHealth, CheckHealth, ContinuationArray, HttpStatusCodes, randomStr } from "uno-serverless";
 import { S3Client } from "./s3-client";
 
 /** Options fro S3Cache */

@@ -1,4 +1,4 @@
-import * as HttpStatusCodes from "http-status-codes";
+import { HttpStatusCodes } from "./http-status-codes";
 
 export interface ErrorData {
   code: string;

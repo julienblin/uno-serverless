@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import * as HttpStatusCode from "http-status-codes";
+import { HttpStatusCodes } from "../../../src/core/http-status-codes";
 import { testAdapter, uno } from "../../../src/core/uno";
 import { http, httpMethodRouter, httpRouter } from "../../../src/handlers/http";
 import { parseBodyAsJSON } from "../../../src/middlewares/http";
