@@ -75,7 +75,11 @@ export const testAdapter = (): ProviderAdapter => {
 
       const defaultContext: UnoContext = {
         invocationId: randomStr(),
-        log: console.log,
+        log: {
+          error: console.error,
+          info: console.info,
+          warn: console.warn,
+        },
         original: {},
         provider: "Test",
       };

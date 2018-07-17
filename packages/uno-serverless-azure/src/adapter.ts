@@ -17,7 +17,11 @@ export const azureFunctionAdapter = (): ProviderAdapter => {
       return (context: AzureFunctionsContext, event: any) => {
           const unoContext: UnoContext = {
             invocationId: context.invocationId,
-            log: context.log,
+            log: {
+              error: (context.log as any).error,
+              info: (context.log as any).info,
+              warn: (context.log as any).warn,
+            },
             original: context,
             provider: "AzureFunctions",
           };

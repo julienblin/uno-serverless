@@ -25,7 +25,11 @@ export const awsLambdaAdapter = (): ProviderAdapter => {
       return async (event: any, context: any) => {
         const unoContext: UnoContext = {
           invocationId: context.awsRequestId,
-          log: console.log,
+          log: {
+            error: console.error,
+            info: console.info,
+            warn: console.warn,
+          },
           original: context,
           provider: "AWSLambda",
         };

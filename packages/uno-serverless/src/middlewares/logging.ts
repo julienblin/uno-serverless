@@ -3,7 +3,7 @@ import { defaultConfidentialityReplacer, safeJSONStringify } from "../core/utils
 
 export const contextErrorLog = (arg: FunctionArg<any, any>, message?: string) => {
   if (message) {
-    arg.context.log(message);
+    arg.context.log.error(message);
   }
 };
 

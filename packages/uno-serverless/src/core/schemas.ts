@@ -6,11 +6,17 @@ export interface UnoEvent {
   unoEventType: UnoEventType;
 }
 
+export interface UnoLogger {
+  error(text: string);
+  warn(text: string);
+  info(text: string);
+}
+
 export interface UnoContext {
   invocationId: string;
   original: any;
   provider: string;
-  log(text: string);
+  log: UnoLogger;
 }
 
 export type HttpMethod = "get" | "head" | "options" | "post" | "put" | "patch" | "delete" | "trace" | "connect";

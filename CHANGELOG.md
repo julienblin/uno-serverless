@@ -17,3 +17,4 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Generator template for Azure functions: better start script & zipping
 - Health checks for BlobStorage no longer writes a temp file, only create container if not exists
 - Internalized HttpStatusCodes.
+- Context.log now has support for info, warn & error.
