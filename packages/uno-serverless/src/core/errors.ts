@@ -62,6 +62,15 @@ export const internalServerError = (message: string) =>
     },
     HttpStatusCodes.INTERNAL_SERVER_ERROR);
 
+export const forbiddenError = (target: string, message: string) =>
+  buildError(
+    {
+      code: "forbidden",
+      message,
+      target,
+    },
+    HttpStatusCodes.FORBIDDEN);
+
 export const unauthorizedError = (target: string, message: string) =>
   buildError(
     {
