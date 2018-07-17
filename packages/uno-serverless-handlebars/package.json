@@ -1,5 +1,5 @@
 {
-  "name": "uno-serverless-template",
+  "name": "uno-serverless-handlebars",
   "description": "Template engine implementation for uno-serverless using handlebars",
   "version": "0.41.0",
   "main": "./dist/index.js",
