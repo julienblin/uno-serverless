@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - duration() helper based on [ms](https://www.npmjs.com/package/ms)
 - support for etag concurrency check on DocumentDb
 - forbiddenError
+- principalFromBasicAuthorizationHeader
 
 ### Changed
 - Generator template for Azure functions: better start script & zipping

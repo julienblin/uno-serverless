@@ -1,5 +1,5 @@
 import { parse as parseQS } from "querystring";
-import { badRequestError, internalServerError, isStatusCodeProvider } from "../core/errors";
+import { badRequestError, internalServerError, isStatusCodeProvider, unauthorizedError } from "../core/errors";
 import { HttpUnoResponse } from "../core/schemas";
 import { HttpUnoEvent, isHttpUnoResponse, UnoEvent } from "../core/schemas";
 import { FunctionArg, FunctionExecution, Middleware } from "../core/uno";
@@ -168,6 +168,63 @@ export const parseBodyAsFORM = ()
       } catch (error) {
         throw badRequestError(error.message);
       }
+    };
+
+    return next(arg);
+  };
+};
+
+/**
+ * This middleware sets the principal in the event to decode
+ * a basic authorization header.
+ */
+export const principalFromBasicAuthorizationHeader =
+  (func: (arg: FunctionArg<HttpUnoEvent, any>, username: string, password: string) => any)
+  : Middleware<HttpUnoEvent, any> => {
+  return async (
+    arg: FunctionArg<HttpUnoEvent, any>,
+    next: FunctionExecution<HttpUnoEvent, any>): Promise<any> => {
+
+    const previousPrincipal = arg.event.principal;
+    let previousResult: any;
+    arg.event.principal = async (throwIfEmpty = true) => {
+      if (previousPrincipal) {
+        const previousPrincipalResult = await previousPrincipal(false);
+        if (previousPrincipalResult) {
+          return previousPrincipalResult;
+        }
+      }
+
+      if (previousResult) {
+        return previousResult;
+      }
+
+      const basicToken = arg.event.headers.authorization
+        ? arg.event.headers.authorization.replace(/\s*Basic\s*/ig, "")
+        : undefined;
+
+      if (!basicToken) {
+        if (throwIfEmpty) {
+          throw unauthorizedError("authorization header", "No authorization header found.");
+        }
+
+        return undefined;
+      }
+
+      let decodedBasicToken;
+      try {
+        decodedBasicToken = Buffer.from(basicToken, "base64").toString();
+      } catch (error) {
+        if (throwIfEmpty) {
+          throw unauthorizedError("authorization header", "Authorization header could not be decoded properly.");
+        }
+
+        return undefined;
+      }
+      const [ username, password ] = decodedBasicToken.split(":");
+
+      previousResult = func(arg, username, password);
+      return previousResult;
     };
 
     return next(arg);

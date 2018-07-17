@@ -7,7 +7,7 @@ import { testAdapter, uno } from "../../../src/core/uno";
 import { randomStr } from "../../../src/core/utils";
 import { ok } from "../../../src/handlers/http-responses";
 import {
-  cors, httpErrors, parseBodyAsFORM, parseBodyAsJSON,
+  cors, httpErrors, parseBodyAsFORM, parseBodyAsJSON, principalFromBasicAuthorizationHeader,
   responseHeaders, serializeBodyAsJSON} from "../../../src/middlewares/http";
 
 describe("responseHeaders middleware", () => {
@@ -240,9 +240,9 @@ describe("parseBodyAsJSON middleware", () => {
 
     await handler(
       {
-        unoEventType: "http",
         httpMethod: "get",
         rawBody: JSON.stringify(body),
+        unoEventType: "http",
       });
   });
 
@@ -264,10 +264,136 @@ describe("parseBodyAsFORM middleware", () => {
 
     await handler(
       {
-        unoEventType: "http",
         httpMethod: "get",
         rawBody: "foo=bar",
+        unoEventType: "http",
       });
+  });
+
+});
+
+describe("principalFromBasicAuthorizationHeader", () => {
+
+  it("should pass username/password", async () => {
+    const username = randomStr();
+    const password = randomStr();
+    const header = Buffer.from(`${username}:${password}`).toString("base64");
+
+    const handler = uno(testAdapter())
+      .use(principalFromBasicAuthorizationHeader((_, user, pwd) => {
+        return {
+          pwd,
+          user,
+        };
+      }))
+      .handler<HttpUnoEvent, any>
+        (async ({ event }) => {
+          const principal = await event.principal<any>();
+          expect(principal.user).to.equal(username);
+          expect(principal.pwd).to.equal(password);
+        });
+
+    await handler(
+      {
+        headers: {
+          authorization: `Basic ${header}`,
+        },
+        httpMethod: "get",
+        rawBody: "foo=bar",
+        unoEventType: "http",
+      });
+  });
+
+  it("should throw if no header", async () => {
+    const handler = uno(testAdapter())
+      .use(principalFromBasicAuthorizationHeader((_, user, pwd) => {
+        return {
+          pwd,
+          user,
+        };
+      }))
+      .handler<HttpUnoEvent, any>
+        (async ({ event }) => {
+          const principal = await event.principal<any>();
+        });
+
+    try {
+      await handler(
+        {
+          headers: {},
+          httpMethod: "get",
+          rawBody: "foo=bar",
+          unoEventType: "http",
+        });
+      expect(false);
+    } catch (error) {
+      expect(error.code).to.equal("unauthorized");
+    }
+  });
+
+  it("should throw if header not correct", async () => {
+    const username = randomStr();
+    const password = randomStr();
+    const header = Buffer.from(`${username}:${password}`).toString("base64");
+
+    const handler = uno(testAdapter())
+      .use(principalFromBasicAuthorizationHeader((_, user, pwd) => {
+        return {
+          pwd,
+          user,
+        };
+      }))
+      .handler<HttpUnoEvent, any>
+        (async ({ event }) => {
+          const principal = await event.principal<any>();
+        });
+
+    try {
+      await handler(
+        {
+          headers: {
+            authorization: `Basic ${header}`.slice(10),
+          },
+          httpMethod: "get",
+          rawBody: "foo=bar",
+          unoEventType: "http",
+        });
+      expect(false);
+    } catch (error) {
+      expect(error.code).to.equal("unauthorized");
+    }
+  });
+
+  it("should throw if header not correct - missing password", async () => {
+    const username = randomStr();
+    const header = Buffer.from(username).toString("base64");
+
+    const handler = uno(testAdapter())
+      .use(principalFromBasicAuthorizationHeader((_, user, pwd) => {
+        return {
+          pwd,
+          user,
+        };
+      }))
+      .handler<HttpUnoEvent, any>
+        (async ({ event }) => {
+          const principal = await event.principal<any>();
+        });
+
+    try {
+      await handler(
+        {
+          headers: {
+            authorization: `Basic ${header}`,
+          },
+          httpMethod: "get",
+          rawBody: "foo=bar",
+          unoEventType: "http",
+        });
+      expect(false);
+    } catch (error) {
+      expect(error.code).to.equal("unauthorized");
+    }
   });
 
 });
