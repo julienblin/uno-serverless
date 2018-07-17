@@ -19,7 +19,7 @@ describe("http handler", () => {
       });
 
     expect(lambdaResult.body).to.deep.equal(testBody);
-    expect(lambdaResult.statusCode).to.equal(HttpStatusCode.OK);
+    expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.OK);
   });
 
   it("should run http handler with undefined", async () => {
@@ -32,7 +32,7 @@ describe("http handler", () => {
       expect(false);
     } catch (error) {
       expect(error.code).to.equal("notFound");
-      expect(error.getStatusCode()).to.equal(HttpStatusCode.NOT_FOUND);
+      expect(error.getStatusCode()).to.equal(HttpStatusCodes.NOT_FOUND);
     }
   });
 
@@ -41,13 +41,13 @@ describe("http handler", () => {
     const handler = uno(testAdapter())
       .handler(http(async () => ({
         body: "hello",
-        statusCode: HttpStatusCode.IM_A_TEAPOT,
+        statusCode: HttpStatusCodes.IM_A_TEAPOT,
       })));
 
     const lambdaResult = await handler();
 
     expect(lambdaResult.body).to.equal("hello");
-    expect(lambdaResult.statusCode).to.equal(HttpStatusCode.IM_A_TEAPOT);
+    expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.IM_A_TEAPOT);
   });
 
 });
@@ -86,7 +86,7 @@ describe("httpMethodMethod handler", () => {
       expect(false);
     } catch (error) {
       expect(error.code).to.equal("methodNotAllowed");
-      expect(error.getStatusCode()).to.equal(HttpStatusCode.METHOD_NOT_ALLOWED);
+      expect(error.getStatusCode()).to.equal(HttpStatusCodes.METHOD_NOT_ALLOWED);
     }
   });
 
