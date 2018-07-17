@@ -90,7 +90,6 @@ module.exports = class extends Generator {
       "@types/nock@latest",
       "cache-loader@latest",
       "chai@latest",
-      "concurrently@latest",
       "copy-webpack-plugin@latest",
       "file-loader@latest",
       "fork-ts-checker-webpack-plugin@latest",
@@ -111,6 +110,7 @@ module.exports = class extends Generator {
       "typescript@latest",
       "webpack@latest",
       "webpack-cli@latest",
+      "webpack-shell-plugin@latest",
       "zip-webpack-plugin@latest"
     ],
     { "save-dev": true });

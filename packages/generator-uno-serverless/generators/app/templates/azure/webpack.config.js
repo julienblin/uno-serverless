@@ -6,6 +6,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const ZipPlugin = require('zip-webpack-plugin');
+const WebpackShellPlugin = require('webpack-shell-plugin');
 
 const handlersPath = 'src/handlers';
 
@@ -74,6 +75,11 @@ module.exports = (env) => {
     plugins.push(
       new ZipPlugin({
         filename: '<%= projectName %>.zip'
+      }));
+  } else {
+    plugins.push(
+      new WebpackShellPlugin({
+        onBuildEnd: ['cd dist && func host start']
       }));
   }
 
