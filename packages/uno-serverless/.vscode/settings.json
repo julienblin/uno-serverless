@@ -5,5 +5,12 @@
         "deserializer",
         "memoization",
         "memoized"
-    ]
+    ],
+    "files.exclude": {
+      "**/coverage": true,
+      "**/dist": true,
+      "**/node_modules": true,
+      "**/.nyc_output": true,
+    },
+    "typescript.tsdk": "node_modules\\typescript\\lib"
 }
