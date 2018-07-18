@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+- TokenService returns expiration alongside signed token.
+
 ## [0.42.0] - 2018-07-18
 ### Added
 - TemplateEngine interface + uno-serverless-handlebars implementation

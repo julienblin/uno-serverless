@@ -1,4 +1,5 @@
 import { decode, sign, verify } from "jsonwebtoken";
+import { duration } from "uno-serverless";
 import { SigningKeyService } from "./signing-key-service";
 
 /**
@@ -11,19 +12,30 @@ export interface TokenClaims {
   iss?: string;
 }
 
+export interface SignResult {
+  /** The signed token. */
+  token: string;
+  /** The number of seconds before expiration of the token. */
+  expiresIn: number;
+}
+
 /**
  * Defines a component that takes a token, verify its validity
  * and returns the associated identity information.
  */
 export interface TokenService {
   decode<T extends object>(token: string): Promise<T | undefined>;
-  sign<T extends object>(payload: T): Promise<string>;
+  sign<T extends object>(payload: T): Promise<SignResult>;
   verify<T extends object>(token: string): Promise<T>;
 }
 
 export interface JWTTokenServiceOptions {
   audience?: string | Promise<string>;
   issuer?: string | Promise<string>;
+  /**
+   * The token expiration in milliseconds or using ms format/duration function.
+   * Defaults to 1h.
+   */
   expiration?: string | number | Promise<string | number>;
 }
 
@@ -44,7 +56,7 @@ export class JWTTokenService implements TokenService {
       : undefined;
   }
 
-  public async sign<T extends object>(payload: T): Promise<string> {
+  public async sign<T extends object>(payload: T): Promise<SignResult> {
     const finalPayload = {
       aud: await this.options.audience,
       iss: await this.options.issuer,
@@ -52,15 +64,20 @@ export class JWTTokenService implements TokenService {
     };
 
     const privateKey = await this.keyService.getSecretOrPrivateKey();
-
-    return sign(
+    const expiration = await this.options.expiration || "1h";
+    const token = sign(
       finalPayload,
       privateKey.key,
       {
         algorithm: privateKey.alg,
-        expiresIn: await this.options.expiration || "1h",
+        expiresIn: expiration,
         keyid: privateKey.kid,
       });
+
+    return {
+      expiresIn: (typeof expiration === "number" ? expiration : duration(expiration)) / 1000,
+      token,
+    };
   }
 
   public async verify<T>(token: string): Promise<T> {
