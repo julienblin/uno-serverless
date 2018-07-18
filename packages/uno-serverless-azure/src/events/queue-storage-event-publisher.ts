@@ -49,9 +49,10 @@ export class QueueStorageEventPublisher implements EventPublisher, CheckHealth {
   public async publish(evt: Event): Promise<void> {
     const svc = await this.queueService();
     const queue = await this.options.queue;
+    const messageBody = Buffer.from(this.options.serialize!(evt)).toString("base64");
 
     return new Promise<void>((resolve, reject) => {
-      svc.createMessage(queue, this.options.serialize!(evt), (err) => {
+      svc.createMessage(queue, messageBody, (err) => {
         if (err) {
           return reject(err);
         }
