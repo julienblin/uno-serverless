@@ -1,7 +1,7 @@
 {
   "name": "uno-serverless-handlebars",
   "description": "Template engine implementation for uno-serverless using handlebars",
-  "version": "0.41.0",
+  "version": "0.42.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "sideEffects": false,
@@ -54,7 +54,7 @@
     "handlebars": "^4.0.11",
     "handlebars-dateformat": "^1.1.1",
     "pluralize": "^7.0.0",
-    "uno-serverless": "^0.41.0"
+    "uno-serverless": "^0.42.0"
   },
   "nyc": {
     "extension": [
