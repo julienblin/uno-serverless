@@ -30,8 +30,9 @@ describe("JWTTokenService", () => {
     };
 
     const result = await service.sign(token);
-    const splitResult = result.split(".");
+    const splitResult = result.token.split(".");
     expect(splitResult.length).to.equal(3);
+    expect(result.expiresIn).to.equal(3600);
   });
 
   it ("should verify tokens", async () => {
@@ -42,7 +43,7 @@ describe("JWTTokenService", () => {
 
     const token = await service.sign(payload);
 
-    const result = await service.verify<typeof payload & TokenClaims>(token);
+    const result = await service.verify<typeof payload & TokenClaims>(token.token);
     expect(result.claim1).to.equal(payload.claim1);
     expect(result.sub).to.equal(payload.sub);
 
@@ -60,7 +61,7 @@ describe("JWTTokenService", () => {
 
     const token = await service.sign(payload);
 
-    const result = await service.decode<typeof payload & TokenClaims>(token);
+    const result = await service.decode<typeof payload & TokenClaims>(token.token);
     expect(result!.claim1).to.equal(payload.claim1);
     expect(result!.sub).to.equal(payload.sub);
 
@@ -76,7 +77,7 @@ describe("JWTTokenService", () => {
       sub: randomStr(),
     };
 
-    const token = (await service.sign(payload)).split(".");
+    const token = (await service.sign(payload)).token.split(".");
     const signedPayload = JSON.parse(Buffer.from(token[1], "base64").toString());
     signedPayload.sub = randomStr();
     const alteredToken = `${token[0]}.${Buffer.from(JSON.stringify(signedPayload)).toString("base64")}.${token[2]}`;
