@@ -1,7 +1,7 @@
 {
   "name": "uno-serverless-aws",
   "description": "AWS Cloud providers & services for uno-serverless",
-  "version": "0.42.0",
+  "version": "0.43.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "sideEffects": false,
@@ -49,7 +49,7 @@
   },
   "dependencies": {
     "aws-sdk": "^2.266.1",
-    "uno-serverless": "^0.42.0"
+    "uno-serverless": "^0.43.0"
   },
   "nyc": {
     "extension": [
