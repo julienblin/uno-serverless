@@ -6,7 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Added
-- CryptoService that implements bcrypt & aes-256-gcm
+- HashService with bcrypt implementation
+- SymmetricEncryptionService with AES 256 GCM implementation
 
 ## [0.42.0] - 2018-07-18
 ### Added
