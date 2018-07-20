@@ -68,7 +68,7 @@ export class KeyVaultConfigService implements ConfigService {
       } else {
         let credentials;
         if (process.env.APPSETTING_WEBSITE_SITE_NAME) {
-          credentials = await loginWithAppServiceMSI();
+          credentials = await loginWithAppServiceMSI({ resource: "https://vault.azure.net" } as any);
         } else {
           const optionsWithCredentials = this.options as KeyVaultConfigServiceOptionsWithCredentials;
           credentials = await loginWithServicePrincipalSecret(
