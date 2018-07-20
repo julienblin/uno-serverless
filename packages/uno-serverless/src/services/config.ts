@@ -23,11 +23,18 @@ export interface ConfigService {
  * ConfigService implementation that returns static values
  * provided at service construction time.
  */
-export class StaticConfigService implements ConfigService {
+export class StaticConfigService implements ConfigService, CheckHealth {
 
   public constructor(
     private readonly values: Record<string, string | undefined>,
     private readonly name = "StaticConfigService") {}
+
+  public async checkHealth() {
+    return checkHealth(
+      this.name,
+      undefined,
+      async () => { return ; });
+  }
 
   public async get(key: string): Promise<string>;
   public async get(key: string, required = true): Promise<string | undefined> {
