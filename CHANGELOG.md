@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+
+## [0.43.1] - 2018-07-20
+### Changed
+- Referenced KeyVaultConfigService (implementation was there but not exposed)
+- Fixed uno-serverless dependency to http-status-codes package
+
 ## [0.43.0] - 2018-07-19
 ### Added
 - HashService with bcrypt implementation
