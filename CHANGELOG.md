@@ -6,13 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [0.43.2] - 2018-07-20
-### Changed
-- KeyVaultConfigService: fixed resource acquisition in the context of Managed Service Identity
+## [0.44] - 2018-07-20
+### Added
+- KeyVaultConfigService to pull configuration from Azure KeyVault
+- StaticConfigService & ProcessEnvConfigService now implements CheckHealth
 
-## [0.43.1] - 2018-07-20
 ### Changed
-- Referenced KeyVaultConfigService (implementation was there but not exposed)
 - Fixed uno-serverless dependency to http-status-codes package
 
 ## [0.43.0] - 2018-07-19
