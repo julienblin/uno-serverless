@@ -1,7 +1,7 @@
 {
   "name": "uno-serverless",
   "description": "A Framework to build serverless applications and deploy in any cloud (currently AWS & Azure).",
-  "version": "0.43.0",
+  "version": "0.43.1",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "sideEffects": false,
