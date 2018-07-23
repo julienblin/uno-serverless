@@ -1,7 +1,7 @@
 {
   "name": "uno-serverless-azure",
   "description": "Azure providers & services for uno-serverless",
-  "version": "0.44.0",
+  "version": "0.45.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "sideEffects": false,
@@ -52,7 +52,7 @@
     "azure-storage": "^2.10.0",
     "documentdb": "^1.14.4",
     "ms-rest-azure": "^2.5.7",
-    "uno-serverless": "^0.44.0"
+    "uno-serverless": "^0.45.0"
   },
   "nyc": {
     "extension": [
