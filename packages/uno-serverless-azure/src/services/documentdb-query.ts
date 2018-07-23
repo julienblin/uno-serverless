@@ -31,10 +31,11 @@ export enum Operator {
   ArrayContains = "ARRAY_CONTAINS",
 }
 
-export type ArrayOrArrayElement<T> = T | T[];
+export type ArrayOrArrayElement<T> =
+  T extends Array<infer P> ? (T | P) : (T | T[]);
 
 export type EntityWhereConditions<T> = {
-  [P in keyof Partial<T>]: ArrayOrArrayElement<T[P]> | [ArrayOrArrayElement<T[P]>, Operator];
+  [P in keyof Partial<T>]: ArrayOrArrayElement<T[P]> | [Operator, ArrayOrArrayElement<T[P]>];
 };
 
 export type EntityOrderByConditions<T> = {
@@ -182,9 +183,9 @@ class DocumentQueryBuilderImpl implements DocumentQueryBuilder {
     }
     return {
       leftPath: [this.from, entry[0]].join("."),
-      operator: Array.isArray(entry[1]) ? entry[1][1] : Operator.Eq,
+      operator: Array.isArray(entry[1]) ? entry[1][0] : Operator.Eq,
       parameterName,
-      parameterValue: Array.isArray(entry[1]) ? entry[1][0] : entry[1],
+      parameterValue: Array.isArray(entry[1]) ? entry[1][1] : entry[1],
     };
   }
 }

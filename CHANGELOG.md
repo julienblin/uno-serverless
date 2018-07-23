@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - StandardErrorCodes: Error codes in framework now use enum values. (Fix #27)
 
+### Changed
+- [BREAKING] DocumentDbQuery: Operators order is changed from last to first (Fix #)
+
 ## [0.44] - 2018-07-20
 ### Added
 - KeyVaultConfigService to pull configuration from Azure KeyVault

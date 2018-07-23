@@ -86,7 +86,7 @@ describe("DocumentQueryBuilderImpl", () => {
       },
     },
     {
-      query: select().where<Order>({ name: [["foo", "bar"], Operator.In] }),
+      query: select().where<Order>({ name: [ Operator.In, ["foo", "bar"]] }),
       result: {
         parameters: [
           { name: "@name0", value: "foo" },
@@ -96,7 +96,7 @@ describe("DocumentQueryBuilderImpl", () => {
       },
     },
     {
-      query: select().where<Order>({ name: [ "foo", Operator.Contains] }),
+      query: select().where<Order>({ name: [ Operator.Contains, "foo" ] }),
       result: {
         parameters: [
           { name: "@name", value: "foo" },
@@ -105,7 +105,7 @@ describe("DocumentQueryBuilderImpl", () => {
       },
     },
     {
-      query: select().where<Order>({ name: [ "foo", Operator.StartsWith] }),
+      query: select().where<Order>({ name: [ Operator.StartsWith, "foo" ] }),
       result: {
         parameters: [
           { name: "@name", value: "foo" },
@@ -114,7 +114,7 @@ describe("DocumentQueryBuilderImpl", () => {
       },
     },
     {
-      query: select().where<Order>({ name: [ "foo", Operator.EndsWith] }),
+      query: select().where<Order>({ name: [ Operator.EndsWith, "foo" ] }),
       result: {
         parameters: [
           { name: "@name", value: "foo" },
@@ -147,7 +147,7 @@ describe("DocumentQueryBuilderImpl", () => {
       },
     },
     {
-      query: select().where<Order>({ createdAt: [ 12345, Operator.Gt ] }),
+      query: select().where<Order>({ createdAt: [ Operator.Gt, 12345 ] }),
       result: {
         parameters: [
           { name: "@createdAt", value: 12345 },
@@ -156,7 +156,7 @@ describe("DocumentQueryBuilderImpl", () => {
       },
     },
     {
-      query: select().where<Order>({ createdAt: [ 12345, Operator.Lt ] }),
+      query: select().where<Order>({ createdAt: [ Operator.Lt, 12345 ] }),
       result: {
         parameters: [
           { name: "@createdAt", value: 12345 },
@@ -166,8 +166,8 @@ describe("DocumentQueryBuilderImpl", () => {
     },
     {
       query: select()
-        .where<Order>({ createdAt: [ 12345, Operator.Gt ] })
-        .where<Order>({ createdAt: [ 54321, Operator.Lt ] }),
+        .where<Order>({ createdAt: [ Operator.Gt, 12345 ] })
+        .where<Order>({ createdAt: [ Operator.Lt, 54321 ] }),
       result: {
         parameters: [
           { name: "@createdAt", value: 12345 },
@@ -177,7 +177,7 @@ describe("DocumentQueryBuilderImpl", () => {
       },
     },
     {
-      query: select().where<Order>({ states: [ "florida", Operator.ArrayContains ] }),
+      query: select().where<Order>({ states: [ Operator.ArrayContains, "florida" ] }),
       result: {
         parameters: [
           { name: "@states", value: "florida" },
