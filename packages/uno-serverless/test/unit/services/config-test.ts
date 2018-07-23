@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
+import { StandardErrorCodes } from "../../../src/core/errors";
 import { randomStr } from "../../../src/core/utils";
 import {
   ConfigService, JSONFileConfigService,
@@ -30,7 +31,7 @@ describe("StaticConfigService", () => {
       await config.get("foo");
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("configurationError");
+      expect(error.code).to.equal(StandardErrorCodes.ConfigurationError);
       expect(error.data.key).to.equal("foo");
       expect(error.data.provider).to.equal("StaticConfigService");
     }
@@ -39,7 +40,7 @@ describe("StaticConfigService", () => {
       await config.get("foo", true);
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("configurationError");
+      expect(error.code).to.equal(StandardErrorCodes.ConfigurationError);
       expect(error.data.key).to.equal("foo");
       expect(error.data.provider).to.equal("StaticConfigService");
     }
@@ -71,7 +72,7 @@ describe("ProcessEnvConfigService", () => {
       await config.get("foo");
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("configurationError");
+      expect(error.code).to.equal(StandardErrorCodes.ConfigurationError);
       expect(error.data.key).to.equal("foo");
       expect(error.data.provider).to.equal("ProcessEnvConfigService");
     }
@@ -80,7 +81,7 @@ describe("ProcessEnvConfigService", () => {
       await config.get("foo", true);
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("configurationError");
+      expect(error.code).to.equal(StandardErrorCodes.ConfigurationError);
       expect(error.data.key).to.equal("foo");
       expect(error.data.provider).to.equal("ProcessEnvConfigService");
     }
@@ -118,7 +119,7 @@ describe("JSONFileConfigService", () => {
       await config.get("missing");
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("configurationError");
+      expect(error.code).to.equal(StandardErrorCodes.ConfigurationError);
       expect(error.data.key).to.equal("missing");
       expect(error.data.provider).to.equal("JSONFileConfigService");
     }
@@ -127,7 +128,7 @@ describe("JSONFileConfigService", () => {
       await config.get("missing", true);
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("configurationError");
+      expect(error.code).to.equal(StandardErrorCodes.ConfigurationError);
       expect(error.data.key).to.equal("missing");
       expect(error.data.provider).to.equal("JSONFileConfigService");
     }

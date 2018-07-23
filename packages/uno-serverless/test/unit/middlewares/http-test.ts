@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { notFoundError } from "../../../src/core/errors";
+import { notFoundError, StandardErrorCodes } from "../../../src/core/errors";
 import { HttpStatusCodes } from "../../../src/core/http-status-codes";
 import { HttpUnoEvent } from "../../../src/core/schemas";
 import { testAdapter, uno } from "../../../src/core/uno";
@@ -125,7 +125,7 @@ describe("httpErrors middleware", () => {
 
     expect(result.statusCode).to.equal(HttpStatusCodes.NOT_FOUND);
     expect(result.body.error).to.not.be.undefined;
-    expect(result.body.error.code).to.equal("notFound");
+    expect(result.body.error.code).to.equal(StandardErrorCodes.NotFound);
     expect(result.body.error.target).to.equal(target);
   });
 
@@ -144,7 +144,7 @@ describe("httpErrors middleware", () => {
 
     expect(result.statusCode).to.equal(HttpStatusCodes.INTERNAL_SERVER_ERROR);
     expect(result.body.error).to.not.be.undefined;
-    expect(result.body.error.code).to.equal("internalServerError");
+    expect(result.body.error.code).to.equal(StandardErrorCodes.InternalServerError);
     expect(result.body.error.message).to.equal(message);
   });
 
@@ -163,7 +163,7 @@ describe("httpErrors middleware", () => {
 
     expect(result.statusCode).to.equal(HttpStatusCodes.BAD_GATEWAY);
     expect(result.body.error).to.not.be.undefined;
-    expect(result.body.error.code).to.equal("internalServerError");
+    expect(result.body.error.code).to.equal(StandardErrorCodes.InternalServerError);
     expect(result.body.error.message).to.equal(message);
   });
 
@@ -327,7 +327,7 @@ describe("principalFromBasicAuthorizationHeader", () => {
         });
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("unauthorized");
+      expect(error.code).to.equal(StandardErrorCodes.Unauthorized);
     }
   });
 
@@ -360,7 +360,7 @@ describe("principalFromBasicAuthorizationHeader", () => {
         });
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("unauthorized");
+      expect(error.code).to.equal(StandardErrorCodes.Unauthorized);
     }
   });
 
@@ -392,7 +392,7 @@ describe("principalFromBasicAuthorizationHeader", () => {
         });
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("unauthorized");
+      expect(error.code).to.equal(StandardErrorCodes.Unauthorized);
     }
   });
 

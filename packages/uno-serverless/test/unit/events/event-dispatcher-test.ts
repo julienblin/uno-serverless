@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { StandardErrorCodes } from "../../../src/core/errors";
 import { randomStr } from "../../../src/core/utils";
 import { LocalEventDispatcher } from "../../../src/events/event-dispatcher";
 
@@ -99,7 +100,7 @@ describe("LocalEventDispatcher", () => {
       });
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("aggregateError");
+      expect(error.code).to.equal(StandardErrorCodes.AggregateError);
       expect(error.details[0].message).to.equal(thrownError1.message);
       expect(allRun).to.equal(1);
     }

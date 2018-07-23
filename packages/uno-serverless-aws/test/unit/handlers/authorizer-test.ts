@@ -1,6 +1,6 @@
 import * as awsLambda from "aws-lambda";
 import { expect } from "chai";
-import { randomStr, uno } from "uno-serverless";
+import { randomStr, StandardErrorCodes, uno } from "uno-serverless";
 import { awsLambdaAdapter } from "../../../src/adapter";
 import { authorizerBearer } from "../../../src/handlers/authorizer";
 import { createLambdaContext } from "../lambda-helper-test";
@@ -58,7 +58,7 @@ describe("authorizerBearer handler", () => {
         (e, r) => { });
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("unauthorized");
+      expect(error.code).to.equal(StandardErrorCodes.Unauthorized);
     }
   });
 

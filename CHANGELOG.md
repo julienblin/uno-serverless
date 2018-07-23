@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- StandardErrorCodes: Error codes in framework now use enum values. (Fix #27)
 
 ## [0.44] - 2018-07-20
 ### Added

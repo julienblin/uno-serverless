@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { StandardErrorCodes } from "../../../src/core/errors";
 import { JSONSchema } from "../../../src/core/json-schema";
 import { testAdapter, uno } from "../../../src/core/uno";
 import { randomStr } from "../../../src/core/utils";
@@ -32,7 +33,7 @@ describe("validateEvent middleware", () => {
         });
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("validationError");
+      expect(error.code).to.equal(StandardErrorCodes.ValidationError);
     }
   });
 
@@ -69,7 +70,7 @@ describe("validateBody middleware", () => {
         });
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("validationError");
+      expect(error.code).to.equal(StandardErrorCodes.ValidationError);
     }
   });
 
@@ -88,7 +89,7 @@ describe("validateBody middleware", () => {
         });
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("validationError");
+      expect(error.code).to.equal(StandardErrorCodes.ValidationError);
     }
   });
 
@@ -150,7 +151,7 @@ describe("validateParameters middleware", () => {
         });
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("validationError");
+      expect(error.code).to.equal(StandardErrorCodes.ValidationError);
     }
   });
 

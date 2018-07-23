@@ -15,6 +15,20 @@ export interface StatusCodeProvider {
 export const isStatusCodeProvider = (error: any): error is StatusCodeProvider =>
   (typeof error.getStatusCode === "function");
 
+export enum StandardErrorCodes {
+  AggregateError = "aggregateError",
+  BadRequest = "badRequest",
+  ConfigurationError = "configurationError",
+  Conflict = "conflict",
+  DependencyError = "dependencyError",
+  Forbidden = "forbidden",
+  InternalServerError = "internalServerError",
+  MethodNotAllowed = "methodNotAllowed",
+  NotFound = "notFound",
+  Unauthorized = "unauthorized",
+  ValidationError = "validationError",
+}
+
 /**
  * Builds a non-standard error payload that can still be interpreted
  * with a status code.
@@ -57,7 +71,7 @@ export const buildError = (
 export const internalServerError = (message: string) =>
   buildError(
     {
-      code: "internalServerError",
+      code: StandardErrorCodes.InternalServerError,
       message,
     },
     HttpStatusCodes.INTERNAL_SERVER_ERROR);
@@ -65,7 +79,7 @@ export const internalServerError = (message: string) =>
 export const forbiddenError = (target: string, message: string) =>
   buildError(
     {
-      code: "forbidden",
+      code: StandardErrorCodes.Forbidden,
       message,
       target,
     },
@@ -74,7 +88,7 @@ export const forbiddenError = (target: string, message: string) =>
 export const unauthorizedError = (target: string, message: string) =>
   buildError(
     {
-      code: "unauthorized",
+      code: StandardErrorCodes.Unauthorized,
       message,
       target,
     },
@@ -83,7 +97,7 @@ export const unauthorizedError = (target: string, message: string) =>
 export const notFoundError = (target: string, message?: string, data?: object) =>
   buildError(
     {
-      code: "notFound",
+      code: StandardErrorCodes.NotFound,
       data,
       message: message || `The target ${target} could not be found.`,
       target,
@@ -93,7 +107,7 @@ export const notFoundError = (target: string, message?: string, data?: object) =
 export const badRequestError = (message: string, data?: object) =>
   buildError(
     {
-      code: "badRequest",
+      code: StandardErrorCodes.BadRequest,
       data,
       message,
     },
@@ -102,7 +116,7 @@ export const badRequestError = (message: string, data?: object) =>
 export const methodNotAllowedError = (message: string) =>
   buildError(
     {
-      code: "methodNotAllowed",
+      code: StandardErrorCodes.MethodNotAllowed,
       message,
     },
     HttpStatusCodes.METHOD_NOT_ALLOWED);
@@ -110,7 +124,7 @@ export const methodNotAllowedError = (message: string) =>
 export const validationError = (errors: ErrorData[], message?: string) =>
   buildError(
     {
-      code: "validationError",
+      code: StandardErrorCodes.ValidationError,
       details: errors.map((e) => ({ code: e.code, message: e.message, target: e.target, data: e.data })),
       message: message || "Validation failed",
     },
@@ -119,7 +133,7 @@ export const validationError = (errors: ErrorData[], message?: string) =>
 export const conflictError = (message: string, data?: object) =>
   buildError(
     {
-      code: "conflict",
+      code: StandardErrorCodes.Conflict,
       data,
       message,
     },
@@ -128,7 +142,7 @@ export const conflictError = (message: string, data?: object) =>
 export const configurationError = (data: any, message: string) =>
   buildError(
     {
-      code: "configurationError",
+      code: StandardErrorCodes.ConfigurationError,
       data,
       message,
     },
@@ -137,12 +151,21 @@ export const configurationError = (data: any, message: string) =>
 export const dependencyError = (target: string, error: Error, message?: string) =>
   buildError(
     {
-      code: "dependencyError",
+      code: StandardErrorCodes.DependencyError,
       details: [{ code: error.name, message: error.message, data: error }],
       message: message || error.toString(),
       target,
     },
     HttpStatusCodes.BAD_GATEWAY);
+
+export const aggregateError = (message: string, details: ErrorData[]) =>
+  buildError(
+    {
+      code: StandardErrorCodes.AggregateError,
+      details,
+      message,
+    },
+    HttpStatusCodes.INTERNAL_SERVER_ERROR);
 
 /** Creates a Proxy around target which traps all errors and encapsulate into dependencyErrors. */
 export const dependencyErrorProxy = <T extends object>(target: T, targetName: string) => {

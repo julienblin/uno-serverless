@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { StandardErrorCodes } from "../../../src/core/errors";
 import { HttpStatusCodes } from "../../../src/core/http-status-codes";
 import { testAdapter, uno } from "../../../src/core/uno";
 import { http, httpMethodRouter, httpRouter } from "../../../src/handlers/http";
@@ -31,7 +32,7 @@ describe("http handler", () => {
       await handler();
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("notFound");
+      expect(error.code).to.equal(StandardErrorCodes.NotFound);
       expect(error.getStatusCode()).to.equal(HttpStatusCodes.NOT_FOUND);
     }
   });
@@ -85,7 +86,7 @@ describe("httpMethodMethod handler", () => {
         });
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("methodNotAllowed");
+      expect(error.code).to.equal(StandardErrorCodes.MethodNotAllowed);
       expect(error.getStatusCode()).to.equal(HttpStatusCodes.METHOD_NOT_ALLOWED);
     }
   });
@@ -157,7 +158,7 @@ describe("httpRouter handler", () => {
         });
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("methodNotAllowed");
+      expect(error.code).to.equal(StandardErrorCodes.MethodNotAllowed);
     }
   });
 
@@ -181,7 +182,7 @@ describe("httpRouter handler", () => {
         });
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("notFound");
+      expect(error.code).to.equal(StandardErrorCodes.NotFound);
     }
   });
 

@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { HttpUnoEvent, randomStr, testAdapter, uno } from "uno-serverless";
+import { HttpUnoEvent, randomStr, StandardErrorCodes, testAdapter, uno } from "uno-serverless";
 import { principalFromBearerToken } from "../../../src/middlewares/http";
 
 describe("principalFromBearerToken", () => {
@@ -38,7 +38,7 @@ describe("principalFromBearerToken", () => {
       });
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("unauthorized");
+      expect(error.code).to.equal(StandardErrorCodes.Unauthorized);
     }
 
   });

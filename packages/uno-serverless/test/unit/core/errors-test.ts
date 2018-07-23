@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { dependencyErrorProxy, internalServerError } from "../../../src/core/errors";
+import { dependencyErrorProxy, internalServerError, StandardErrorCodes } from "../../../src/core/errors";
 
 describe("dependencyErrorProxy", () => {
 
@@ -67,7 +67,7 @@ describe("dependencyErrorProxy", () => {
       proxy.standardFunc(true);
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("dependencyError");
+      expect(error.code).to.equal(StandardErrorCodes.DependencyError);
       expect(error.target).to.equal("TestTarget");
     }
   });
@@ -90,7 +90,7 @@ describe("dependencyErrorProxy", () => {
       await proxy.promiseFunc(true);
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("dependencyError");
+      expect(error.code).to.equal(StandardErrorCodes.DependencyError);
       expect(error.target).to.equal("TestTarget");
     }
   });
@@ -103,7 +103,7 @@ describe("dependencyErrorProxy", () => {
       proxy.managedError();
       expect(false);
     } catch (error) {
-      expect(error.code).to.equal("internalServerError");
+      expect(error.code).to.equal(StandardErrorCodes.InternalServerError);
     }
   });
 
