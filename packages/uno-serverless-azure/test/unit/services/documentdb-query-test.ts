@@ -156,6 +156,27 @@ describe("DocumentQueryBuilderImpl", () => {
       },
     },
     {
+      query: select().where<Order>({ createdAt: [ 12345, Operator.Lt ] }),
+      result: {
+        parameters: [
+          { name: "@createdAt", value: 12345 },
+        ],
+        query: `SELECT * FROM root WHERE (root.createdAt < @createdAt)`,
+      },
+    },
+    {
+      query: select()
+        .where<Order>({ createdAt: [ 12345, Operator.Gt ] })
+        .where<Order>({ createdAt: [ 54321, Operator.Lt ] }),
+      result: {
+        parameters: [
+          { name: "@createdAt", value: 12345 },
+          { name: "@createdAt1", value: 54321 },
+        ],
+        query: `SELECT * FROM root WHERE (root.createdAt > @createdAt) AND (root.createdAt < @createdAt1)`,
+      },
+    },
+    {
       query: select().where<Order>({ states: [ "florida", Operator.ArrayContains ] }),
       result: {
         parameters: [

@@ -170,10 +170,20 @@ class DocumentQueryBuilderImpl implements DocumentQueryBuilder {
   }
 
   private resolveQueryParts(entry: [string, any]) {
+    let parameterName = entry[0];
+    if (this.sqlParameters["@" + parameterName]) {
+      const baseName = parameterName;
+      let index = 1;
+      parameterName = `${baseName}${index}`;
+      while (this.sqlParameters["@" + parameterName]) {
+        ++index;
+        parameterName = `${baseName}${index}`;
+      }
+    }
     return {
       leftPath: [this.from, entry[0]].join("."),
       operator: Array.isArray(entry[1]) ? entry[1][1] : Operator.Eq,
-      parameterName: entry[0],
+      parameterName,
       parameterValue: Array.isArray(entry[1]) ? entry[1][0] : entry[1],
     };
   }
