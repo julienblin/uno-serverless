@@ -5,13 +5,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.45.0] - 2018-07-23
 ### Added
 - StandardErrorCodes: Error codes in framework now use enum values. (Fix #27)
 
 ### Changed
 - [BREAKING] DocumentDbQuery: Operators order is changed from last to first (Fix #)
 
-## [0.44] - 2018-07-20
+## [0.44.0] - 2018-07-20
 ### Added
 - KeyVaultConfigService to pull configuration from Azure KeyVault
 - StaticConfigService & ProcessEnvConfigService now implements CheckHealth
