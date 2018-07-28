@@ -109,7 +109,7 @@ module.exports = class extends Generator {
       "typescript@latest",
       "webpack@latest",
       "webpack-cli@latest",
-      "webpack-shell-plugin@latest",
+      "webpack-spawn-plugin@latest",
       "zip-webpack-plugin@latest"
     ],
     { "save-dev": true });

@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Changed
 - [BREAKING] validateAndTrow is renamed to validateAndThrow (Fix #31)
+- Updated webpack configuration in Azure Functions generator to use Spawn plugin instead of shell (Fix #35)
 
 ## [0.45.0] - 2018-07-23
 ### Added

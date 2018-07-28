@@ -6,7 +6,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const ZipPlugin = require('zip-webpack-plugin');
-const WebpackShellPlugin = require('webpack-shell-plugin');
+const SpawnPlugin = require("webpack-spawn-plugin");
 
 const handlersPath = 'src/handlers';
 
@@ -78,14 +78,18 @@ module.exports = (env) => {
       }));
   } else {
     plugins.push(
-      new WebpackShellPlugin({
-        onBuildEnd: ['cd dist && func host start']
+      new SpawnPlugin('func', ['start', '--language-worker="--inspect=5858"'], {
+        cwd: 'dist',
+        when: 'done',
+        encoding: 'utf-8',
+        persistent: true,
+        maxBuffer: 10485760 // 10MB
       }));
   }
 
   return ({
     entry: entries,
-    devtool: env === 'production' ? 'source-map' : 'eval-source-map',
+    devtool: env === 'production' ? 'cheap-module-source-map' : 'eval-source-map',
     mode: env,
     target: 'node',
     stats: 'normal',
