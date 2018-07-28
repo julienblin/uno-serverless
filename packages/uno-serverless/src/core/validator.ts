@@ -32,7 +32,7 @@ export const validate = (schema: JSONSchema, data: any, defaultTarget?: string) 
  * Validates data based on schema, throwing validationError when it does not validate.
  * @param defaultTarget The default target to use if it cannot be determined.
  */
-export const validateAndTrow = (schema: JSONSchema, data: any, defaultTarget?: string, errorMessage?: string) => {
+export const validateAndThrow = (schema: JSONSchema, data: any, defaultTarget?: string, errorMessage?: string) => {
   const validationErrors = validate(schema, data, defaultTarget);
 
   if (validationErrors.length > 0) {
