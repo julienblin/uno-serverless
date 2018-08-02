@@ -180,56 +180,61 @@ export const parseBodyAsFORM = ()
  */
 export const principalFromBasicAuthorizationHeader =
   (func: (arg: FunctionArg<HttpUnoEvent, any>, username: string, password: string) => any)
-  : Middleware<HttpUnoEvent, any> => {
-  return async (
-    arg: FunctionArg<HttpUnoEvent, any>,
-    next: FunctionExecution<HttpUnoEvent, any>): Promise<any> => {
+    : Middleware<HttpUnoEvent, any> => {
 
-    const previousPrincipal = arg.event.principal;
-    let previousResult: any;
-    arg.event.principal = async (throwIfEmpty = true) => {
-      if (previousPrincipal) {
-        const previousPrincipalResult = await previousPrincipal(false);
-        if (previousPrincipalResult) {
-          return previousPrincipalResult;
+    const basicHeaderRegex = new RegExp(/\s*Basic\s+(.*)/i);
+
+    return async (
+      arg: FunctionArg<HttpUnoEvent, any>,
+      next: FunctionExecution<HttpUnoEvent, any>): Promise<any> => {
+
+      const previousPrincipal = arg.event.principal;
+      let previousResult: any;
+      arg.event.principal = async (throwIfEmpty = true) => {
+        if (previousPrincipal) {
+          const previousPrincipalResult = await previousPrincipal(false);
+          if (previousPrincipalResult) {
+            return previousPrincipalResult;
+          }
         }
-      }
 
-      if (previousResult) {
+        if (previousResult) {
+          return previousResult;
+        }
+
+        let basicToken: string | undefined;
+        const match = basicHeaderRegex.exec(arg.event.headers.authorization);
+        if (match) {
+          basicToken = match[1];
+        }
+
+        if (!basicToken) {
+          if (throwIfEmpty) {
+            throw unauthorizedError("authorization header", "No authorization header found.");
+          }
+
+          return undefined;
+        }
+
+        let decodedBasicToken;
+        try {
+          decodedBasicToken = Buffer.from(basicToken, "base64").toString();
+        } catch (error) {
+          if (throwIfEmpty) {
+            throw unauthorizedError("authorization header", "Authorization header could not be decoded properly.");
+          }
+
+          return undefined;
+        }
+        const [username, password] = decodedBasicToken.split(":");
+
+        previousResult = func(arg, username, password);
         return previousResult;
-      }
+      };
 
-      const basicToken = arg.event.headers.authorization
-        ? arg.event.headers.authorization.replace(/\s*Basic\s*/ig, "")
-        : undefined;
-
-      if (!basicToken) {
-        if (throwIfEmpty) {
-          throw unauthorizedError("authorization header", "No authorization header found.");
-        }
-
-        return undefined;
-      }
-
-      let decodedBasicToken;
-      try {
-        decodedBasicToken = Buffer.from(basicToken, "base64").toString();
-      } catch (error) {
-        if (throwIfEmpty) {
-          throw unauthorizedError("authorization header", "Authorization header could not be decoded properly.");
-        }
-
-        return undefined;
-      }
-      const [ username, password ] = decodedBasicToken.split(":");
-
-      previousResult = func(arg, username, password);
-      return previousResult;
+      return next(arg);
     };
-
-    return next(arg);
   };
-};
 
 /**
  * Returns the following suite of middlewares:

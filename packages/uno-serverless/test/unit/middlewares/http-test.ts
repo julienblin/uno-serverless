@@ -8,7 +8,8 @@ import { randomStr } from "../../../src/core/utils";
 import { ok } from "../../../src/handlers/http-responses";
 import {
   cors, httpErrors, parseBodyAsFORM, parseBodyAsJSON, principalFromBasicAuthorizationHeader,
-  responseHeaders, serializeBodyAsJSON} from "../../../src/middlewares/http";
+  responseHeaders, serializeBodyAsJSON,
+} from "../../../src/middlewares/http";
 
 describe("responseHeaders middleware", () => {
 
@@ -234,9 +235,9 @@ describe("parseBodyAsJSON middleware", () => {
     const handler = uno(testAdapter())
       .use(parseBodyAsJSON())
       .handler<HttpUnoEvent, any>
-        (async ({ event }) => {
-          expect(event.body()).to.deep.equal(body);
-        });
+      (async ({ event }) => {
+        expect(event.body()).to.deep.equal(body);
+      });
 
     await handler(
       {
@@ -258,9 +259,9 @@ describe("parseBodyAsFORM middleware", () => {
     const handler = uno(testAdapter())
       .use(parseBodyAsFORM())
       .handler<HttpUnoEvent, any>
-        (async ({ event }) => {
-          expect(event.body()).to.deep.equal(body);
-        });
+      (async ({ event }) => {
+        expect(event.body()).to.deep.equal(body);
+      });
 
     await handler(
       {
@@ -287,11 +288,11 @@ describe("principalFromBasicAuthorizationHeader", () => {
         };
       }))
       .handler<HttpUnoEvent, any>
-        (async ({ event }) => {
-          const principal = await event.principal<any>();
-          expect(principal.user).to.equal(username);
-          expect(principal.pwd).to.equal(password);
-        });
+      (async ({ event }) => {
+        const principal = await event.principal<any>();
+        expect(principal.user).to.equal(username);
+        expect(principal.pwd).to.equal(password);
+      });
 
     await handler(
       {
@@ -304,6 +305,56 @@ describe("principalFromBasicAuthorizationHeader", () => {
       });
   });
 
+  it("should not throw if no header and throwIfEmpty = false", async () => {
+    const handler = uno(testAdapter())
+      .use(principalFromBasicAuthorizationHeader((_, user, pwd) => {
+        return {
+          pwd,
+          user,
+        };
+      }))
+      .handler<HttpUnoEvent, any>
+      (async ({ event }) => {
+        const principal = await event.principal<any>(false);
+        expect(principal).to.be.undefined;
+      });
+
+    await handler(
+      {
+        headers: {},
+        httpMethod: "get",
+        rawBody: "foo=bar",
+        unoEventType: "http",
+      });
+    expect(true);
+  });
+
+  it("should not throw if another authorization header and throwIfEmpty = false", async () => {
+    const handler = uno(testAdapter())
+      .use(principalFromBasicAuthorizationHeader((_, user, pwd) => {
+        return {
+          pwd,
+          user,
+        };
+      }))
+      .handler<HttpUnoEvent, any>
+      (async ({ event }) => {
+        const principal = await event.principal<any>(false);
+        expect(principal).to.be.undefined;
+      });
+
+    await handler(
+      {
+        headers: {
+          authorization: `Bearer ${randomStr()}`,
+        },
+        httpMethod: "get",
+        rawBody: "foo=bar",
+        unoEventType: "http",
+      });
+    expect(true);
+  });
+
   it("should throw if no header", async () => {
     const handler = uno(testAdapter())
       .use(principalFromBasicAuthorizationHeader((_, user, pwd) => {
@@ -313,9 +364,9 @@ describe("principalFromBasicAuthorizationHeader", () => {
         };
       }))
       .handler<HttpUnoEvent, any>
-        (async ({ event }) => {
-          const principal = await event.principal<any>();
-        });
+      (async ({ event }) => {
+        const principal = await event.principal<any>();
+      });
 
     try {
       await handler(
@@ -344,9 +395,9 @@ describe("principalFromBasicAuthorizationHeader", () => {
         };
       }))
       .handler<HttpUnoEvent, any>
-        (async ({ event }) => {
-          const principal = await event.principal<any>();
-        });
+      (async ({ event }) => {
+        const principal = await event.principal<any>();
+      });
 
     try {
       await handler(
@@ -376,9 +427,9 @@ describe("principalFromBasicAuthorizationHeader", () => {
         };
       }))
       .handler<HttpUnoEvent, any>
-        (async ({ event }) => {
-          const principal = await event.principal<any>();
-        });
+      (async ({ event }) => {
+        const principal = await event.principal<any>();
+      });
 
     try {
       await handler(

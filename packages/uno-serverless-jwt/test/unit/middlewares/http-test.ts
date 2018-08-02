@@ -23,7 +23,6 @@ describe("principalFromBearerToken", () => {
   });
 
   it("should throw if no token", async () => {
-    const token = randomStr();
     const handler = uno(testAdapter())
       .use(principalFromBearerToken(async (arg, bearerToken) => bearerToken))
       .handler<HttpUnoEvent, any>(async ({ event }) => {
@@ -40,6 +39,38 @@ describe("principalFromBearerToken", () => {
     } catch (error) {
       expect(error.code).to.equal(StandardErrorCodes.Unauthorized);
     }
+
+  });
+
+  it("should not throw if no token and throwIfEmpty = false", async () => {
+    const handler = uno(testAdapter())
+      .use(principalFromBearerToken(async (arg, bearerToken) => bearerToken))
+      .handler<HttpUnoEvent, any>(async ({ event }) => {
+        return await event.principal(false);
+      });
+
+    const result = await handler({
+      headers: {
+        authorization: "",
+      },
+    });
+    expect(result).to.be.undefined;
+
+  });
+
+  it("should not throw if other authorization header and throwIfEmpty = false", async () => {
+    const handler = uno(testAdapter())
+      .use(principalFromBearerToken(async (arg, bearerToken) => bearerToken))
+      .handler<HttpUnoEvent, any>(async ({ event }) => {
+        return await event.principal(false);
+      });
+
+    const result = await handler({
+      headers: {
+        authorization: `Basic ${randomStr()}`,
+      },
+    });
+    expect(result).to.be.undefined;
 
   });
 
