@@ -5,6 +5,9 @@ import { FunctionArg, FunctionExecution, HttpUnoEvent, Middleware, unauthorizedE
  */
 export const principalFromBearerToken = (func: (arg: FunctionArg<HttpUnoEvent, any>, bearerToken: string) => any)
   : Middleware<HttpUnoEvent, any> => {
+
+  const bearerHeaderRegex = new RegExp(/\s*Bearer\s+(.*)/i);
+
   return async (
     arg: FunctionArg<HttpUnoEvent, any>,
     next: FunctionExecution<HttpUnoEvent, any>): Promise<any> => {
@@ -23,9 +26,11 @@ export const principalFromBearerToken = (func: (arg: FunctionArg<HttpUnoEvent, a
         return previousResult;
       }
 
-      const bearerToken = arg.event.headers.authorization
-        ? arg.event.headers.authorization.replace(/\s*bearer\s*/ig, "")
-        : undefined;
+      let bearerToken: string | undefined;
+      const match = bearerHeaderRegex.exec(arg.event.headers.authorization);
+      if (match) {
+        bearerToken = match[1];
+      }
 
       if (!bearerToken) {
         if (throwIfEmpty) {
