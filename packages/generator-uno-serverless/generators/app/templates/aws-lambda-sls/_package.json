@@ -4,18 +4,15 @@
   "description": "<%= projectDescription %>",
   "private": true,
   "scripts": {
-    "postinstall": "rimraf .cache-loader",
     "lint": "tslint --project tsconfig.json",
-    "clean": "rimraf dist",
-    "prebuild": "npm run clean",
-    "build": "webpack",
-    "start": "webpack --env=development --watch",
+    "start": "node --inspect ./node_modules/serverless/bin/serverless offline start -s",
     "test": "mocha --opts test/mocha.opts test/unit/**/*.test.ts",
     "test:watch": "mocha --opts test/mocha.opts --watch test/unit/**/*.test.ts",
     "test:e2e": "newman run test/e2e/e2e.collection.json",
-    "cover": "nyc mocha test/unit/**/*.test.ts"
+    "cover": "nyc mocha test/unit/**/*.test.ts",
+    "deploy": "sls deploy -s",
+    "pkg": "sls package -s"
   },
-  "keywords": [],
   "nyc": {
     "extension": [
       ".ts"

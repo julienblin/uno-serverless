@@ -1,0 +1,159 @@
+cloudFormationTags: &TAGS
+  - Key: environment
+    Value: ${self:custom.tags.environment}
+  - Key: application
+    Value: ${self:custom.tags.application}
+
+corsOptionsIntegration: &CORS_OPTIONS_INTEGRATION
+  Type: MOCK
+  RequestTemplates:
+    "application/json": >-
+      {
+        "statusCode": 200
+      }
+  IntegrationResponses:
+    - StatusCode: "200"
+      ResponseParameters:
+        "method.response.header.Access-Control-Allow-Origin": "'*'"
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-RequestId'"
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET'"
+        "method.response.header.Access-Control-Allow-Credentials": "'false'"
+        "method.response.header.Content-Type": "'application/json'"
+      ResponseTemplates:
+        "application/json": ""
+
+corsOptionsMethodResponses: &CORS_OPTIONS_METHOD_RESPONSES
+  - StatusCode: "200"
+    ResponseParameters:
+      "method.response.header.Access-Control-Allow-Origin": true
+      "method.response.header.Access-Control-Allow-Headers": true
+      "method.response.header.Access-Control-Allow-Methods": true
+      "method.response.header.Access-Control-Allow-Credentials": true
+      "method.response.header.Content-Type": true
+
+resources:
+  Resources:
+
+    ApiGatewayRestApi:
+      Properties:
+          MinimumCompressionSize: 860 # Based on Akamai heuristic
+
+    # /info api endpoint.
+    ApiGatewayResourceInfo:
+      Type: AWS::ApiGateway::Resource
+      Properties:
+        ParentId:
+          Fn::GetAtt:
+            - ApiGatewayRestApi
+            - RootResourceId
+        PathPart: info
+        RestApiId:
+          Ref: ApiGatewayRestApi
+    ApiGatewayMethodInfoGet:
+      Type: AWS::ApiGateway::Method
+      Properties:
+        HttpMethod: GET
+        ResourceId:
+          Ref: ApiGatewayResourceInfo
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        AuthorizationType: NONE
+        Integration:
+          IntegrationHttpMethod: POST
+          Type: MOCK
+          RequestTemplates:
+            "application/json": >-
+              {
+                "statusCode": 200
+              }
+          IntegrationResponses:
+            - StatusCode: "200"
+              ResponseParameters:
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+                "method.response.header.Content-Type": "'application/json'"
+              ResponseTemplates:
+                "application/json": >-
+                  #set($inputRoot = $input.path('$'))
+                  {
+                    "name": "$context.apiId",
+                    "environment": "$context.stage",
+                    "version": "${self:custom.apiVersion}",
+                    "timestamp": "${self:custom.timestamp}"
+                  }
+        MethodResponses:
+          - StatusCode: "200"
+            ResponseParameters:
+              "method.response.header.Access-Control-Allow-Origin": true
+              "method.response.header.Content-Type": true
+    ApiGatewayMethodInfoOptions:
+      Type: AWS::ApiGateway::Method
+      Properties:
+        HttpMethod: OPTIONS
+        ResourceId:
+          Ref: ApiGatewayResourceInfo
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        AuthorizationType: NONE
+        Integration: *CORS_OPTIONS_INTEGRATION
+        MethodResponses: *CORS_OPTIONS_METHOD_RESPONSES
+
+    # /openapi api endpoint.
+    ApiGatewayResourceOpenApi:
+      Type: AWS::ApiGateway::Resource
+      Condition: OpenApi
+      Properties:
+        ParentId:
+          Fn::GetAtt:
+            - ApiGatewayRestApi
+            - RootResourceId
+        PathPart: openapi
+        RestApiId:
+          Ref: ApiGatewayRestApi
+    ApiGatewayMethodOpenApiGet:
+      Type: AWS::ApiGateway::Method
+      Condition: OpenApi
+      Properties:
+        HttpMethod: GET
+        ResourceId:
+          Ref: ApiGatewayResourceOpenApi
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        AuthorizationType: NONE
+        Integration:
+          IntegrationHttpMethod: POST
+          Type: MOCK
+          RequestTemplates:
+            "application/json": >-
+              {
+                "statusCode": 200
+              }
+          IntegrationResponses:
+            - StatusCode: "200"
+              ResponseParameters:
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,X-Amzn-RequestId'"
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET'"
+                "method.response.header.Access-Control-Allow-Credentials": "'false'"
+                "method.response.header.Content-Type": "'application/json'"
+              ResponseTemplates:
+                "application/json": "#[[ ${file(./build/openapi.js)} ]]#"
+        MethodResponses:
+          - StatusCode: "200"
+            ResponseParameters:
+              "method.response.header.Access-Control-Allow-Origin": true
+              "method.response.header.Access-Control-Allow-Headers": true
+              "method.response.header.Access-Control-Allow-Methods": true
+              "method.response.header.Access-Control-Allow-Credentials": true
+              "method.response.header.Content-Type": true
+    ApiGatewayMethodOpenApiOptions:
+      Type: AWS::ApiGateway::Method
+      Condition: OpenApi
+      Properties:
+        HttpMethod: OPTIONS
+        ResourceId:
+          Ref: ApiGatewayResourceOpenApi
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        AuthorizationType: NONE
+        Integration: *CORS_OPTIONS_INTEGRATION
+        MethodResponses: *CORS_OPTIONS_METHOD_RESPONSES

@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- AWS Lambda / Serverless generator (Fix #36)
+
 ### Changed
 - [BREAKING] validateAndTrow is renamed to validateAndThrow (Fix #31)
 - Updated webpack configuration in Azure Functions generator to use Spawn plugin instead of shell (Fix #35)
