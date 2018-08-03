@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - AWS Lambda / Serverless generator (Fix #36)
+- DocumentDb: Add defaultConsistencyLevel option (Fix #39)
 
 ### Changed
 - [BREAKING] validateAndTrow is renamed to validateAndThrow (Fix #31)
