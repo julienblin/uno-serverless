@@ -125,7 +125,8 @@ export const validationError = (errors: ErrorData[], message?: string) =>
   buildError(
     {
       code: StandardErrorCodes.ValidationError,
-      details: errors.map((e) => ({ code: e.code, message: e.message, target: e.target, data: e.data })),
+      details: errors.map(
+        (e) => ({ code: e.code, data: e.data, details: e.details, message: e.message, target: e.target })),
       message: message || "Validation failed",
     },
     HttpStatusCodes.BAD_REQUEST);
