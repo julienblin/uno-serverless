@@ -53,8 +53,8 @@ module.exports = class extends Generator {
           value: "azure"
         },
         {
-          name: "AWS Lambda",
-          value: "aws"
+          name: "AWS Lambda / serverless",
+          value: "aws-lambda-sls"
         }
       ],
       require: true
@@ -69,8 +69,8 @@ module.exports = class extends Generator {
       case "azure":
         this._dependenciesAzure();
         break;
-      case "aws":
-        this._dependenciesAws();
+      case "aws-lambda-sls":
+        this._dependenciesAwsLambdaSls();
         break;
     }
   }
@@ -86,7 +86,6 @@ module.exports = class extends Generator {
     this.npmInstall([
       "@types/chai@latest",
       "@types/mocha@latest",
-      "@types/nock@latest",
       "cache-loader@latest",
       "chai@latest",
       "copy-webpack-plugin@latest",
@@ -95,7 +94,6 @@ module.exports = class extends Generator {
       "js-yaml@latest",
       "mocha@latest",
       "mocha-junit-reporter@latest",
-      "nock@latest",
       "newman@latest",
       "nyc@latest",
       "rimraf@latest",
@@ -115,13 +113,47 @@ module.exports = class extends Generator {
     { "save-dev": true });
   }
 
+  _dependenciesAwsLambdaSls() {
+    this.npmInstall([
+      "aws-sdk@latest",
+      "source-map-support@latest",
+      "uno-serverless@latest",
+      "uno-serverless-aws@latest",
+    ],
+    { "save": true });
+
+    this.npmInstall([
+      "@types/chai@latest",
+      "@types/mocha@latest",
+      "cache-loader@latest",
+      "chai@latest",
+      "fork-ts-checker-webpack-plugin@latest",
+      "mocha@latest",
+      "newman@latest",
+      "nyc@latest",
+      "serverless@latest",
+      "serverless-offline@latest",
+      "serverless-webpack@latest",
+      "thread-loader@latest",
+      "ts-loader@latest",
+      "ts-node@latest",
+      "tsconfig-paths@latest",
+      "tsconfig-paths-webpack-plugin@latest",
+      "tslint@latest",
+      "tslint-no-unused-expression-chai@latest",
+      "typescript@latest",
+      "webpack@latest"
+    ],
+    { "save-dev": true });
+  }
+
   writing() {
     switch(this.props.projectType) {
       case "azure":
         this._writingAzure();
         break;
-      case "aws":
-        this._writingAws();
+      case "aws-lambda-sls":
+        this._writingAwsLambdaSls();
         break;
     }
 
@@ -140,7 +172,7 @@ module.exports = class extends Generator {
       "src/handlers/openapi.ts",
       "src/config.ts",
       "test/e2e/e2e.collection.json",
-      "test/unit/handlers/common-test.ts",
+      "test/unit/handlers/common.test.ts",
       "test/mocha.opts",
       "_.editorconfig",
       "_.gitignore",
@@ -156,6 +188,39 @@ module.exports = class extends Generator {
     ].forEach((x) => {
       this.fs.copyTpl(
         this.templatePath(`azure/${x}`),
+        this.destinationPath(x.startsWith("_") ? x.slice(1) : x),
+        this.props
+      );
+    });
+  }
+
+  _writingAwsLambdaSls() {
+    [
+      "_.vscode/extensions.json",
+      "_.vscode/settings.json",
+      "build/api-version.js",
+      "build/openapi.js",
+      "build/source-map-install.js",
+      "build/timestamp.js",
+      "src/handlers/common.ts",
+      "src/handlers/health.ts",
+      "src/config.ts",
+      "test/e2e/e2e.collection.json",
+      "test/unit/handlers/common.test.ts",
+      "test/mocha.opts",
+      "_.editorconfig",
+      "_.gitignore",
+      "_package.json",
+      "cf-resources.yml",
+      "openapi.yml",
+      "README.md",
+      "serverless.yml",
+      "tsconfig.json",
+      "tslint.json",
+      "webpack.config.js",
+    ].forEach((x) => {
+      this.fs.copyTpl(
+        this.templatePath(`aws-lambda-sls/${x}`),
         this.destinationPath(x.startsWith("_") ? x.slice(1) : x),
         this.props
       );

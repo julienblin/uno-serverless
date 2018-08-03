@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const childProcess = require('child_process');
 const yaml = require('js-yaml');
+const webpack = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
@@ -45,6 +46,7 @@ module.exports = (env) => {
 
   const plugins = [
     new ForkTsCheckerWebpackPlugin({ checkSyntacticErrors: true }),
+    new webpack.ContextReplacementPlugin(/ms-rest/, undefined),
     new CopyWebpackPlugin([
       { from: 'src/handlers/*.json', to: '[name]/function.json' },
       { from: 'host.json', to: 'host.json' },

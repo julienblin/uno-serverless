@@ -1,0 +1,30 @@
+service: <%= projectName %>
+
+custom:
+  apiVersion: ${file(./build/api-version.js)}
+  timestamp: ${file(./build/timestamp.js)}
+  environment: ${opt:stage}
+
+  tags:
+    environment: ${self:custom.environment}
+    application: <%= projectName %>
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stackTags: ${self:custom.tags}
+
+functions:
+  health:
+    handler: src/handlers/health.handler
+    events:
+      - http:
+          path: api/health
+          method: get
+          cors: true
+
+resources: ${file(cf-resources.yml):resources}
