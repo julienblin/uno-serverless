@@ -1,9 +1,11 @@
 import {
-  Collection, DocumentClient, DocumentQuery,
-  FeedOptions, RequestOptions, RetrievedDocument, UniqueId, UriFactory } from "documentdb";
+  Collection, ConsistencyLevel, DocumentClient,
+  DocumentOptions, DocumentQuery, FeedOptions, RequestOptions, RetrievedDocument, UniqueId, UriFactory,
+} from "documentdb";
 import {
   CheckHealth, checkHealth, conflictError, ContinuationArray,
-  decodeNextToken, encodeNextToken, HttpStatusCodes, lazyAsync, WithContinuation } from "uno-serverless";
+  decodeNextToken, encodeNextToken, HttpStatusCodes, lazyAsync, WithContinuation,
+} from "uno-serverless";
 import { DocumentQueryProducer, EntityDocument, isDocumentQueryProducer } from "./documentdb-query";
 
 export interface DocumentDbRequestOptions {
@@ -81,14 +83,13 @@ export interface DocumentDbImplOptions {
   collectionId: string | Promise<string>;
   entitySeparator?: string;
   collectionCreationOptions?: Partial<Collection>;
+  defaultConsistencyLevel?: ConsistencyLevel;
 }
 
 export class DocumentDbImpl implements DocumentDb, CheckHealth {
 
   private readonly lazyClient = lazyAsync(
     async () => {
-      const endpoint = await this.options.endpoint;
-
       return new DocumentClient(
         await this.options.endpoint,
         {
@@ -133,11 +134,14 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
   public async delete(entity: string, id: string, options?: DocumentDbRequestOptions): Promise<void> {
     const client = await this.lazyClient();
     const documentUri = await this.documentUri(entity, id);
-
+    const requestOptions: RequestOptions = options && options.requestOptions ? options.requestOptions : {};
+    if (this.options.defaultConsistencyLevel && !requestOptions.consistencyLevel) {
+      requestOptions.consistencyLevel = this.options.defaultConsistencyLevel;
+    }
     return new Promise<void>((resolve, reject) => {
       client.deleteDocument(
         documentUri,
-        options && options.requestOptions ? options.requestOptions : {},
+        requestOptions,
         (err) => {
           if (err) {
             return reject(err);
@@ -152,11 +156,14 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
     : Promise<any> {
     const client = await this.lazyClient();
     const documentUri = await this.documentUri(entity, id);
-
+    const requestOptions: RequestOptions = options && options.requestOptions ? options.requestOptions : {};
+    if (this.options.defaultConsistencyLevel && !requestOptions.consistencyLevel) {
+      requestOptions.consistencyLevel = this.options.defaultConsistencyLevel;
+    }
     return new Promise<any>((resolve, reject) => {
       client.readDocument(
         documentUri,
-        options && options.requestOptions ? options.requestOptions : {},
+        requestOptions,
         (err, doc) => {
           if (err) {
             if (err.code === HttpStatusCodes.NOT_FOUND) {
@@ -175,23 +182,27 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
     const client = await this.lazyClient();
     const collectionUri = await this.collectionUri();
     const documentQuery = this.getDocumentQuery(query);
+    const feedOptions: FeedOptions = options && options.feedOptions ? options.feedOptions : {};
+    if (this.options.defaultConsistencyLevel && !feedOptions.consistencyLevel) {
+      feedOptions.consistencyLevel = this.options.defaultConsistencyLevel;
+    }
     const continuation = options && options.nextToken ? decodeNextToken(options.nextToken)!.toString() : undefined;
+    if (continuation && !feedOptions.continuation) {
+      feedOptions.continuation = continuation;
+    }
 
     return new Promise<ContinuationArray<any>>((resolve, reject) => {
       const queryResult = client.queryDocuments(
         collectionUri,
         documentQuery,
-        {
-          continuation,
-          ...(options && options.feedOptions),
-        });
+        feedOptions);
 
       queryResult.executeNext((err, docs, responseHeaders) => {
         if (err) {
           return reject(err);
         }
 
-        let newNextToken: string |  undefined;
+        let newNextToken: string | undefined;
         if (responseHeaders["x-ms-continuation"]) {
           newNextToken = encodeNextToken(responseHeaders["x-ms-continuation"]);
         }
@@ -208,12 +219,16 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
     const client = await this.lazyClient();
     const collectionUri = await this.collectionUri();
     const documentQuery = this.getDocumentQuery(query);
+    const feedOptions: FeedOptions = options && options.feedOptions ? options.feedOptions : {};
+    if (this.options.defaultConsistencyLevel && !feedOptions.consistencyLevel) {
+      feedOptions.consistencyLevel = this.options.defaultConsistencyLevel;
+    }
 
     return new Promise<any[]>((resolve, reject) => {
       const queryResult = client.queryDocuments(
         collectionUri,
         documentQuery,
-        options && options.feedOptions);
+        feedOptions);
 
       queryResult.toArray((err, docs) => {
         if (err) {
@@ -239,14 +254,19 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
       : {};
 
     return new Promise<any>((resolve, reject) => {
+      const documentOptions: DocumentOptions = {
+        ...etagOptions,
+        disableAutomaticIdGeneration: true,
+        ...(options && options.requestOptions ? options.requestOptions : {}),
+      };
+      if (this.options.defaultConsistencyLevel && !documentOptions.consistencyLevel) {
+        documentOptions.consistencyLevel = this.options.defaultConsistencyLevel;
+      }
+
       client.upsertDocument(
         collectionUri,
         document,
-        {
-          ...etagOptions,
-          disableAutomaticIdGeneration: true,
-          ...(options && options.requestOptions ? options.requestOptions : {}),
-        },
+        documentOptions,
         (err, doc) => {
           if (err) {
             if (err.code === HttpStatusCodes.PRECONDITION_FAILED) {
