@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - AzureSearchClient plugged to Azure Search Rest API
+- toRecord convenient function to convert arrays of objects to records (dictionaries)
 
 ## [0.46.0] - 2018-08-03
 ### Added

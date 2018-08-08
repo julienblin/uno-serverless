@@ -3,7 +3,7 @@ import { describe, it } from "mocha";
 import {
   convertHrtimeToMs, createConfidentialityReplacer,
   DEFAULT_CONFIDENTIALITY_REPLACE_BY, duration, lazyAsync,
-  memoize, randomStr, safeJSONStringify } from "../../../src/core/utils";
+  memoize, randomStr, safeJSONStringify, toRecord } from "../../../src/core/utils";
 
 describe("convertHrtimeToMs", () => {
 
@@ -133,6 +133,61 @@ describe("duration", () => {
     expect(await duration(Promise.resolve(undefined))).to.equal(undefined);
     expect(await duration(Promise.resolve(""))).to.equal(undefined);
     expect(await duration(Promise.resolve("1d"))).to.equal(86400000);
+  });
+
+});
+
+describe("toRecord", () => {
+
+  it("should convert with defautls", async () => {
+    const test = [
+      {
+        id: randomStr(),
+        name: randomStr(),
+      },
+      {
+        id: randomStr(),
+        name: randomStr(),
+      },
+    ];
+
+    const result = toRecord(test);
+    expect(result[test[0].id]).to.deep.equal(test[0]);
+    expect(result[test[1].id]).to.deep.equal(test[1]);
+  });
+
+  it("should convert with valueFunc", async () => {
+    const test = [
+      {
+        id: randomStr(),
+        name: randomStr(),
+      },
+      {
+        id: randomStr(),
+        name: randomStr(),
+      },
+    ];
+
+    const result = toRecord(test, (x) => ({ name: x.name }));
+    expect(result[test[0].id]).to.deep.equal({ name: test[0].name });
+    expect(result[test[1].id]).to.deep.equal({ name: test[1].name });
+  });
+
+  it("should convert with idFunc", async () => {
+    const test = [
+      {
+        id: randomStr(),
+        name: randomStr(),
+      },
+      {
+        id: randomStr(),
+        name: randomStr(),
+      },
+    ];
+
+    const result = toRecord(test, (x) => x.id, (x) => x.name);
+    expect(result[test[0].name]).to.equal(test[0].id);
+    expect(result[test[1].name]).to.equal(test[1].id);
   });
 
 });

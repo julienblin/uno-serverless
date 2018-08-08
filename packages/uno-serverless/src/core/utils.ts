@@ -62,8 +62,8 @@ const destructuringHandler = <T extends object>(target: any): ProxyHandler<T> =>
   get: (proxyTarget, name, receiver) =>
     (...args) =>
       Reflect
-      .get(proxyTarget, name, receiver)
-      .apply(target, args),
+        .get(proxyTarget, name, receiver)
+        .apply(target, args),
 });
 
 /** Wraps target behind a proxy to support ES destructuring for methods. */
@@ -105,4 +105,30 @@ export function duration(value: any): any {
   }
 
   return ms(value);
+}
+
+/**
+ * Converts an array of objects to a Record.
+ */
+export function toRecord<T extends { id: string, [x: string]: any }>(values: T[]): Record<string, T>;
+export function toRecord<T extends { id: string, [x: string]: any }, U>(
+  values: T[],
+  valueFunc: (x: T) => U): Record<string, U>;
+export function toRecord<U>(
+  values: string[],
+  valueFunc: (x: string) => U): Record<string, U>;
+export function toRecord<T, U>(
+  values: T[],
+  valueFunc: (x: T) => U,
+  idFunc: (x: T) => string): Record<string, U>;
+export function toRecord(
+  values: any[],
+  valueFunc: (x) => any = (x) => x,
+  idFunc: (x) => string = (x) => x.id ? x.id : x.toString()): any {
+  return values.reduce(
+    (acc, cur) => {
+      acc[idFunc(cur)] = valueFunc(cur);
+      return acc;
+    },
+    {});
 }

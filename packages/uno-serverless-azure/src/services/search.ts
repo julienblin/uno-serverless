@@ -1,6 +1,6 @@
 import {
   ContinuationArray, decodeNextToken, encodeNextToken, HttpClient,
-  httpClientFactory, lazyAsync, WithContinuation,
+  httpClientFactory, lazyAsync, toRecord, WithContinuation,
 } from "uno-serverless";
 
 export type AzureSearchIndexFieldType =
@@ -272,9 +272,9 @@ export class AzureSearchClient {
         }
 
         if (highlights) {
-          highlights = Object.keys(highlights)
-            .filter((y) => !y.endsWith("@odata.type"))
-            .reduce((acc, cur) => { acc[cur] = highlights[cur]; return acc; }, {});
+          highlights = toRecord(
+            Object.keys(highlights).filter((y) => !y.endsWith("@odata.type")),
+            (y) => highlights[y]);
         }
 
         return {
