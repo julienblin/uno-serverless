@@ -22,5 +22,4 @@ if (major < 8) {
   process.exit(1);
 }
 
-const commands = require(path.resolve(__dirname, "../dist"));
-commands.root();
+require(path.resolve(__dirname, "../dist"));

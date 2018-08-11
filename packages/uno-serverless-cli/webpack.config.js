@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 
 const distFolder = path.join(__dirname, 'dist');
@@ -28,6 +29,10 @@ module.exports = {
   },
   plugins: [
     new CleanWebpackPlugin([distFolder]),
+    new webpack.ContextReplacementPlugin(/yargs/, undefined),
+    new webpack.ContextReplacementPlugin(/yargs-parser/, undefined),
+    new webpack.ContextReplacementPlugin(/require-main-filename/, undefined),
+    new webpack.ContextReplacementPlugin(/cross-spawn/, undefined)
   ],
   externals: {
     'uno-serverless': 'uno-serverless'
