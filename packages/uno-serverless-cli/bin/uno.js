@@ -2,6 +2,7 @@
 
 'use strict';
 
+const path = require('path');
 var chalk = require('chalk');
 
 var currentNodeVersion = process.versions.node;
@@ -21,4 +22,5 @@ if (major < 8) {
   process.exit(1);
 }
 
-require("../dist");
+const commands = require(path.resolve(__dirname, "../dist"));
+commands.root();
