@@ -19,7 +19,7 @@ yargs.usage("$0 command")
         format: y.format,
       });
       const result = generation.run();
-      console.log(result);
+      process.stdout.write(result);
     })
   .demand(1, (chalk as any).red("Error: Must provide a valid command"))
   .help("h")
