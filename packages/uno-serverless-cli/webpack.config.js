@@ -35,6 +35,6 @@ module.exports = {
     new webpack.ContextReplacementPlugin(/cross-spawn/, undefined)
   ],
   externals: {
-    'uno-serverless': 'uno-serverless'
+    'typescript': 'typescript'
   }
 };

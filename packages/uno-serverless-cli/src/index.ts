@@ -1,10 +1,27 @@
 import chalk = require("chalk");
 import * as yargs from "yargs";
+import { SchemaGeneration } from "./services/schema-generation";
 
-// tslint:disable-next-line:no-unused-expression-chai
 yargs.usage("$0 command")
-  .command("generate-schemas", "Generate schemas from Typescript interfaces")
+  .command(
+    "generate-schemas <files>",
+    "Generate schemas from Typescript interfaces",
+    (y) => {
+      return y
+        .positional("files", { description: "pattern to select files", type: "string" })
+        .option(
+            "format",
+            { choices: [ "json", "yaml", "ts" ], default: "json", alias: "f", describe: "Output format" });
+    },
+    (y) => {
+      const generation = new SchemaGeneration({
+        files: y.files,
+        format: y.format,
+      });
+      const result = generation.run();
+      console.log(result);
+    })
   .demand(1, (chalk as any).red("Error: Must provide a valid command"))
   .help("h")
   .alias("h", "help")
-  .argv;
+  .parse();
