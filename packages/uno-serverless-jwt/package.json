@@ -1,7 +1,7 @@
 {
   "name": "uno-serverless-jwt",
   "description": "JSON Web Token services for uno-serverless",
-  "version": "0.46.0",
+  "version": "0.47.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "sideEffects": false,
@@ -51,7 +51,7 @@
     "jsonwebtoken": "^8.3.0",
     "pem": "^1.12.5",
     "pem-jwk": "^1.5.1",
-    "uno-serverless": "^0.46.0"
+    "uno-serverless": "^0.47.0"
   },
   "nyc": {
     "extension": [
