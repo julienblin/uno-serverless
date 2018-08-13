@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Added
+- uno-serverless-cli with composable commands
+- CLI: generate-schemas to generate JSON, YAML and Typescript schemas from Typescript interfaces.
 - AzureSearchClient plugged to Azure Search Rest API
 - toRecord convenient function to convert arrays of objects to records (dictionaries)
 
