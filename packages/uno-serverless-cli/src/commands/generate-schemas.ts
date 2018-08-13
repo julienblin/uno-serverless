@@ -29,6 +29,6 @@ export const handler = (yargs) => {
       process.stdout.write(result);
     }
   } catch (error) {
-    (chalk as any).red(error);
+    console.error((chalk as any).red(error.toString()));
   }
 };
