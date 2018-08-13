@@ -12,4 +12,9 @@ export interface User {
   password: string;
   firstName?: string;
   lastName?: string;
+  composite?: Array<{
+    address: Address;
+    id: string,
+    name?: string;
+  }>;
 }

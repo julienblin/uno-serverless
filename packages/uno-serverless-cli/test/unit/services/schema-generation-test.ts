@@ -35,4 +35,16 @@ describe("SchemaGeneration", function() {
     expect(parsedResult.definitions.User.properties.email.type).to.equal("string");
   });
 
+  it("should generate TS schemas", () => {
+
+    const generation = new SchemaGeneration({
+      files,
+      format: "ts",
+    });
+
+    const result = generation.run();
+    expect(result).to.contain("userSchema");
+    expect(result).to.contain("addressSchema");
+  });
+
 });
