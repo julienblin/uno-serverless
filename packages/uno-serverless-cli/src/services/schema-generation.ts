@@ -53,6 +53,8 @@ export class SchemaGeneration {
     lines.push([0, " * Manual changes may cause incorrect behavior and will be lost if"]);
     lines.push([0, " * the code is regenerated."]);
     lines.push([0, " */"]);
+    lines.push();
+    lines.push([0, "// tslint:disable"]);
 
     const orderedSchemas = this.orderSchemas(jsonSchema.definitions || {});
 
@@ -125,7 +127,7 @@ export class SchemaGeneration {
     switch (typeof value) {
       case "string":
       case "symbol":
-        return `"${value}"`;
+        return `"${value.replace(/\r?\n|\r/g, " ")}"`;
       case "number":
       case "boolean":
         return value.toString();
