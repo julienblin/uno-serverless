@@ -6,7 +6,8 @@ import {
   CheckHealth, checkHealth, conflictError, ContinuationArray,
   decodeNextToken, encodeNextToken, HttpStatusCodes, lazyAsync, WithContinuation,
 } from "uno-serverless";
-import { DocumentQueryProducer, EntityDocument, isDocumentQueryProducer } from "./documentdb-query";
+import {
+  DocumentQueryProducer, ENTITY_TYPE_SEPARATOR, EntityDocument, isDocumentQueryProducer } from "./documentdb-query";
 
 export interface DocumentDbRequestOptions {
   requestOptions?: RequestOptions;
@@ -81,7 +82,6 @@ export interface DocumentDbImplOptions {
   primaryKey: string | Promise<string>;
   databaseId: string | Promise<string>;
   collectionId: string | Promise<string>;
-  entitySeparator?: string;
   collectionCreationOptions?: Partial<Collection>;
   defaultConsistencyLevel?: ConsistencyLevel;
 }
@@ -97,11 +97,7 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
         });
     });
 
-  public constructor(private readonly options: DocumentDbImplOptions) {
-    if (!this.options.entitySeparator) {
-      this.options.entitySeparator = "-";
-    }
-  }
+  public constructor(private readonly options: DocumentDbImplOptions) {}
 
   public async checkHealth() {
     const databaseId = await this.options.databaseId;
@@ -300,17 +296,17 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
     return UriFactory.createDocumentUri(databaseId, collectionId, this.id(entity, id));
   }
 
-  private id(entity: string, id: string) { return `${entity}${this.options.entitySeparator}${id}`; }
+  private id(entity: string, id: string) { return `${entity}${ENTITY_TYPE_SEPARATOR}${id}`; }
 
   private process(doc: RetrievedDocument, entity: string | undefined, metadata: boolean | undefined) {
     if (doc.id) {
       if (entity) {
-        doc.id = doc.id.slice(entity.length + this.options.entitySeparator!.length);
+        doc.id = doc.id.slice(entity.length + ENTITY_TYPE_SEPARATOR.length);
       } else {
         if (doc._entity) {
-          doc.id = doc.id.slice(doc._entity.length + this.options.entitySeparator!.length);
+          doc.id = doc.id.slice(doc._entity.length + ENTITY_TYPE_SEPARATOR.length);
         } else {
-          doc.id = doc.id.slice(doc.id.indexOf(this.options.entitySeparator!) + 1);
+          doc.id = doc.id.slice(doc.id.indexOf(ENTITY_TYPE_SEPARATOR) + 1);
         }
       }
     }

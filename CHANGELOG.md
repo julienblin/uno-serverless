@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - DocumentDb: Added operator Neq (Fix #48)
 
+### Changed
+- DocumentDb: Querying with parameter id will automatically prefix the id value with the entity type if entity filter is also in the query (e.g. select().entity("orders").where<Orders>({ id: "value"})). (Fix #51)
+
 ## [0.47.0] - 2018-08-13
 ### Added
 - uno-serverless-cli with composable commands

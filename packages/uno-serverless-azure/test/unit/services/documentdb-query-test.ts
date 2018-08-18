@@ -86,6 +86,25 @@ describe("DocumentQueryBuilderImpl", () => {
       },
     },
     {
+      query: select().where<Order>({ id: "foobar" }),
+      result: {
+        parameters: [
+          { name: "@id", value: "foobar" },
+        ],
+        query: `SELECT * FROM root WHERE (root.id = @id)`,
+      },
+    },
+    {
+      query: select().entity("orders").where<Order>({ id: "foobar" }),
+      result: {
+        parameters: [
+          { name: "@_entity", value: "orders" },
+          { name: "@id", value: "orders-foobar" },
+        ],
+        query: `SELECT * FROM root WHERE (root._entity = @_entity) AND (root.id = @id)`,
+      },
+    },
+    {
       query: select().where<Order>({ name: [Operator.Neq, "foobar"] }),
       result: {
         parameters: [
@@ -102,6 +121,17 @@ describe("DocumentQueryBuilderImpl", () => {
           { name: "@name1", value: "bar" },
         ],
         query: `SELECT * FROM root WHERE (root.name IN (@name0, @name1))`,
+      },
+    },
+    {
+      query: select().entity("orders").where<Order>({ id: [ Operator.In, ["foo", "bar"]] }),
+      result: {
+        parameters: [
+          { name: "@_entity", value: "orders" },
+          { name: "@id0", value: "orders-foo" },
+          { name: "@id1", value: "orders-bar" },
+        ],
+        query: `SELECT * FROM root WHERE (root._entity = @_entity) AND (root.id IN (@id0, @id1))`,
       },
     },
     {
