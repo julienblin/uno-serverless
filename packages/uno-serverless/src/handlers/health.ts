@@ -10,6 +10,23 @@ export type HealthFunc<TServices> =
     services: TServices,
   }) => Promise<HealthCheckRun[]>;
 
+/** Will make sure that errors are properly serialized. */
+const replaceErrors = (_, value) => {
+  if (value instanceof Error) {
+    const error = {};
+
+    Object.getOwnPropertyNames(value).forEach((key) => {
+      error[key] = value[key];
+    });
+
+    return error;
+  }
+
+  return value;
+};
+
+const ensureErrorSerialization = (message) => JSON.parse(JSON.stringify(message, replaceErrors));
+
 /**
  * This handlers runs the health checks provided.
  */
@@ -21,12 +38,12 @@ export const health = <TServices = any>(name: string, func: HealthFunc<TServices
       const runs = await func(arg);
       result = await checkHealth(name, undefined, runs);
     } catch (error) {
-      result = {
+      result = ensureErrorSerialization({
         error,
         message: "Error while running the health checks.",
         name,
         status: HealthCheckStatus.Error,
-      };
+      });
     }
 
     if (arg.event.unoEventType === "http") {
@@ -38,15 +55,15 @@ export const health = <TServices = any>(name: string, func: HealthFunc<TServices
             statusCode: HttpStatusCodes.OK,
           };
         case HealthCheckStatus.Warning:
-          return {
+          return ensureErrorSerialization({
             body: result,
             statusCode: HttpStatusCodes.BAD_REQUEST,
-          };
+          });
         case HealthCheckStatus.Error:
-          return {
+          return ensureErrorSerialization({
             body: result,
             statusCode: HttpStatusCodes.INTERNAL_SERVER_ERROR,
-          };
+          });
       }
     }
 

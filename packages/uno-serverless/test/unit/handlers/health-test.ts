@@ -53,6 +53,7 @@ describe("health handler", () => {
     const handler = uno(testAdapter())
       .handler(health(name, async ({ }) => [
         async () => ({ name: "Error", status: HealthCheckStatus.Error }),
+        async () => { throw new Error("foo"); },
       ]));
 
     const lambdaResult = await handler({
@@ -60,5 +61,7 @@ describe("health handler", () => {
     });
 
     expect(lambdaResult.statusCode).to.equal(HttpStatusCodes.INTERNAL_SERVER_ERROR);
+    const serializedResult = JSON.parse(JSON.stringify(lambdaResult));
+    expect(serializedResult.body.children[1].error.message).to.equal("foo");
   });
 });
