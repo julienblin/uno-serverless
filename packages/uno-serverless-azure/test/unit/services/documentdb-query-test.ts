@@ -86,6 +86,15 @@ describe("DocumentQueryBuilderImpl", () => {
       },
     },
     {
+      query: select().where<Order>({ name: [Operator.Neq, "foobar"] }),
+      result: {
+        parameters: [
+          { name: "@name", value: "foobar" },
+        ],
+        query: `SELECT * FROM root WHERE (root.name != @name)`,
+      },
+    },
+    {
       query: select().where<Order>({ name: [ Operator.In, ["foo", "bar"]] }),
       result: {
         parameters: [

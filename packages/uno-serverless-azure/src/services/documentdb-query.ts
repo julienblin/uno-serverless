@@ -20,6 +20,7 @@ export const isDocumentQueryProducer = (query: any): query is DocumentQueryProdu
 
 export enum Operator {
   Eq = "=",
+  Neq = "!=",
   Gt = ">",
   Gte = ">=",
   Lt = "<",
@@ -99,6 +100,7 @@ class DocumentQueryBuilderImpl implements DocumentQueryBuilder {
         const queryParts = this.resolveQueryParts(entry);
         switch (queryParts.operator) {
           case Operator.Eq:
+          case Operator.Neq:
           case Operator.Gt:
           case Operator.Gte:
           case Operator.Lt:
