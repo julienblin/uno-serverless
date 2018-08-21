@@ -1,5 +1,5 @@
 import { decode, sign, verify } from "jsonwebtoken";
-import { duration } from "uno-serverless";
+import { duration, unauthorizedError } from "uno-serverless";
 import { SigningKeyService } from "./signing-key-service";
 
 /**
@@ -88,6 +88,10 @@ export class JWTTokenService implements TokenService {
 
     const publicKey = await this.keyService.getSecretOrPublicKey(keyId);
 
-    return verify(token, publicKey) as any;
+    try {
+      return verify(token, publicKey) as any;
+    } catch (error) {
+      throw unauthorizedError("token", error.message);
+    }
   }
 }

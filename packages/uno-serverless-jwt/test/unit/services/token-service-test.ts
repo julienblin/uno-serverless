@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { randomStr } from "uno-serverless";
+import { randomStr, StandardErrorCodes } from "uno-serverless";
 import { RSSigningKeyService, SigningKeyService } from "../../../src/services/signing-key-service";
 import {
   JWTTokenService, JWTTokenServiceOptions,
@@ -86,6 +86,7 @@ describe("JWTTokenService", () => {
       await service.verify<typeof payload & TokenClaims>(alteredToken);
       expect(false);
     } catch (error) {
+      expect(error.code).to.equal(StandardErrorCodes.Unauthorized);
       expect(error.message).to.contain("invalid token");
     }
   });
