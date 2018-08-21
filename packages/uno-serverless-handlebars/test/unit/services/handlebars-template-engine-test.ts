@@ -98,4 +98,16 @@ describe("HandlebarsTemplateEngineOptions", () => {
 
     expect(result).to.equal("Result: Hello, FOOBAR. How are you today?");
   });
+
+  it("should allow layout", async () => {
+    const result = await templateEngine.render(
+      "layout-content.handlebars",
+      {
+        name: "foobar",
+      });
+
+    expect(result).to.contain("Header");
+    expect(result).to.contain("Hello, foobar");
+    expect(result).to.contain("Footer");
+  });
 });
