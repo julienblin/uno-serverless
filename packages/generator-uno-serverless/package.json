@@ -28,6 +28,6 @@
     "change-case": "^3.0.2",
     "figlet": "^1.2.0",
     "js-yaml": "^3.11.0",
-    "yeoman-generator": "^2.0.5"
+    "yeoman-generator": "^3.1.1"
   }
 }
