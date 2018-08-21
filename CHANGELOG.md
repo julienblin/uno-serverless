@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - DocumentDb: Added operator Neq (Fix #48)
+- DocumentDb: Added option overwrite to set to allow pure create operation (Fix #52)
 
 ### Changed
 - [BREAKING] DocumentDb: Querying with parameter id will automatically prefix the id value with the entity type if entity filter is also in the query (e.g. select().entity("orders").where<Orders>({ id: "value"})). (Fix #51)

@@ -28,6 +28,14 @@ export interface ETagDocument {
   _etag?: string;
 }
 
+export interface SetOptions {
+  /**
+   * If set to false, the operation will fail if the document id exists.
+   * Defaults to true.
+   */
+  overwrite?: boolean;
+}
+
 export interface DocumentDb {
   /** Delete a document by entity type and id. */
   delete(entity: string, id: string, options?: DocumentDbRequestOptions): Promise<void>;
@@ -65,12 +73,12 @@ export interface DocumentDb {
    * Create or update a document.
    * Will honor ETag concurrency validation if document has an _etag property.
    */
-  set<T>(document: T & EntityDocument & ETagDocument, options?: DocumentDbRequestOptions): Promise<T>;
+  set<T>(document: T & EntityDocument & ETagDocument, options?: DocumentDbRequestOptions & SetOptions): Promise<T>;
   /**
    * Create or update a document.
    * Will honor ETag concurrency validation if document has an _etag property.
    */
-  set<T>(document: T & EntityDocument & ETagDocument, options: DocumentDbRequestOptions & MetadataOptions)
+  set<T>(document: T & EntityDocument & ETagDocument, options: DocumentDbRequestOptions & SetOptions & MetadataOptions)
     : Promise<T & RetrievedDocument & EntityDocument>;
 }
 
@@ -236,7 +244,9 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
     });
   }
 
-  public async set(document: any & EntityDocument & ETagDocument, options?: DocumentDbRequestOptions & MetadataOptions)
+  public async set(
+    document: any & EntityDocument & ETagDocument,
+    options?: DocumentDbRequestOptions & SetOptions & MetadataOptions)
     : Promise<any> {
     const client = await this.lazyClient();
     const collectionUri = await this.collectionUri();
@@ -259,21 +269,27 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
         documentOptions.consistencyLevel = this.options.defaultConsistencyLevel;
       }
 
-      client.upsertDocument(
+      const method = options && options.overwrite === false ? "createDocument" : "upsertDocument";
+
+      client[method](
         collectionUri,
         document,
         documentOptions,
         (err, doc) => {
           if (err) {
-            if (err.code === HttpStatusCodes.PRECONDITION_FAILED) {
-              return reject(
-                conflictError(
-                  `There has been a conflict while updating document ${document.id}. The ETag did not match.`,
-                  {
-                    etag: document._etag,
-                  }));
-            } else {
-              return reject(err);
+            switch (err.code) {
+              case HttpStatusCodes.PRECONDITION_FAILED:
+                return reject(
+                  conflictError(
+                    `There has been a conflict while updating document ${document.id}. The ETag did not match.`,
+                    {
+                      etag: document._etag,
+                    }));
+              case HttpStatusCodes.CONFLICT:
+                return reject(
+                  conflictError(`The document with id ${document.id} already exists.`));
+              default:
+                return reject(err);
             }
           }
 
