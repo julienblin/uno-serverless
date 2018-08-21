@@ -21,12 +21,14 @@ export interface HandlebarsTemplateEngineOptions {
  *
  * Partials templates are automatically available.
  * e.g. partials/header.handlebars is avaiblable through {{>header}}
- * Inlcluded helpers:
+ * Included helpers:
  *   - date: {{date [datevar] "dddd, MMMM Do YYYY, h:mm:ss a"}} (Uses moment.js format)
  *   - pluralize: {{pluralize [number] "child"}} (Uses pluralize if plural form not provided)
  *   - currency: {{currency [value] "USD"}} (Uses currency-formatter)
  *   - lowercase: {{lowercase [value]}} (Calls value.toLowerCase())
  *   - uppercase: {{uppercase [value]}} (Calls value.toUpperCase())
+ *   - t: {{t [resource] }}: allow translation of context.resources based on context.language
+ *     The resources can also contain substitution as well.
  */
 export class HandlebarsTemplateEngine implements TemplateEngine {
 
@@ -70,6 +72,25 @@ export class HandlebarsTemplateEngine implements TemplateEngine {
     });
     handlebars.registerHelper("lowercase", (value: string) => value.toLowerCase());
     handlebars.registerHelper("uppercase", (value: string) => value.toUpperCase());
+    handlebars.registerHelper("t", (resource: string, options: any) => {
+      const root = options.data.root;
+      if (!root.language) {
+        throw new Error(`Unable to translate resource ${resource} - Missing language property in root context.`);
+      }
+
+      const resourcePath = `${root.language}.${resource}`;
+      const resourceValue = resourcePath.split(".").reduce(
+        (acc, cur) => acc ? acc[cur] : undefined,
+        options.data.root.resources);
+      if (!resourceValue) {
+        throw new Error(`Unable to find resource ${resource} for language ${root.language}.`);
+      }
+      if (!resourceValue.includes("{{")) {
+        return resourceValue;
+      }
+      const template = handlebars.compile(resourceValue);
+      return template(options.data.root);
+    });
     Object.keys(this.options.helpers).forEach((key) => handlebars.registerHelper(key, this.options.helpers[key]));
 
     const partialFiles = await this.listPartialFiles();
