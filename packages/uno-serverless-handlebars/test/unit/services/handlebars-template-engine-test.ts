@@ -110,4 +110,41 @@ describe("HandlebarsTemplateEngineOptions", () => {
     expect(result).to.contain("Hello, foobar");
     expect(result).to.contain("Footer");
   });
+
+  it("should handle translation", async () => {
+    const resources = {
+      en: {
+        bye: "Bye!",
+        dateFormat: "MM/DD/YYYY",
+        hello: "Hello, {{name}}",
+      },
+      fr: {
+        bye: "Salut!",
+        dateFormat: "YYYY-MM-DD",
+        hello: "Bonjour, {{name}}",
+      },
+    };
+    let result = await templateEngine.render(
+      "i18n.handlebars",
+      {
+        language: "en",
+        name: "foobar",
+        now: new Date().getTime(),
+        resources,
+      });
+
+    expect(result).to.contain("Hello, foobar");
+    expect(result).to.contain("Bye!");
+
+    result = await templateEngine.render(
+      "i18n.handlebars",
+      {
+        language: "fr",
+        name: "foobar",
+        resources,
+      });
+
+    expect(result).to.contain("Bonjour, foobar");
+    expect(result).to.contain("Salut!");
+  });
 });
