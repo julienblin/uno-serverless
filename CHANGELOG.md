@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - health handler makes sure that raw errors coming from health checks will be appropriately serialized (Fix #49)
 - TokenService verify throws unauthorizedError when failing verification (instead of standard JWT error) (Fix #47)
 - Updated all dependencies to latest versions
+- Better internalization of HttpStatusCodes (Fix #55)
 
 ## [0.47.0] - 2018-08-13
 ### Added
