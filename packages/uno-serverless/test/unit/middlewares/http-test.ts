@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import { notFoundError, StandardErrorCodes } from "../../../src/core/errors";
+import { notFoundError, oauthError, StandardErrorCodes } from "../../../src/core/errors";
 import { HttpStatusCodes } from "../../../src/core/http-status-codes";
 import { HttpUnoEvent } from "../../../src/core/schemas";
 import { testAdapter, uno } from "../../../src/core/uno";
@@ -166,6 +166,24 @@ describe("httpErrors middleware", () => {
     expect(result.body.error).to.not.be.undefined;
     expect(result.body.error.code).to.equal(StandardErrorCodes.InternalServerError);
     expect(result.body.error.message).to.equal(message);
+  });
+
+  it("should handle custom payloads", async () => {
+    const message = randomStr();
+    const handler = uno(testAdapter())
+      .use(httpErrors())
+      .handler(async () => {
+        throw oauthError("invalid_grant", "Invalid username / password");
+      });
+
+    const result = await handler(
+      {
+        unoEventType: "http",
+      });
+
+    expect(result.statusCode).to.equal(HttpStatusCodes.BAD_REQUEST);
+    expect(result.body.error).to.equal("invalid_grant");
+    expect(result.body.error_description).to.equal("Invalid username / password");
   });
 
 });

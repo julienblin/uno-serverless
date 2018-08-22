@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - DocumentDb: Added operator Neq (Fix #48)
 - DocumentDb: Added option overwrite to set to allow pure create operation (Fix #52)
 - Templates: Support translations/resources (Fix #32).
+- Custom payload for errors + standard oauthError (Fix #56)
 
 ### Changed
 - [BREAKING] DocumentDb: Querying with parameter id will automatically prefix the id value with the entity type if entity filter is also in the query (e.g. select().entity("orders").where<Orders>({ id: "value"})). (Fix #51)
@@ -16,6 +17,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - TokenService verify throws unauthorizedError when failing verification (instead of standard JWT error) (Fix #47)
 - Updated all dependencies to latest versions
 - Better internalization of HttpStatusCodes (Fix #55)
+
+### Removed
+- Deprecated buildNonStandardError method. Replaced by buildErrorWithCustomPayload. (Fix #56)
 
 ## [0.47.0] - 2018-08-13
 ### Added

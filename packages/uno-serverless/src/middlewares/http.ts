@@ -1,5 +1,7 @@
 import { parse as parseQS } from "querystring";
-import { badRequestError, internalServerError, isStatusCodeProvider, unauthorizedError } from "../core/errors";
+import {
+  badRequestError, internalServerError, isCustomPayloadProvider, isStatusCodeProvider, unauthorizedError,
+} from "../core/errors";
 import { HttpUnoResponse } from "../core/schemas";
 import { HttpUnoEvent, isHttpUnoResponse, UnoEvent } from "../core/schemas";
 import { FunctionArg, FunctionExecution, Middleware } from "../core/uno";
@@ -66,6 +68,15 @@ export const httpErrors = (forceStatusCode?: (error: any) => number): Middleware
       const finalError = isStatusCodeProvider(error)
         ? error
         : internalServerError(error.message) as any;
+
+      if (isCustomPayloadProvider(finalError)) {
+        return {
+          body: finalError.getPayload(),
+          statusCode: forceStatusCode
+          ? forceStatusCode(finalError)
+          : finalError.getStatusCode(),
+        };
+      }
 
       return {
         body: {

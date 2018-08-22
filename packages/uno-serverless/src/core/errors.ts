@@ -12,8 +12,15 @@ export interface StatusCodeProvider {
   getStatusCode(): number;
 }
 
+export interface CustomPayloadProvider extends StatusCodeProvider {
+  getPayload(): any;
+}
+
 export const isStatusCodeProvider = (error: any): error is StatusCodeProvider =>
   (typeof error.getStatusCode === "function");
+
+export const isCustomPayloadProvider = (error: any): error is CustomPayloadProvider =>
+  (typeof error.getPayload === "function");
 
 export enum StandardErrorCodes {
   AggregateError = "aggregateError",
@@ -25,11 +32,13 @@ export enum StandardErrorCodes {
   InternalServerError = "internalServerError",
   MethodNotAllowed = "methodNotAllowed",
   NotFound = "notFound",
+  OAuthError = "oauthError",
   Unauthorized = "unauthorized",
   ValidationError = "validationError",
 }
 
 /**
+ * @deprecated
  * Builds a non-standard error payload that can still be interpreted
  * with a status code.
  */
@@ -48,6 +57,20 @@ export const buildNonStandardError = (errorPayload: any, httpStatusCode: number)
   Object.freeze(error);
 
   return error;
+};
+
+export const buildErrorWithCustomPayload =
+  (message: string, errorPayload: any, httpStatusCode: number): any & StatusCodeProvider & CustomPayloadProvider => {
+    const error = new Error(message) as any;
+
+    Object.keys(errorPayload).forEach((key) => {
+      error[key] = errorPayload[key];
+    });
+    error.getStatusCode = () => httpStatusCode;
+    error.getPayload = () => errorPayload;
+    Object.freeze(error);
+
+    return error;
 };
 
 /**
@@ -167,6 +190,20 @@ export const aggregateError = (message: string, details: ErrorData[]) =>
       message,
     },
     HttpStatusCodes.INTERNAL_SERVER_ERROR);
+
+/**
+ * Error specific to OAuth specification.
+ * See https://tools.ietf.org/html/rfc6749
+ */
+export const oauthError = (error: string, description: string, uri?: string) =>
+  buildErrorWithCustomPayload(
+    error,
+    {
+      error,
+      error_description: description,
+      error_uri: uri,
+    },
+    HttpStatusCodes.BAD_REQUEST);
 
 /** Creates a Proxy around target which traps all errors and encapsulate into dependencyErrors. */
 export const dependencyErrorProxy = <T extends object>(target: T, targetName: string) => {
