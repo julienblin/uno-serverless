@@ -84,7 +84,7 @@ export interface RSSigningKeyServiceOptions {
   /**
    * The private key algorithm to use. Defaults to RS256.
    */
-  alg?: string | Promise<string>;
+  alg?: string | Promise<string | undefined>;
   /**
    * Base64-encoded PEM private key.
    */
@@ -92,7 +92,7 @@ export interface RSSigningKeyServiceOptions {
   /**
    * Base64-encoded PEM public key.
    */
-  publicKey?: string | Promise<string>;
+  publicKey?: string | Promise<string | undefined>;
 }
 
 /**
@@ -141,7 +141,7 @@ export class RSSigningKeyService implements SigningKeyService {
     if (!this.privateKey) {
       const privateKeyPem = new Buffer(await this.options.privateKey, "base64").toString("utf8");
       this.privateKey = {
-        alg: await this.options.alg || "RS256",
+        alg: (await this.options.alg) || "RS256",
         key: privateKeyPem,
         kid: createHash("md5").update(privateKeyPem).digest("hex"),
       };
@@ -152,8 +152,9 @@ export class RSSigningKeyService implements SigningKeyService {
 
   public async getSecretOrPublicKey(keyId?: string): Promise<string> {
     if (!this.publicKey) {
-      if (this.options.publicKey) {
-        this.publicKey = new Buffer(await this.options.publicKey, "base64").toString("utf8");
+      const awaitedPublicKey = await this.options.publicKey;
+      if (awaitedPublicKey) {
+        this.publicKey = new Buffer(awaitedPublicKey, "base64").toString("utf8");
       } else {
         const privateKey = await this.getSecretOrPrivateKey();
         this.publicKey = new Buffer(

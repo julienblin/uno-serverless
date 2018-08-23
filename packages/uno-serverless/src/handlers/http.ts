@@ -72,7 +72,7 @@ export const httpRouter = <TServices = any>(router: HttpRoutes<TServices>, param
   }));
 
   return async (arg: FunctionArg<HttpUnoEvent, TServices>) => {
-    const subPath = decodeURIComponent(arg.event.parameters[parameterName]);
+    const subPath = decodeURIComponent(arg.event.parameters[parameterName] || "");
 
     for (const routerPath of routerPaths) {
       const pathEvaluation = routerPath.pathEval.exec(subPath);

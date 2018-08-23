@@ -117,6 +117,8 @@ describe("httpRouter handler", () => {
 
     const tests = [
       { path: "", method: "get", expected: "empty" },
+      { path: undefined, method: "get", expected: "empty" },
+      { path: null, method: "get", expected: "empty" },
       { path: "CA/another-route", method: "get", expected: "first-param-CA" },
       { path: "users", method: "get", expected: "list-method" },
       { path: "users", method: "post", expected: "post-method" },
