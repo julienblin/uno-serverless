@@ -30,7 +30,7 @@ describe("http handler", () => {
 
     try {
       await handler();
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.code).to.equal(StandardErrorCodes.NotFound);
       expect(error.getStatusCode()).to.equal(HttpStatusCodes.NOT_FOUND);
@@ -84,7 +84,7 @@ describe("httpMethodMethod handler", () => {
         {
           httpMethod: "options",
         });
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.code).to.equal(StandardErrorCodes.MethodNotAllowed);
       expect(error.getStatusCode()).to.equal(HttpStatusCodes.METHOD_NOT_ALLOWED);
@@ -156,7 +156,7 @@ describe("httpRouter handler", () => {
           },
           url: "/api/users",
         });
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.code).to.equal(StandardErrorCodes.MethodNotAllowed);
     }
@@ -180,7 +180,7 @@ describe("httpRouter handler", () => {
           },
           url: "/api/users/foo",
         });
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.code).to.equal(StandardErrorCodes.NotFound);
     }

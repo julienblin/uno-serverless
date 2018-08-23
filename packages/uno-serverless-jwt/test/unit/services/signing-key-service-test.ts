@@ -34,7 +34,7 @@ describe("JWKSigningKeyService", () => {
   it("should throw if keyId is not provided.", async () => {
     try {
       await provider.getSecretOrPublicKey();
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.message).to.contain("keyId");
     }
@@ -43,7 +43,7 @@ describe("JWKSigningKeyService", () => {
   it("should throw if key cannot be found.", async () => {
     try {
       await provider.getSecretOrPublicKey(randomStr());
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.message).to.contain("find key");
     }
@@ -52,7 +52,7 @@ describe("JWKSigningKeyService", () => {
   it("should throw if asked for private key.", async () => {
     try {
       await provider.getSecretOrPrivateKey();
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.message).to.contain("private");
     }

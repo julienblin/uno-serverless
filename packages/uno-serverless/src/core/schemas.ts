@@ -1,3 +1,4 @@
+import { JSONSchema } from "./json-schema";
 
 export type UnoEventType = "any" | "http";
 
@@ -21,6 +22,13 @@ export interface UnoContext {
 
 export type HttpMethod = "get" | "head" | "options" | "post" | "put" | "patch" | "delete" | "trace" | "connect";
 
+export interface BodyOptions<T> {
+  /** After de-serialization, validate the object using this schema. */
+  validate?: JSONSchema;
+  /** Assign the parsed object to a specific class. */
+  assignClass?: { new(...args: any[]): T ; };
+}
+
 export interface HttpUnoEvent extends UnoEvent {
   headers: Record<string, string>;
   httpMethod: HttpMethod | string;
@@ -28,7 +36,7 @@ export interface HttpUnoEvent extends UnoEvent {
   parameters: Record<string, string>;
   rawBody: string;
   url: string;
-  body<T>(): T;
+  body<T>(options?: BodyOptions<T>): T;
   principal<T>(): Promise<T>;
   principal<T>(throwIfEmpty: false): Promise<T | undefined>;
 }

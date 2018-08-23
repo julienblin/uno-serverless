@@ -15,7 +15,7 @@ describe("AES256GCMSymmetricEncryptionService", () => {
 
     try {
       await cryptoService.decrypt(randomStr());
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.message).to.not.be.undefined;
     }

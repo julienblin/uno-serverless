@@ -84,7 +84,7 @@ describe("JWTTokenService", () => {
 
     try {
       await service.verify<typeof payload & TokenClaims>(alteredToken);
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.code).to.equal(StandardErrorCodes.Unauthorized);
       expect(error.message).to.contain("invalid token");

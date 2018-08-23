@@ -4,6 +4,7 @@ import { JSONSchema } from "./json-schema";
 
 const ajv = new Ajv({
   allErrors: true,
+  useDefaults: true,
 });
 
 /**

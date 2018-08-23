@@ -1,8 +1,9 @@
 import { parse as parseQS } from "querystring";
+import { validateAndThrow } from "../core";
 import {
   badRequestError, internalServerError, isCustomPayloadProvider, isStatusCodeProvider, unauthorizedError,
 } from "../core/errors";
-import { HttpUnoResponse } from "../core/schemas";
+import { BodyOptions, HttpUnoResponse } from "../core/schemas";
 import { HttpUnoEvent, isHttpUnoResponse, UnoEvent } from "../core/schemas";
 import { FunctionArg, FunctionExecution, Middleware } from "../core/uno";
 import { safeJSONStringify } from "../core/utils";
@@ -135,6 +136,25 @@ export const serializeBodyAsJSON =
   };
 
 /**
+ * Helper method to assist in body options application.
+ */
+export const applyBodyOptions = (parsed: any, options?: BodyOptions<any>): any => {
+  if (!options) {
+    return parsed;
+  }
+
+  if (options.validate) {
+    validateAndThrow(options.validate, parsed, "body", "Error while validating the body");
+  }
+
+  if (options.assignClass) {
+    parsed = Object.assign(new options.assignClass(), parsed);
+  }
+
+  return parsed;
+};
+
+/**
  * This middleware exposes a method in the service object to parse the body of a request as JSON.
  */
 export const parseBodyAsJSON = (reviver?: (key: any, value: any) => any)
@@ -143,16 +163,19 @@ export const parseBodyAsJSON = (reviver?: (key: any, value: any) => any)
     arg: FunctionArg<HttpUnoEvent, any>,
     next: FunctionExecution<HttpUnoEvent, any>): Promise<any> => {
 
-    arg.event.body = () => {
+    arg.event.body = (options?: BodyOptions<any>) => {
       if (!arg.event.rawBody) {
-        return undefined;
+        throw badRequestError("Body is empty.");
       }
 
+      let parsed;
       try {
-        return JSON.parse(arg.event.rawBody, reviver);
+        parsed = JSON.parse(arg.event.rawBody, reviver);
       } catch (error) {
         throw badRequestError(error.message);
       }
+
+      return applyBodyOptions(parsed, options);
     };
 
     return next(arg);
@@ -169,16 +192,19 @@ export const parseBodyAsFORM = ()
     arg: FunctionArg<HttpUnoEvent, any>,
     next: FunctionExecution<HttpUnoEvent, any>): Promise<any> => {
 
-    arg.event.body = () => {
-      if (!arg.event.body) {
-        return undefined;
+    arg.event.body = (options?: BodyOptions<any>) => {
+      if (!arg.event.rawBody) {
+        throw badRequestError("Body is empty.");
       }
 
+      let parsed;
       try {
-        return parseQS<any>(arg.event.rawBody);
+        parsed = parseQS<any>(arg.event.rawBody);
       } catch (error) {
         throw badRequestError(error.message);
       }
+
+      return applyBodyOptions(parsed, options);
     };
 
     return next(arg);
@@ -238,6 +264,9 @@ export const principalFromBasicAuthorizationHeader =
           return undefined;
         }
         const [username, password] = decodedBasicToken.split(":");
+        if (!username || !password) {
+          throw unauthorizedError("authorization header", "Missing username or password.");
+        }
 
         previousResult = func(arg, username, password);
         return previousResult;

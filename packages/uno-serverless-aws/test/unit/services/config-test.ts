@@ -66,7 +66,7 @@ describe("SSMParameterStoreConfigService", () => {
 
     try {
       await config.get("foo");
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.code).to.equal(StandardErrorCodes.ConfigurationError);
       expect(error.data.key).to.equal("foo");
@@ -75,7 +75,7 @@ describe("SSMParameterStoreConfigService", () => {
 
     try {
       await config.get("foo", true);
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.code).to.equal(StandardErrorCodes.ConfigurationError);
       expect(error.data.key).to.equal("foo");

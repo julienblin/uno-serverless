@@ -17,7 +17,7 @@ describe("errorLogging middleware", () => {
         {
           bar: "bar",
         });
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(logged).to.not.be.undefined;
       expect(logged).to.contain("foo");

@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
+import { JSONSchema } from "../../../src/core";
 import { notFoundError, oauthError, StandardErrorCodes } from "../../../src/core/errors";
 import { HttpStatusCodes } from "../../../src/core/http-status-codes";
 import { HttpUnoEvent } from "../../../src/core/schemas";
@@ -169,7 +170,6 @@ describe("httpErrors middleware", () => {
   });
 
   it("should handle custom payloads", async () => {
-    const message = randomStr();
     const handler = uno(testAdapter())
       .use(httpErrors())
       .handler(async () => {
@@ -265,6 +265,68 @@ describe("parseBodyAsJSON middleware", () => {
       });
   });
 
+  it("should parse body and validate.", async () => {
+    const body = {
+      foo: "bar",
+    };
+
+    const schema: JSONSchema = {
+      properties: {
+        bar: {
+          type: "string",
+        },
+      },
+      required: ["bar"],
+      type: "object",
+    };
+
+    const handler = uno(testAdapter())
+      .use(parseBodyAsJSON())
+      .handler<HttpUnoEvent, any>
+      (async ({ event }) => {
+        event.body({ validate: schema });
+      });
+
+    try {
+      await handler(
+        {
+          httpMethod: "get",
+          rawBody: JSON.stringify(body),
+          unoEventType: "http",
+        });
+      expect.fail();
+    } catch (error) {
+      expect(error.code).to.equal(StandardErrorCodes.ValidationError);
+      expect(error.details[0].code).to.equal("required");
+    }
+  });
+
+  it("should parse body and assign.", async () => {
+    const body = {
+      foo: "bar",
+    };
+
+    class Result {
+      public foo?: string;
+    }
+
+    const handler = uno(testAdapter())
+      .use(parseBodyAsJSON())
+      .handler<HttpUnoEvent, any>
+      (async ({ event }) => {
+        const result = event.body({ assignClass: Result });
+        expect(result).to.be.instanceOf(Result);
+        expect(result.foo).to.equal("bar");
+      });
+
+    await handler(
+      {
+        httpMethod: "get",
+        rawBody: JSON.stringify(body),
+        unoEventType: "http",
+      });
+  });
+
 });
 
 describe("parseBodyAsFORM middleware", () => {
@@ -279,6 +341,68 @@ describe("parseBodyAsFORM middleware", () => {
       .handler<HttpUnoEvent, any>
       (async ({ event }) => {
         expect(event.body()).to.deep.equal(body);
+      });
+
+    await handler(
+      {
+        httpMethod: "get",
+        rawBody: "foo=bar",
+        unoEventType: "http",
+      });
+  });
+
+  it("should parse body and validate.", async () => {
+    const body = {
+      foo: "bar",
+    };
+
+    const schema: JSONSchema = {
+      properties: {
+        bar: {
+          type: "string",
+        },
+      },
+      required: ["bar"],
+      type: "object",
+    };
+
+    const handler = uno(testAdapter())
+      .use(parseBodyAsFORM())
+      .handler<HttpUnoEvent, any>
+      (async ({ event }) => {
+        event.body({ validate: schema });
+      });
+
+    try {
+      await handler(
+        {
+          httpMethod: "get",
+          rawBody: "foo=bar",
+          unoEventType: "http",
+        });
+      expect.fail();
+    } catch (error) {
+      expect(error.code).to.equal(StandardErrorCodes.ValidationError);
+      expect(error.details[0].code).to.equal("required");
+    }
+  });
+
+  it("should parse body and assign.", async () => {
+    const body = {
+      foo: "bar",
+    };
+
+    class Result {
+      public foo?: string;
+    }
+
+    const handler = uno(testAdapter())
+      .use(parseBodyAsFORM())
+      .handler<HttpUnoEvent, any>
+      (async ({ event }) => {
+        const result = event.body({ assignClass: Result });
+        expect(result).to.be.instanceOf(Result);
+        expect(result.foo).to.equal("bar");
       });
 
     await handler(
@@ -394,7 +518,7 @@ describe("principalFromBasicAuthorizationHeader", () => {
           rawBody: "foo=bar",
           unoEventType: "http",
         });
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.code).to.equal(StandardErrorCodes.Unauthorized);
     }
@@ -427,7 +551,7 @@ describe("principalFromBasicAuthorizationHeader", () => {
           rawBody: "foo=bar",
           unoEventType: "http",
         });
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.code).to.equal(StandardErrorCodes.Unauthorized);
     }
@@ -446,7 +570,7 @@ describe("principalFromBasicAuthorizationHeader", () => {
       }))
       .handler<HttpUnoEvent, any>
       (async ({ event }) => {
-        const principal = await event.principal<any>();
+        await event.principal<any>();
       });
 
     try {
@@ -459,7 +583,7 @@ describe("principalFromBasicAuthorizationHeader", () => {
           rawBody: "foo=bar",
           unoEventType: "http",
         });
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.code).to.equal(StandardErrorCodes.Unauthorized);
     }
