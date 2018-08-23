@@ -70,7 +70,7 @@ describe("LocalEventDispatcher", () => {
         id: randomStr(12),
         type: EventTypes.NewUser,
       });
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.message).to.equal(thrownError.message);
       expect(allRun).to.equal(1);
@@ -98,7 +98,7 @@ describe("LocalEventDispatcher", () => {
         id: randomStr(12),
         type: EventTypes.NewUser,
       });
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.code).to.equal(StandardErrorCodes.AggregateError);
       expect(error.details[0].message).to.equal(thrownError1.message);

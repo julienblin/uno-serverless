@@ -65,7 +65,7 @@ describe("dependencyErrorProxy", () => {
 
     try {
       proxy.standardFunc(true);
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.code).to.equal(StandardErrorCodes.DependencyError);
       expect(error.target).to.equal("TestTarget");
@@ -88,7 +88,7 @@ describe("dependencyErrorProxy", () => {
 
     try {
       await proxy.promiseFunc(true);
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.code).to.equal(StandardErrorCodes.DependencyError);
       expect(error.target).to.equal("TestTarget");
@@ -101,7 +101,7 @@ describe("dependencyErrorProxy", () => {
 
     try {
       proxy.managedError();
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.code).to.equal(StandardErrorCodes.InternalServerError);
     }

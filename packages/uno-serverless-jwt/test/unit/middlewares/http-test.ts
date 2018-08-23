@@ -35,7 +35,7 @@ describe("principalFromBearerToken", () => {
           authorization: "",
         },
       });
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.code).to.equal(StandardErrorCodes.Unauthorized);
     }

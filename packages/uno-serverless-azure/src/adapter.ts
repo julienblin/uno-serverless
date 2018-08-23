@@ -1,6 +1,6 @@
 import {
-  GenericFunctionBuilder, HttpStatusCodes, HttpUnoEvent,
-  ProviderAdapter, UnoContext, UnoEvent } from "uno-serverless";
+  applyBodyOptions, BodyOptions, GenericFunctionBuilder,
+  HttpStatusCodes, HttpUnoEvent, ProviderAdapter, UnoContext, UnoEvent } from "uno-serverless";
 import { AzureFunctionsContext, AzureFunctionsHttpEvent, AzureFunctionsHttpResponse } from "./azure-functions-schemas";
 
 const defaultPrincipal = async (throwIfEmpty = true) => {
@@ -31,7 +31,7 @@ export const azureFunctionAdapter = (): ProviderAdapter => {
           if (typeof event === "object" && typeof event !== "string" && "method" in event) {
             const azHttpEvent = event as AzureFunctionsHttpEvent;
             const httpUnoEvent: HttpUnoEvent = {
-              body: () => azHttpEvent.body,
+              body: (options?: BodyOptions<any>) => applyBodyOptions(azHttpEvent.body, options),
               headers: azHttpEvent.headers || {},
               httpMethod: azHttpEvent.method && azHttpEvent.method.toLowerCase(),
               original: azHttpEvent,

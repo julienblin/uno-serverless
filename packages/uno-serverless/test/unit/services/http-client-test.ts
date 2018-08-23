@@ -155,7 +155,7 @@ describe("httpClientFactory", () => {
       const data = { title: randomStr() };
       try {
         await test(client, postId, data);
-        expect(false);
+        expect.fail();
       } catch (error) {
         const httpClientError = error as HttpClientError;
         expect(httpClientError.response!.status).to.equal(HttpStatusCodes.NOT_FOUND);

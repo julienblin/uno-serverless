@@ -56,7 +56,7 @@ describe("authorizerBearer handler", () => {
         },
         createLambdaContext(),
         (e, r) => { });
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.code).to.equal(StandardErrorCodes.Unauthorized);
     }

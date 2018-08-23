@@ -2,7 +2,7 @@ import { HttpUnoEvent } from "../core";
 import { validationError } from "../core/errors";
 import { JSONSchema } from "../core/json-schema";
 import { FunctionArg, FunctionExecution, Middleware } from "../core/uno";
-import { validate } from "../core/validator";
+import { validateAndThrow } from "../core/validator";
 
 /**
  * This middleware validates the event using JSON Schema.
@@ -13,16 +13,14 @@ export const validateEvent = (schema: JSONSchema)
     arg: FunctionArg<any, any>,
     next: FunctionExecution<any, any>): Promise<any> => {
 
-    const validationErrors = validate(schema, arg.event, "event");
-    if (validationErrors.length > 0) {
-      throw validationError(validationErrors);
-    }
+    validateAndThrow(schema, arg.event, "event");
 
     return next(arg);
   };
 };
 
 /**
+ * @deprecated - Use event.body({ validate: schema }) instead.
  * This middleware validates the body using JSON Schema.
  * Requires the addition of a middleware to parse the body before it.
  */
@@ -40,23 +38,14 @@ export const validateBody = (schema: JSONSchema)
         return next(arg);
     }
 
-    const bodyAsObject = arg.event.body();
-
-    if (!bodyAsObject) {
-      throw validationError([{ code: "required", message: "Missing body", target: "body" }]);
-    }
-
-    const validationErrors = validate(schema, bodyAsObject, "body");
-    if (validationErrors.length > 0) {
-      throw validationError(validationErrors);
-    }
+    arg.event.body({ validate: schema });
 
     return next(arg);
   };
 };
 
 /**
- * This middleware validates the body using JSON Schema.
+ * This middleware validates the parameters using JSON Schema.
  * Requires the addition of a middleware to parse the parameters before it.
  */
 export const validateParameters = (schema: JSONSchema)
@@ -65,10 +54,7 @@ export const validateParameters = (schema: JSONSchema)
     arg: FunctionArg<HttpUnoEvent, any>,
     next: FunctionExecution<any, any>): Promise<any> => {
 
-    const validationErrors = validate(schema, arg.event.parameters, "parameters");
-    if (validationErrors.length > 0) {
-      throw validationError(validationErrors);
-    }
+    validateAndThrow(schema, arg.event.parameters, "parameters");
 
     return next(arg);
   };

@@ -31,7 +31,7 @@ describe("validateEvent middleware", () => {
         {
           foo: randomStr(),
         });
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.code).to.equal(StandardErrorCodes.ValidationError);
     }
@@ -65,10 +65,10 @@ describe("validateBody middleware", () => {
     try {
       await handler(
         {
-          body: JSON.stringify({ foo: "foo" }),
           httpMethod: "put",
+          rawBody: JSON.stringify({ foo: "foo" }),
         });
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.code).to.equal(StandardErrorCodes.ValidationError);
     }
@@ -87,9 +87,9 @@ describe("validateBody middleware", () => {
         {
           httpMethod: "post",
         });
-      expect(false);
+      expect.fail();
     } catch (error) {
-      expect(error.code).to.equal(StandardErrorCodes.ValidationError);
+      expect(error.code).to.equal(StandardErrorCodes.BadRequest);
     }
   });
 
@@ -118,7 +118,7 @@ describe("validateBody middleware", () => {
         {
           httpMethod: "patch",
         });
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.message).to.contain("body");
     }
@@ -146,25 +146,11 @@ describe("validateParameters middleware", () => {
     try {
       await handler(
         {
-          pathParameters: { bar: "foo" },
-          queryStringParameters: { id: "5" },
+          parameters: { bar: "foo", id: "5" },
         });
-      expect(false);
+      expect.fail();
     } catch (error) {
       expect(error.code).to.equal(StandardErrorCodes.ValidationError);
-    }
-  });
-
-  it("should throw if missing parameters.", async () => {
-    const handler = uno(testAdapter())
-      .use(validateParameters({}))
-      .handler(async () => { });
-
-    try {
-      await handler();
-      expect(false);
-    } catch (error) {
-      expect(error.message).to.contain("parameters");
     }
   });
 

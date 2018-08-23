@@ -1,8 +1,11 @@
 import {
-  GenericFunctionBuilder, HttpUnoEvent, isHttpUnoResponse,
-  ProviderAdapter, UnoContext } from "uno-serverless";
+  BodyOptions, GenericFunctionBuilder, HttpUnoEvent,
+  isHttpUnoResponse, ProviderAdapter, UnoContext } from "uno-serverless";
 
-const throwBody = () => { throw new Error("Unable to parse body. Did you forget to add a middleware?"); };
+const throwBody = (options?: BodyOptions<any>) => {
+  throw new Error("Unable to parse body. Did you forget to add a middleware?");
+};
+
 const defaultPrincipal = async (throwIfEmpty = true) => {
   if (throwIfEmpty) {
     throw new Error("Unable to retrieve principal. Did you forget to add a middleware?");
