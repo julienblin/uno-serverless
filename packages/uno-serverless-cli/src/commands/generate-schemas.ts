@@ -10,7 +10,7 @@ export const builder = (yargs) => {
     .positional("files", { description: "pattern to select files", type: "string" })
     .option(
       "format",
-      { choices: ["json", "yaml", "ts"], default: "json", alias: "f", describe: "Output format" })
+      { choices: ["json", "yaml", "ts", "openapi3"], default: "json", alias: "f", describe: "Output format" })
     .option(
       "out",
       { alias: "o", describe: "Output to file" });
@@ -21,10 +21,13 @@ export const handler = (yargs) => {
     const generation = new SchemaGeneration({
       files: yargs.files,
       format: yargs.format,
+      out: yargs.out,
     });
     const result = generation.run();
     if (yargs.out) {
-      writeFileSync(yargs.out, result);
+      if (yargs.format !== "openapi3") {
+        writeFileSync(yargs.out, result);
+      }
     } else {
       process.stdout.write(result);
     }

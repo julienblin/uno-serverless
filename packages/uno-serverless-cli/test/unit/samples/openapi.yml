@@ -1,0 +1,243 @@
+openapi: 3.0.0
+info:
+  title: Sample API
+  description: |
+    Sample API
+  version: 1.0.9999
+tags:
+  - name: Api
+    description: Operations related to general API operations
+  - name: Authentication
+    description: Operations related to authentication
+
+paths:
+  /info:
+    get:
+      summary: 'Get general api information, like the exact version.'
+      tags:
+        - Api
+      responses:
+        '200':
+          description: The Api information
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Information about the API.
+                required:
+                  - name
+                  - environment
+                  - version
+                properties:
+                  name:
+                    type: string
+                    description: The name of the API.
+                  environment:
+                    type: string
+                    description: The name of the environment.
+                  version:
+                    type: string
+                    description: >
+                      The exact version of the deployed api. Recommendation is
+                      to follow the SemVer 2.0 specification
+                      (http://semver.org/)
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: The last deployment date and time
+        5XX:
+          $ref: '#/components/responses/internalServerError'
+  /api/health:
+    get:
+      summary: Get health and self-diagnostic information.
+      tags:
+        - Api
+      responses:
+        '200':
+          description: The system is healthy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResult'
+        '400':
+          description: The system is healthy.
+          headers:
+            x-amzn-RequestId:
+              $ref: '#/components/headers/x-amzn-RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResult'
+        5XX:
+          description: The health checks failed.
+          headers:
+            x-amzn-RequestId:
+              $ref: '#/components/headers/x-amzn-RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResult'
+  
+components:
+  
+  headers:
+    x-amzn-RequestId:
+      description: The request id that uniquely identifies this request.
+      schema:
+        type: string
+  
+  responses:
+    internalServerError:
+      description: Server error - something went wrong.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    unauthorized:
+      description: >
+        Access has been denied because the user does not have the necessary
+        priviledges to call the endpoint.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    forbidden:
+      description: >
+        Access has been denied because the user does not have the necessary
+        priviledges to call the endpoint.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    notfound:
+      description: The requested item or item to update was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+            
+    badRequest:
+      description: The request is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    Address:
+      type: object
+      properties:
+        street:
+          type: string
+        city:
+          type: string
+      additionalProperties: false
+      required:
+        - city
+        - street
+    ErrorResponse:
+      type: object
+      description: Standard error response message.
+      required:
+        - error
+      properties:
+        error:
+          $ref: '#/components/schemas/Error'
+    Error:
+      type: object
+      description: Information about an error.
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: One of a server-defined set of error codes.
+          enum:
+            - internalServerError
+            - notFound
+            - goneError
+            - badRequest
+            - validationError
+            - configurationError
+            - dependencyError
+        message:
+          type: string
+          description: A human-readable representation of the error.
+        target:
+          type: string
+          description: The target of the error.
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+          description: >
+            An array of details about specific errors that led to this reported
+            error.
+        innererror:
+          $ref: '#/components/schemas/InnerError'
+    InnerError:
+      type: object
+      description: More details about an error.
+      properties:
+        code:
+          type: string
+          description: >-
+            A more specific error code than was provided by the containing
+            error.
+        innererror:
+          type: object
+          description: >
+            An object containing more specific information than the current
+            object about the error.
+    HealthCheckResult:
+      type: object
+      description: Health check result (recursive)
+      required:
+        - name
+        - status
+        - elapsed
+      properties:
+        name:
+          type: string
+          description: The health check name.
+        target:
+          type: string
+          description: 'An indication of the system targeted for the health check, if any.'
+        status:
+          type: string
+          description: The status of the health check
+          enum:
+            - Inconclusive
+            - Ok
+            - Warning
+            - Error
+        error:
+          type: object
+          description: Description of the error that has occured.
+        elapsed:
+          type: number
+          description: The number of milliseconds taken by the health check verification.
+        children:
+          type: array
+          description: 'Sub health checks, if any.'
+          items:
+            $ref: '#/components/schemas/HealthCheckResult'
+    
+    OAuthError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: >
+            See https://tools.ietf.org/html/rfc6749#section-4.1.2.1
+          enum:
+            - invalid_request
+            - invalid_client
+            - invalid_grant
+            - unauthorized_client
+            - unsupported_grant_type
+        error_description:
+          type: string
+          description: See https://tools.ietf.org/html/rfc6749#section-4.1.2.1
+      required:
+        - error

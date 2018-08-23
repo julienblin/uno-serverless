@@ -1,6 +1,7 @@
 import { camelCase } from "change-case";
+import { readFileSync, writeFileSync } from "fs";
 import * as glob from "glob";
-import * as YAML from "json2yaml";
+import * as YAML from "js-yaml";
 import { EOL } from "os";
 import * as path from "path";
 import * as toposort from "toposort";
@@ -8,7 +9,7 @@ import * as TJS from "typescript-json-schema";
 
 export interface SchemaGenerationOptions {
   files: string;
-  format: "json" | "yaml" | "ts";
+  format: "json" | "yaml" | "ts" | "openapi3";
   out?: string;
 }
 
@@ -28,9 +29,11 @@ export class SchemaGeneration {
       case "json":
         return JSON.stringify(jsonSchema, undefined, 2);
       case "yaml":
-        return YAML.stringify(jsonSchema);
+        return YAML.safeDump(jsonSchema);
       case "ts":
         return this.tsFormat(jsonSchema);
+      case "openapi3":
+        return this.openApi3Schemas(jsonSchema, this.options.out);
       default:
         throw new Error("Unsupported format: " + this.options.format);
     }
@@ -156,6 +159,38 @@ export class SchemaGeneration {
       }
     });
     return result;
+  }
+
+  private openApi3Schemas(jsonSchema: TJS.Definition, out?: string): string {
+    const replaceDefinitionsRef = (schemaObj: any) => {
+      Object.keys(schemaObj).forEach((prop: any) => {
+        const value = schemaObj[prop];
+        if (typeof value === "object") {
+          if (value.$ref) {
+            value.$ref = value.$ref.replace("#/definitions/", "#/components/schemas/");
+          } else {
+            replaceDefinitionsRef(value);
+          }
+        }
+      });
+    };
+
+    const sortedProperties = Object.keys(jsonSchema.definitions!)
+      .sort()
+      .reduce((acc, cur) => { acc[cur] = jsonSchema.definitions![cur]; return acc; }, {});
+
+    replaceDefinitionsRef(sortedProperties);
+
+    if (out) {
+      const openAPIFile = YAML.safeLoad(readFileSync(out).toString());
+      openAPIFile.components.schemas = {
+        ...openAPIFile.components && openAPIFile.components.schemas,
+        ...sortedProperties,
+      };
+      writeFileSync(out, YAML.safeDump(openAPIFile));
+    }
+
+    return YAML.safeDump(sortedProperties);
   }
 }
 

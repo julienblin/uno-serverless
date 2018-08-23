@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { readFileSync, writeFileSync } from "fs";
 import * as yaml from "js-yaml";
 import * as path from "path";
 import { SchemaGeneration } from "../../../src/services/schema-generation";
@@ -8,6 +9,7 @@ describe("SchemaGeneration", function() {
 
   const basePath = path.resolve(__dirname);
   const files = `${basePath}/../samples/entities/*.ts`;
+  const openApiSchemaFile = `${basePath}/../samples/openapi.yml`;
 
   it("should generate JSON schemas", () => {
 
@@ -45,6 +47,39 @@ describe("SchemaGeneration", function() {
     const result = generation.run();
     expect(result).to.contain("userSchema");
     expect(result).to.contain("addressSchema");
+  });
+
+  it("should generate OpenAPI3 schemas", () => {
+
+    const generation = new SchemaGeneration({
+      files,
+      format: "openapi3",
+    });
+
+    const result = generation.run();
+    expect(result).to.contain("User");
+    expect(result).to.contain("Address");
+    expect(result).to.not.contain("#/definitions");
+  });
+
+  it("should write OpenAPI3 schemas files", () => {
+
+    const openApiFileContent = readFileSync(openApiSchemaFile);
+
+    try {
+      const generation = new SchemaGeneration({
+        files,
+        format: "openapi3",
+        out: openApiSchemaFile,
+      });
+
+      generation.run();
+      const openApiFileContentModified = readFileSync(openApiSchemaFile).toString();
+      expect(openApiFileContentModified).to.contain("User");
+      expect(openApiFileContentModified).to.contain("Address");
+    } finally {
+      writeFileSync(openApiSchemaFile, openApiFileContent);
+    }
   });
 
 });

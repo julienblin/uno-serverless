@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- CLI: Added openapi3 schema generation option to update openapi3 YAML file definition with schemas.
+
 ### Changed
 - Fixed a bug in httpRouter when proxy parameter is null or undefined, preventing routing at the root level
 - Fixed options signature for RSSigningKeyService (undefined result for promises)
