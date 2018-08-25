@@ -9,6 +9,8 @@ describe("SchemaGeneration", function() {
 
   const basePath = path.resolve(__dirname);
   const files = `${basePath}/../samples/entities/*.ts`;
+  const filesWithPath = `${basePath}/../samples/entities-path/*.ts`;
+  const tsConfig = `${basePath}/../samples/tsconfig.json`;
   const openApiSchemaFile = `${basePath}/../samples/openapi.yml`;
 
   it("should generate JSON schemas", () => {
@@ -41,6 +43,19 @@ describe("SchemaGeneration", function() {
 
     const generation = new SchemaGeneration({
       files,
+      format: "ts",
+    });
+
+    const result = generation.run();
+    expect(result).to.contain("userSchema");
+    expect(result).to.contain("addressSchema");
+  });
+
+  it("should generate TS schemas with tsconfig", () => {
+
+    const generation = new SchemaGeneration({
+      config: tsConfig,
+      files: filesWithPath,
       format: "ts",
     });
 

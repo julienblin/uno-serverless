@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - SQSEventPublisher to publish events using AWS Simple Queue Service
 - SQSEvent & SQSEventBatch as specialized handlers for Simple Queue Service-backed lambdas
+- CLI: generate-schemas: added -config option to specify tsconfig.json file (Fix #60)
 
 ## [0.49.0] - 2018-08-23
 ### Added

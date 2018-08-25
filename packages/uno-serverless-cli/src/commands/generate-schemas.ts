@@ -12,6 +12,9 @@ export const builder = (yargs) => {
       "format",
       { choices: ["json", "yaml", "ts", "openapi3"], default: "json", alias: "f", describe: "Output format" })
     .option(
+      "config",
+      { alias: "c", describe: "Path to tsconfig.json file" })
+    .option(
       "out",
       { alias: "o", describe: "Output to file" });
 };
@@ -19,6 +22,7 @@ export const builder = (yargs) => {
 export const handler = (yargs) => {
   try {
     const generation = new SchemaGeneration({
+      config: yargs.config,
       files: yargs.files,
       format: yargs.format,
       out: yargs.out,

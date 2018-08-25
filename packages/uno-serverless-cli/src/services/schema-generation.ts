@@ -5,9 +5,12 @@ import * as YAML from "js-yaml";
 import { EOL } from "os";
 import * as path from "path";
 import * as toposort from "toposort";
+import * as ts from "typescript";
 import * as TJS from "typescript-json-schema";
 
 export interface SchemaGenerationOptions {
+  /** Path to tsconfig.json */
+  config?: string;
   files: string;
   format: "json" | "yaml" | "ts" | "openapi3";
   out?: string;
@@ -15,11 +18,11 @@ export interface SchemaGenerationOptions {
 
 export class SchemaGeneration {
 
-  public constructor(private readonly options: SchemaGenerationOptions) {}
+  public constructor(private readonly options: SchemaGenerationOptions) { }
 
   public run(): string {
     const allFiles = glob.sync(this.options.files).map((x) => path.resolve(x)).map(this.normalizeFileName);
-    const program = TJS.getProgramFromFiles(allFiles, { strictNullChecks: true });
+    const program = TJS.getProgramFromFiles(allFiles, this.getCompilerOptions());
     const generator = TJS.buildGenerator(program, { noExtraProps: true, required: true })!;
     const mainFileSymbols = generator.getMainFileSymbols(program, allFiles);
     const jsonSchema = generator.getSchemaForSymbols(mainFileSymbols);
@@ -41,9 +44,28 @@ export class SchemaGeneration {
 
   private normalizeFileName(fn: string): string {
     while (fn.substr(0, 2) === "./") {
-        fn = fn.substr(2);
+      fn = fn.substr(2);
     }
     return fn.replace(/\\/g, "/");
+  }
+
+  private getCompilerOptions() {
+    if (!this.options.config) {
+      return ({ strictNullChecks: true });
+    }
+
+    const parseResult = ts.parseConfigFileTextToJson(this.options.config, ts.sys.readFile(this.options.config)!);
+    const config = ts.parseJsonConfigFileContent(
+      parseResult.config, ts.sys, path.dirname(this.options.config), {}, path.basename(this.options.config));
+
+    const options = config.options;
+    options.noEmit = true;
+    delete options.out;
+    delete options.outDir;
+    delete options.outFile;
+    delete options.declaration;
+
+    return options;
   }
 
   /* Formats a jsonSchema as a tslint-compatible Typescript file. */
