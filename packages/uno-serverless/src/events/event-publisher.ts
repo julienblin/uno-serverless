@@ -1,6 +1,6 @@
 import { Event } from "./event";
 
-/** EventPublisher publishes event for defered execution. */
+/** EventPublisher publishes event for deferred execution. */
 export interface EventPublisher {
 
   /**

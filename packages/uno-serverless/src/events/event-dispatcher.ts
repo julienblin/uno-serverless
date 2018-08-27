@@ -61,3 +61,16 @@ export class LocalEventDispatcher implements EventPublisher, EventDispatcher {
   }
 
 }
+
+/**
+ * Very simple EventDispatcher that forwards events to a different EventPublisher.
+ */
+export class ForwardEventDispatcher implements EventDispatcher {
+
+  public constructor(private readonly publisher: EventPublisher) {}
+
+  public dispatch(evt: Event): Promise<void> {
+    return this.publisher.publish(evt);
+  }
+
+}
