@@ -1,5 +1,6 @@
-import { BlobService, createBlobService } from "azure-storage";
-import { checkHealth, CheckHealth, HttpStatusCodes, KeyValueRepository, lazyAsync, randomStr } from "uno-serverless";
+import { BlobService, common, createBlobService } from "azure-storage";
+import * as uno from "uno-serverless";
+import { ContinuationArray, decodeNextToken, encodeNextToken, ListOptions, ListResult } from "uno-serverless";
 
 export interface BlobStorageKeyValueRepositoryOptionsWithService {
   /** The Storage blob service instance */
@@ -35,10 +36,10 @@ export type BlobStorageKeyValueRepositoryOptions =
   (BlobStorageKeyValueRepositoryOptionsWithService | BlobStorageKeyValueRepositoryOptionsWithConnectionString)
   & BlobStorageKeyValueRepositoryCommonOptions;
 
-export class BlobStorageKeyValueRepository implements KeyValueRepository, CheckHealth {
+export class BlobStorageKeyValueRepository implements uno.KeyValueRepository, uno.CheckHealth {
 
   private readonly options: BlobStorageKeyValueRepositoryOptions;
-  private readonly blobService = lazyAsync(() => this.buildBlobService());
+  private readonly blobService = uno.lazyAsync(() => this.buildBlobService());
 
   public constructor(options: BlobStorageKeyValueRepositoryOptions) {
     this.options = {
@@ -53,10 +54,21 @@ export class BlobStorageKeyValueRepository implements KeyValueRepository, CheckH
   }
 
   public async checkHealth() {
-    return checkHealth(
+    return uno.checkHealth(
       "BlobStorageKeyValueRepository",
       `${await this.options.container}${this.options.path ? "/" + this.options.path : ""}`,
       async () => this.createContainerIfNotExists());
+  }
+
+  public async clear(): Promise<void> {
+    let nextToken: string | undefined;
+    do {
+      const results = await this.listBlobs();
+      nextToken = results.nextToken;
+      for (const result of results.items) {
+        await this.delete(result);
+      }
+    } while (nextToken);
   }
 
   public async delete(key: string): Promise<void> {
@@ -84,7 +96,7 @@ export class BlobStorageKeyValueRepository implements KeyValueRepository, CheckH
         container,
         this.getKey(key),
         (err, text, result, response) => {
-          if (response && response.statusCode === HttpStatusCodes.NOT_FOUND) {
+          if (response && response.statusCode === uno.HttpStatusCodes.NOT_FOUND) {
             return resolve(undefined);
           }
 
@@ -104,6 +116,19 @@ export class BlobStorageKeyValueRepository implements KeyValueRepository, CheckH
           }
         });
     });
+  }
+
+  public async list<T>(options: ListOptions = {}): Promise<ContinuationArray<ListResult<T>>> {
+    const results = await this.listBlobs(options);
+    const allItems = await Promise.all(results.items.map((x) => this.get<T>(x)));
+
+    return {
+      items: results.items.map((x, index) => ({
+        id: x,
+        item: allItems[index]!,
+      })),
+      nextToken: results.nextToken,
+    };
   }
 
   public async set<T>(key: string, value: T): Promise<void> {
@@ -143,7 +168,47 @@ export class BlobStorageKeyValueRepository implements KeyValueRepository, CheckH
     });
   }
 
-  private getKey(key: string) { return `${this.options.path ? `${this.options.path}/` : "" }${key}`; }
+  private getKey(key: string) { return `${this.options.path ? `${this.options.path}/` : ""}${key}`; }
+
+  private async listBlobs(options: uno.ListOptions = {}): Promise<ContinuationArray<string>> {
+    const continuationToken = decodeNextToken<common.ContinuationToken>(options.nextToken);
+    const svc = await this.blobService();
+    const container = await this.options.container;
+    return new Promise<ContinuationArray<string>>((resolve, reject) => {
+      if (options.prefix) {
+        svc.listBlobsSegmentedWithPrefix(
+          container,
+          options.prefix,
+          continuationToken as any,
+          { maxResults: options.max },
+          (err, result) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve({
+                items: result.entries.map((x) => x.name),
+                nextToken: encodeNextToken(result.continuationToken),
+              });
+            }
+          });
+      } else {
+        svc.listBlobsSegmented(
+          container,
+          continuationToken as any,
+          { maxResults: options.max },
+          (err, result) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve({
+                items: result.entries.map((x) => x.name),
+                nextToken: encodeNextToken(result.continuationToken),
+              });
+            }
+          });
+      }
+    });
+  }
 
   private async buildBlobService(): Promise<BlobService> {
     if ((this.options as any).blobService) {
