@@ -1,5 +1,5 @@
 import { S3 } from "aws-sdk";
-import { checkHealth, CheckHealth, HttpStatusCodes, KeyValueRepository, randomStr } from "uno-serverless";
+import * as uno from "uno-serverless";
 import { S3Client } from "./s3-client";
 
 export interface S3KeyValueRepositoryOptions {
@@ -28,7 +28,7 @@ export interface S3KeyValueRepositoryOptions {
 /**
  * KeyValueRepository that uses S3 as a backing store.
  */
-export class S3KeyValueRepository implements KeyValueRepository, CheckHealth {
+export class S3KeyValueRepository implements uno.KeyValueRepository, uno.CheckHealth {
 
   /** Options resolved with default values. */
   private readonly options: Required<S3KeyValueRepositoryOptions>;
@@ -55,14 +55,32 @@ export class S3KeyValueRepository implements KeyValueRepository, CheckHealth {
   }
 
   public async checkHealth() {
-    return checkHealth(
+    return uno.checkHealth(
       "S3KeyValueRepository",
       `${await this.options.bucket}/${this.options.path}`,
       async () => {
-        const testKey = randomStr();
+        const testKey = uno.randomStr();
         await this.set(testKey, { testKey });
         await this.delete(testKey);
       });
+  }
+
+  public async clear() {
+    const Bucket = await this.options.bucket;
+    let continuationToken: string | undefined;
+    do {
+      const allObjects = await this.options.s3.listObjectsV2({
+        Bucket,
+        Prefix: await this.options.path,
+      }).promise();
+      continuationToken = allObjects.ContinuationToken;
+      for (const s3Obj of allObjects.Contents || []) {
+        await this.options.s3.deleteObject({
+          Bucket,
+          Key: s3Obj.Key!,
+        }).promise();
+      }
+    } while (continuationToken);
   }
 
   /** Delete the value associated with the key */
@@ -86,12 +104,33 @@ export class S3KeyValueRepository implements KeyValueRepository, CheckHealth {
 
       return this.options.deserialize<T>(response.Body.toString());
     } catch (error) {
-      if (error.statusCode === HttpStatusCodes.NOT_FOUND) {
+      if (error.statusCode === uno.HttpStatusCodes.NOT_FOUND) {
         return undefined;
       }
 
       throw error;
     }
+  }
+
+  public async list<T>(options: uno.ListOptions = {}): Promise<uno.ContinuationArray<uno.ListResult<T>>> {
+    const listResult = await this.options.s3.listObjectsV2({
+      Bucket: await this.options.bucket,
+      ContinuationToken: options.nextToken,
+      MaxKeys: options.max,
+      Prefix: `${this.options.path ? this.options.path + "/" : ""}${options.prefix ? options.prefix : ""}`,
+    }).promise();
+
+    const allKeys = (listResult.Contents || []).map(
+      (x) => x.Key!.startsWith(this.options.path) ? x.Key!.slice(this.options.path.length + 1) : x.Key!);
+    const allItems = await Promise.all(allKeys.map((x) => this.get<T>(x)));
+
+    return {
+      items: allKeys.map((x, index) => ({
+        id: x,
+        item: allItems[index]!,
+      })),
+      nextToken: listResult.ContinuationToken,
+    };
   }
 
   /** Set the value associated with the key */
@@ -106,5 +145,7 @@ export class S3KeyValueRepository implements KeyValueRepository, CheckHealth {
   }
 
   /** Computes the path + key. */
-  private getKey(key: string) { return `${this.options.path}/${key}`; }
+  private getKey(key: string) {
+    return `${this.options.path ? this.options.path + "/" : ""}${key}`;
+  }
 }
