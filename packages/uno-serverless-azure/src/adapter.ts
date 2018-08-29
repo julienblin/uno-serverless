@@ -32,6 +32,7 @@ export const azureFunctionAdapter = (): ProviderAdapter => {
             const azHttpEvent = event as AzureFunctionsHttpEvent;
             const httpUnoEvent: HttpUnoEvent = {
               body: (options?: BodyOptions<any>) => applyBodyOptions(azHttpEvent.body, options),
+              clientIpAddress: azHttpEvent.headers && azHttpEvent.headers["x-forwarded-for"],
               headers: azHttpEvent.headers || {},
               httpMethod: azHttpEvent.method && azHttpEvent.method.toLowerCase(),
               original: azHttpEvent,
