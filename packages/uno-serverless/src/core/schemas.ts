@@ -30,6 +30,7 @@ export interface BodyOptions<T> {
 }
 
 export interface HttpUnoEvent extends UnoEvent {
+  clientIpAddress?: string;
   headers: Record<string, string>;
   httpMethod: HttpMethod | string;
   original: any;

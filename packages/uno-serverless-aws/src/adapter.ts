@@ -42,6 +42,8 @@ export const awsLambdaAdapter = (): ProviderAdapter => {
         if (typeof event === "object" && typeof event !== "string" && "httpMethod" in event) {
           const httpUnoEvent: HttpUnoEvent = {
             body: throwBody,
+            clientIpAddress:
+              event.requestContext && event.requestContext.identity && event.requestContext.identity.sourceIp,
             headers: event.headers || {},
             httpMethod: event.httpMethod.toLowerCase(),
             original: event,
