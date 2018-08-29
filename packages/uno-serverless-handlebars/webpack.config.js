@@ -30,6 +30,7 @@ module.exports = {
     new CleanWebpackPlugin([distFolder]),
   ],
   externals: {
+    'accounting': 'accounting',
     'currency-formatter': 'currency-formatter',
     'handlebars': 'handlebars',
     'handlebars-dateformat': 'handlebars-dateformat',

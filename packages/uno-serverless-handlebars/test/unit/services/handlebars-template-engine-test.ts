@@ -147,4 +147,17 @@ describe("HandlebarsTemplateEngineOptions", () => {
     expect(result).to.contain("Bonjour, foobar");
     expect(result).to.contain("Salut!");
   });
+
+  it("should format numbers", async () => {
+    const result = await templateEngine.render(
+      "number.handlebars",
+      {
+        x: 1000000,
+        y: 1234567,
+        z: 7654321,
+        zopts: { precision: 2 },
+      });
+
+    expect(result).to.equal("x: 1,000,000 / y: 1 234 567,0 / z: 7,654,321.00");
+  });
 });

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - HttpClient: Added debug mode (Fix #62)
 - Added clear() and list() to KeyValueRepository (Fix #57)
 - Added ForwardEventDispatcher (Fix #63)
+- Added number helper in handlebars to format numbers
 
 ## [0.49.0] - 2018-08-23
 ### Added

@@ -1,3 +1,4 @@
+import * as accounting from "accounting";
 import * as currencyFormatter from "currency-formatter";
 import { exists, readdir, readFile } from "fs";
 import * as handlebars from "handlebars";
@@ -20,15 +21,16 @@ export interface HandlebarsTemplateEngineOptions {
  * TemplateEngine implementation using Handlebars.
  *
  * Partials templates are automatically available.
- * e.g. partials/header.handlebars is avaiblable through {{>header}}
+ * e.g. partials/header.handlebars is available through {{>header}}
  * Included helpers:
- *   - date: {{date [datevar] "dddd, MMMM Do YYYY, h:mm:ss a"}} (Uses moment.js format)
- *   - pluralize: {{pluralize [number] "child"}} (Uses pluralize if plural form not provided)
  *   - currency: {{currency [value] "USD"}} (Uses currency-formatter)
+ *   - date: {{date [value] "dddd, MMMM Do YYYY, h:mm:ss a"}} (Uses moment.js format)
  *   - lowercase: {{lowercase [value]}} (Calls value.toLowerCase())
- *   - uppercase: {{uppercase [value]}} (Calls value.toUpperCase())
+ *   - number: {{number [value] [precision = 0], [thousand = ","], [decimal = "."]}}
+ *   - pluralize: {{pluralize [number] "child"}} (Uses pluralize if plural form not provided)
  *   - t: {{t [resource] }}: allow translation of context.resources based on context.language
- *     The resources can also contain substitution as well.
+ *   - uppercase: {{uppercase [value]}} (Calls value.toUpperCase())
+ *     The resources can also contain substitutions as well.
  */
 export class HandlebarsTemplateEngine implements TemplateEngine {
 
@@ -59,39 +61,41 @@ export class HandlebarsTemplateEngine implements TemplateEngine {
   }
 
   private async initializeHandlebars(): Promise<void> {
-    handlebars.registerHelper("date", handlebarsDateFormat);
-    handlebars.registerHelper("pluralize", (num: number, singular: string, plural?: string) => {
-      if (num === 1) {
-        return singular;
-      } else {
-        return (typeof plural === "string" ? plural : pluralize(singular));
-      }
-    });
-    handlebars.registerHelper("currency", (value: number, currency: string) => {
-      return currencyFormatter.format(value, { code: currency });
-    });
-    handlebars.registerHelper("lowercase", (value: string) => value.toLowerCase());
-    handlebars.registerHelper("uppercase", (value: string) => value.toUpperCase());
-    handlebars.registerHelper("t", (resource: string, options: any) => {
-      const root = options.data.root;
-      if (!root.language) {
-        throw new Error(`Unable to translate resource ${resource} - Missing language property in root context.`);
-      }
+    handlebars.registerHelper({
+      currency: (value: number, currency: string) => currencyFormatter.format(value, { code: currency }),
+      date: handlebarsDateFormat,
+      lowercase: (value: string) => value.toLowerCase(),
+      number: (value: number, options: any) =>
+        accounting.formatNumber(value, options && options.hash ? options.hash : options),
+      pluralize: (num: number, singular: string, plural?: string) => {
+        if (num === 1) {
+          return singular;
+        } else {
+          return (typeof plural === "string" ? plural : pluralize(singular));
+        }
+      },
+      t: (resource: string, options: any) => {
+        const root = options.data.root;
+        if (!root.language) {
+          throw new Error(`Unable to translate resource ${resource} - Missing language property in root context.`);
+        }
 
-      const resourcePath = `${root.language}.${resource}`;
-      const resourceValue = resourcePath.split(".").reduce(
-        (acc, cur) => acc ? acc[cur] : undefined,
-        options.data.root.resources);
-      if (!resourceValue) {
-        throw new Error(`Unable to find resource ${resource} for language ${root.language}.`);
-      }
-      if (!resourceValue.includes("{{")) {
-        return resourceValue;
-      }
-      const template = handlebars.compile(resourceValue);
-      return template(options.data.root);
+        const resourcePath = `${root.language}.${resource}`;
+        const resourceValue = resourcePath.split(".").reduce(
+          (acc, cur) => acc ? acc[cur] : undefined,
+          options.data.root.resources);
+        if (!resourceValue) {
+          throw new Error(`Unable to find resource ${resource} for language ${root.language}.`);
+        }
+        if (!resourceValue.includes("{{")) {
+          return resourceValue;
+        }
+        const template = handlebars.compile(resourceValue);
+        return template(options.data.root);
+      },
+      uppercase: (value: string) => value.toUpperCase(),
     });
-    Object.keys(this.options.helpers).forEach((key) => handlebars.registerHelper(key, this.options.helpers[key]));
+    handlebars.registerHelper(this.options.helpers || {});
 
     const partialFiles = await this.listPartialFiles();
     const partialFilesContent = await Promise.all(partialFiles.map((x) => this.readFile(x)));
