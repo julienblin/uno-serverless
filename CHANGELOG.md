@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added ForwardEventDispatcher (Fix #63)
 - Added number helper in handlebars to format numbers
 - Added clientIpAddress in HttpUnoEvent (Fix #67)
+- Added interceptors in HttpClientConfig (Fix #71)
+- Exposed Axios Instance in HttpClientConfig (Fix #70)
 
 ### Changed
 - Fixed crash in CLI when entities have self-references (Fix #72)

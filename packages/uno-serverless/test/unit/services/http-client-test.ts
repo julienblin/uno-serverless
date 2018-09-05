@@ -3,7 +3,7 @@ import { describe, it } from "mocha";
 import * as nock from "nock";
 import { HttpStatusCodes } from "../../../src/core/http-status-codes";
 import { randomStr } from "../../../src/core/utils";
-import { HttpClientError, httpClientFactory } from "../../../src/services/http-client";
+import { HttpClientError, httpClientFactory, Interceptor } from "../../../src/services/http-client";
 
 // tslint:disable-next-line:only-arrow-functions
 describe("httpClientFactory", () => {
@@ -161,5 +161,44 @@ describe("httpClientFactory", () => {
         expect(httpClientError.response!.status).to.equal(HttpStatusCodes.NOT_FOUND);
       }
     });
+  });
+
+  it("should return underlying axios instance", async () => {
+    const client = httpClientFactory({
+      baseURL: baseURL(),
+    });
+
+    const result = await client.axios();
+    expect(result).to.not.be.undefined;
+  });
+
+  it("should add interceptors", async () => {
+    const interceptor: Interceptor = {
+      request: {
+        onFulfilled: (request) => {
+          request.adapter = () => {
+            return Promise.resolve({
+              config: request,
+              data: {
+                title: "intercepted!",
+              },
+              headers: request.headers,
+              request,
+              status: HttpStatusCodes.OK,
+              statusText: "OK",
+            });
+          };
+
+          return request;
+        },
+      },
+    };
+    const client = httpClientFactory({
+      baseURL: baseURL(),
+      interceptors: [ interceptor ],
+    });
+
+    const result = await client.get<Post>("/posts/1");
+    expect(result.data.title).to.equal("intercepted!");
   });
 });

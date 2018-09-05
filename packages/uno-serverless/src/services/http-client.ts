@@ -4,31 +4,44 @@ import { isStatusCodeProvider, lazyAsync, safeJSONStringify } from "../core";
 
 export type PossiblePromise<T> = T | Promise<T>;
 
+export interface Interceptor {
+  request?: {
+    onFulfilled?: (request: axios.AxiosRequestConfig) => (axios.AxiosRequestConfig | Promise<axios.AxiosRequestConfig>);
+    onRejected?: (error: any) => any;
+  };
+  response?: {
+    onFulfilled?: (response: axios.AxiosResponse) => (axios.AxiosResponse | Promise<axios.AxiosResponse>);
+    onRejected?: (error: any) => any;
+  };
+}
+
 export interface HttpClientConfig {
   adapter?: axios.AxiosAdapter;
-  auth?: PossiblePromise<axios.AxiosBasicCredentials>;
+  auth?: PossiblePromise<axios.AxiosBasicCredentials | undefined>;
   cancelToken?: axios.CancelToken;
-  debug?: PossiblePromise<boolean>;
-  baseURL?: PossiblePromise<string>;
+  debug?: PossiblePromise<boolean | undefined>;
+  baseURL?: PossiblePromise<string | undefined>;
   headers?: PossiblePromise<Record<string, string>>;
   httpAgent?: any;
   httpsAgent?: any;
-  maxContentLength?: PossiblePromise<number>;
-  maxRedirects?: PossiblePromise<number>;
+  interceptors?: PossiblePromise<Interceptor[] | undefined>;
+  maxContentLength?: PossiblePromise<number | undefined>;
+  maxRedirects?: PossiblePromise<number | undefined>;
   onDownloadProgress?: (progressEvent: any) => void;
   onUploadProgress?: (progressEvent: any) => void;
-  params?: PossiblePromise<any>;
+  params?: PossiblePromise<any | undefined>;
   paramsSerializer?: (params: any) => string;
-  proxy?: PossiblePromise<axios.AxiosProxyConfig> | false;
-  responseType?: PossiblePromise<string>;
-  timeout?: PossiblePromise<number>;
+  proxy?: PossiblePromise<axios.AxiosProxyConfig | undefined> | false;
+  responseType?: PossiblePromise<string | undefined>;
+  timeout?: PossiblePromise<number | undefined>;
   transformRequest?: axios.AxiosTransformer | axios.AxiosTransformer[];
   transformResponse?: axios.AxiosTransformer | axios.AxiosTransformer[];
   validateStatus?: (status: number) => boolean;
-  withCredentials?: PossiblePromise<boolean>;
+  withCredentials?: PossiblePromise<boolean | undefined>;
 }
 
 export interface HttpClient {
+  axios(): Promise<axios.AxiosInstance>;
   delete(url: string, config?: axios.AxiosRequestConfig | undefined): Promise<axios.AxiosResponse<any>>;
   get<T = any>(url: string, config?: axios.AxiosRequestConfig | undefined): Promise<axios.AxiosResponse<T>>;
   head(url: string, config?: axios.AxiosRequestConfig | undefined): Promise<axios.AxiosResponse<any>>;
@@ -86,6 +99,10 @@ class AxiosHttpClient implements HttpClient {
   private readonly lazyClient = lazyAsync(async () => this.clientBuilder());
 
   public constructor(private readonly clientBuilder: () => Promise<axios.AxiosInstance>) { }
+
+  public async axios(): Promise<axios.AxiosInstance> {
+    return this.lazyClient();
+  }
 
   public async delete(url: string, config?: axios.AxiosRequestConfig | undefined)
     : Promise<axios.AxiosResponse<any>> {
@@ -190,7 +207,10 @@ export const httpClientFactory = (config: HttpClientConfig = {}): HttpClient =>
         return {
           baseURL: c.baseURL,
           data: c.data,
-          headers: c.headers || {},
+          headers: {
+            ...(c.headers && c.headers.common),
+            ...(c.headers && c.headers[c.method]),
+          },
           method: c.method,
           url: c.url,
         };
@@ -214,6 +234,19 @@ export const httpClientFactory = (config: HttpClientConfig = {}): HttpClient =>
       axiosInstance.interceptors.response.use(
         (response) => { debug(curateResponse(response), "green"); return response; },
         (error) => { debug(error, "red"); return Promise.reject(error); });
+    }
+
+    const interceptors = await config.interceptors;
+    if (interceptors && interceptors.length > 0) {
+      for (const interceptor of interceptors) {
+        if (interceptor.request) {
+          axiosInstance.interceptors.request.use(interceptor.request.onFulfilled, interceptor.request.onRejected);
+        }
+
+        if (interceptor.response) {
+          axiosInstance.interceptors.response.use(interceptor.response.onFulfilled, interceptor.response.onRejected);
+        }
+      }
     }
 
     return axiosInstance;
