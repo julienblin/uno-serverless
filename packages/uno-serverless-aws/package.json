@@ -1,7 +1,7 @@
 {
   "name": "uno-serverless-aws",
   "description": "AWS Cloud providers & services for uno-serverless",
-  "version": "0.50.0",
+  "version": "0.50.1",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "sideEffects": false,
