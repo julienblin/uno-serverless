@@ -97,7 +97,8 @@ export class SchemaGeneration {
   private orderSchemas(schemas: any): any {
     const dependencies: string[][] = [];
     Object.keys(schemas).forEach((s) => {
-      const refSchemas = this.getRefSchemas(schemas[s]);
+      let refSchemas = this.getRefSchemas(schemas[s]);
+      refSchemas = refSchemas.filter((x) => x !== s);
       if (refSchemas.length === 0) {
         dependencies.push([s]);
       } else {

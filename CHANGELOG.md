@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added number helper in handlebars to format numbers
 - Added clientIpAddress in HttpUnoEvent (Fix #67)
 
+### Changed
+- Fixed crash in CLI when entities have self-references (Fix #72)
+
 ## [0.49.0] - 2018-08-23
 ### Added
 - CLI: Added openapi3 schema generation option to update openapi3 YAML file definition with schemas.
