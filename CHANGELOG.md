@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.50.1] - 2018-09-05
+### Changed
+- Forgot to add SQSEvent & SQSEventBatch to definitions in 0.50.0
+
 ## [0.50.0] - 2018-09-05
 ### Added
 - SQSEventPublisher to publish events using AWS Simple Queue Service
