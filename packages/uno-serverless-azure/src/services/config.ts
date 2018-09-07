@@ -1,5 +1,5 @@
 import { KeyVaultClient } from "azure-keyvault";
-import { SecretBundle, SecretListResult } from "azure-keyvault/lib/models";
+import { SecretBundle } from "azure-keyvault/lib/models";
 import { loginWithAppServiceMSI, loginWithServicePrincipalSecret } from "ms-rest-azure";
 import { checkHealth, CheckHealth, ConfigService, configurationError, duration } from "uno-serverless";
 
@@ -16,7 +16,6 @@ export interface KeyVaultConfigServiceOptionsWithCredentials {
 export interface KeyVaultConfigServiceOptionsCommon {
   prefix?: string | Promise<string>;
   keyVaultUrl: string | Promise<string>;
-  maxResults?: number;
   ttl?: number | string;
 }
 
@@ -73,34 +72,39 @@ export class KeyVaultConfigService implements ConfigService, CheckHealth {
   }
 
   private async getParameters(): Promise<Record<string, string>> {
-    const client = await this.getClient() as any;
+    const client = await this.getClient();
     let keyVaultUrl = await this.options.keyVaultUrl;
     if (keyVaultUrl.endsWith("/")) {
       keyVaultUrl = keyVaultUrl.slice(0, -1);
     }
-    const results = await client.getSecrets(
-      keyVaultUrl,
-      { maxresults: this.options.maxResults }) as SecretListResult;
 
-    const secretBundles = await Promise.all(
-      results
-        .filter((x) => !!x.id)
-        .map((item) => {
-          return client.getSecret(keyVaultUrl, this.secretName(keyVaultUrl, item.id), "") as Promise<SecretBundle>;
-        }));
-
-    const prefix = await this.options.prefix;
     const parameterMap = {};
-    secretBundles.forEach((bundle) => {
-      const secretName = this.secretName(keyVaultUrl, bundle.id, true);
-      if (prefix) {
-        if (secretName.startsWith(prefix)) {
-          parameterMap[secretName.replace(prefix, "")] = bundle.value;
+    let nextLink: string | undefined;
+    do {
+      const results = nextLink
+        ? await client.getSecretsNext(nextLink)
+        : await client.getSecrets(keyVaultUrl);
+
+      nextLink = results.nextLink;
+      const secretBundles = await Promise.all(
+        results
+          .filter((x) => !!x.id)
+          .map((item) => {
+            return client.getSecret(keyVaultUrl, this.secretName(keyVaultUrl, item.id), "") as Promise<SecretBundle>;
+          }));
+
+      const prefix = await this.options.prefix;
+      secretBundles.forEach((bundle) => {
+        const secretName = this.secretName(keyVaultUrl, bundle.id, true);
+        if (prefix) {
+          if (secretName.startsWith(prefix)) {
+            parameterMap[secretName.replace(prefix, "")] = bundle.value;
+          }
+        } else {
+          parameterMap[secretName] = bundle.value;
         }
-      } else {
-        parameterMap[secretName] = bundle.value;
-      }
-    });
+      });
+    } while (nextLink);
 
     return parameterMap;
   }
