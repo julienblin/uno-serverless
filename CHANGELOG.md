@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Added CompositeConfigService to allow composition of several different config sources.
+
 ### Changed
 - [BREAKING] Removed maxresults in Azure KeyVaultConfigService options as it is not very useful (blocked at 25 anyway)
 - Allow Azure KeyVaultConfigService to retrieve more than 25 results (Fix #73)

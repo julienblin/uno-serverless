@@ -124,3 +124,36 @@ export class JSONFileConfigService implements ConfigService, CheckHealth {
     });
   }
 }
+
+/**
+ * ConfigService implementation that allows combining several ConfigServices,
+ * ordered by priority
+ */
+export class CompositeConfigService implements ConfigService, CheckHealth {
+
+  public constructor(private readonly configServices: ConfigService[]) {}
+
+  public async checkHealth() {
+    return checkHealth(
+      "CompositeConfigService",
+      undefined,
+      this.configServices as any as CheckHealth[]);
+  }
+
+  public async get(key: string): Promise<string>;
+  public async get(key: string, required = true): Promise<string | undefined> {
+    for (const configService of this.configServices) {
+      const result = await configService.get(key, false);
+      if (result) {
+        return result;
+      }
+    }
+
+    if (required) {
+      throw configurationError({ key, provider: "CompositeConfigService" }, `Missing configuration value for ${key}`);
+    }
+
+    return undefined;
+  }
+
+}

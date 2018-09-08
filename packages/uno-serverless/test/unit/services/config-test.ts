@@ -3,8 +3,8 @@ import { describe, it } from "mocha";
 import { StandardErrorCodes } from "../../../src/core/errors";
 import { randomStr } from "../../../src/core/utils";
 import {
-  ConfigService, JSONFileConfigService,
-  ProcessEnvConfigService, StaticConfigService } from "../../../src/services/config";
+  CompositeConfigService, ConfigService,
+  JSONFileConfigService, ProcessEnvConfigService, StaticConfigService } from "../../../src/services/config";
 import { HealthCheckStatus } from "../../../src/services/health-check";
 
 describe("StaticConfigService", () => {
@@ -157,5 +157,67 @@ describe("JSONFileConfigService", () => {
     expect(result.name).to.equal("JSONFileConfigService");
     expect(result.target).to.equal(testConfigFile);
     expect(result.status).to.equal(HealthCheckStatus.Ok);
+  });
+});
+
+describe("CompositeConfigService", () => {
+
+  const testConfigFile = "./test/unit/services/config-test.json";
+
+  it("should return mandatory values", async () => {
+    process.env.foo = "bar";
+    const configService1 = new ProcessEnvConfigService();
+    const configService2 = new JSONFileConfigService({
+      path: testConfigFile,
+    });
+
+    const config = new CompositeConfigService([ configService1, configService2 ]);
+
+    let result = await config.get("foo");
+    expect(result).to.equal(process.env.foo);
+    result = await config.get("foo2");
+    expect(result).to.equal("bar2");
+  });
+
+  it("should return optional values", async () => {
+    const config = new CompositeConfigService([]) as ConfigService;
+
+    const result = await config.get("foo", false);
+    expect(result).to.be.undefined;
+  });
+
+  it("should throw on missing required values", async () => {
+    const config = new CompositeConfigService([]) as ConfigService;
+
+    try {
+      await config.get("foo");
+      expect.fail();
+    } catch (error) {
+      expect(error.code).to.equal(StandardErrorCodes.ConfigurationError);
+      expect(error.data.key).to.equal("foo");
+      expect(error.data.provider).to.equal("CompositeConfigService");
+    }
+
+    try {
+      await config.get("foo", true);
+      expect.fail();
+    } catch (error) {
+      expect(error.code).to.equal(StandardErrorCodes.ConfigurationError);
+      expect(error.data.key).to.equal("foo");
+      expect(error.data.provider).to.equal("CompositeConfigService");
+    }
+  });
+
+  it("should check health", async () => {
+    const configService1 = new ProcessEnvConfigService();
+    const configService2 = new JSONFileConfigService({
+      path: testConfigFile,
+    });
+
+    const config = new CompositeConfigService([ configService1, configService2 ]);
+
+    const result = await config.checkHealth();
+    expect(result.status).to.equal(HealthCheckStatus.Ok);
+    expect(result.children).to.have.lengthOf(2);
   });
 });
