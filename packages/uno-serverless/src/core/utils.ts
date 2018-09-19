@@ -1,3 +1,4 @@
+import * as chalk from "chalk";
 import { randomBytes } from "crypto";
 import * as stringify from "json-stringify-safe";
 import * as ms from "ms";
@@ -132,3 +133,11 @@ export function toRecord(
     },
     {});
 }
+
+/**
+ * Very simple console debug statement to use by services when debug is activated
+ */
+export const debug = (service: string, color: string, content: any) => {
+  const contentAsString = typeof content === "string" ? content : safeJSONStringify(content, undefined, 2);
+  console.debug(chalk[color](`${new Date().toLocaleTimeString()} - ${service}: ${contentAsString}`));
+};

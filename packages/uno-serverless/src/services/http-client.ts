@@ -1,6 +1,6 @@
 import Axios, * as axios from "axios";
-import * as chalk from "chalk";
-import { isStatusCodeProvider, lazyAsync, safeJSONStringify } from "../core";
+import { debug } from "../core";
+import { isStatusCodeProvider, lazyAsync } from "../core";
 
 export type PossiblePromise<T> = T | Promise<T>;
 
@@ -194,11 +194,6 @@ export const httpClientFactory = (config: HttpClientConfig = {}): HttpClient =>
     });
 
     if (await config.debug) {
-      const debug = (content, color) => {
-        console.log(chalk[color](
-          typeof content === "string" ? content : safeJSONStringify(content, undefined, 2)));
-      };
-
       const curateRequest = (c) => {
         if (typeof c === "string") {
           return c;
@@ -229,11 +224,11 @@ export const httpClientFactory = (config: HttpClientConfig = {}): HttpClient =>
       };
 
       axiosInstance.interceptors.request.use(
-        (c) => { debug(curateRequest(c), "cyan"); return c; },
-        (error) => { debug(error, "red"); return Promise.reject(error); });
+        (c) => { debug("HttpClient", "cyan", curateRequest(c)); return c; },
+        (error) => { debug("HttpClient", "red", error); return Promise.reject(error); });
       axiosInstance.interceptors.response.use(
-        (response) => { debug(curateResponse(response), "green"); return response; },
-        (error) => { debug(error, "red"); return Promise.reject(error); });
+        (response) => { debug("HttpClient", "green", curateResponse(response)); return response; },
+        (error) => { debug("HttpClient", "red", error); return Promise.reject(error); });
     }
 
     const interceptors = await config.interceptors;

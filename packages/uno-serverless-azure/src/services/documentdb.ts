@@ -4,10 +4,11 @@ import {
 } from "documentdb";
 import {
   CheckHealth, checkHealth, conflictError, ContinuationArray,
-  decodeNextToken, encodeNextToken, HttpStatusCodes, lazyAsync, WithContinuation,
+  debug, decodeNextToken, encodeNextToken, HttpStatusCodes, lazyAsync, WithContinuation,
 } from "uno-serverless";
 import {
-  DocumentQueryProducer, ENTITY_TYPE_SEPARATOR, EntityDocument, isDocumentQueryProducer } from "./documentdb-query";
+  DocumentQueryProducer, ENTITY_TYPE_SEPARATOR, EntityDocument, isDocumentQueryProducer,
+} from "./documentdb-query";
 
 export interface DocumentDbRequestOptions {
   requestOptions?: RequestOptions;
@@ -86,13 +87,16 @@ export interface DocumentDb {
 export const single = "single";
 
 export interface DocumentDbImplOptions {
+  collectionCreationOptions?: Partial<Collection>;
+  collectionId: string | Promise<string>;
+  databaseId: string | Promise<string>;
+  debug?: boolean | Promise<boolean>;
+  defaultConsistencyLevel?: ConsistencyLevel;
   endpoint: string | Promise<string>;
   primaryKey: string | Promise<string>;
-  databaseId: string | Promise<string>;
-  collectionId: string | Promise<string>;
-  collectionCreationOptions?: Partial<Collection>;
-  defaultConsistencyLevel?: ConsistencyLevel;
 }
+
+const DOCUMENT_DB_NAME = "DocumentDb";
 
 export class DocumentDbImpl implements DocumentDb, CheckHealth {
 
@@ -105,13 +109,13 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
         });
     });
 
-  public constructor(private readonly options: DocumentDbImplOptions) {}
+  public constructor(private readonly options: DocumentDbImplOptions) { }
 
   public async checkHealth() {
     const databaseId = await this.options.databaseId;
     const collectionId = await this.options.collectionId;
     return checkHealth(
-      "DocumentDb",
+      DOCUMENT_DB_NAME,
       `${databaseId}/${collectionId}`,
       async () => {
         const client = await this.lazyClient();
@@ -142,15 +146,26 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
     if (this.options.defaultConsistencyLevel && !requestOptions.consistencyLevel) {
       requestOptions.consistencyLevel = this.options.defaultConsistencyLevel;
     }
+    const debugEnabled = await this.options.debug;
+
     return new Promise<void>((resolve, reject) => {
       client.deleteDocument(
         documentUri,
         requestOptions,
-        (err) => {
+        (err, _, headers) => {
+          if (debugEnabled) {
+            debug(DOCUMENT_DB_NAME, "cyan", `DELETE ${headers["content-location"]}`);
+          }
           if (err) {
+            if (debugEnabled) {
+              debug(DOCUMENT_DB_NAME, "red", err);
+            }
             return reject(err);
           }
 
+          if (debugEnabled) {
+            this.debugHeaders(headers);
+          }
           return resolve();
         });
     });
@@ -164,20 +179,33 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
     if (this.options.defaultConsistencyLevel && !requestOptions.consistencyLevel) {
       requestOptions.consistencyLevel = this.options.defaultConsistencyLevel;
     }
+    const debugEnabled = await this.options.debug;
     return new Promise<any>((resolve, reject) => {
       client.readDocument(
         documentUri,
         requestOptions,
-        (err, doc) => {
+        (err, doc, headers) => {
+          if (debugEnabled) {
+            debug(DOCUMENT_DB_NAME, "cyan", `GET ${headers["content-location"]}`);
+          }
+
           if (err) {
             if (err.code === HttpStatusCodes.NOT_FOUND) {
+              debug(DOCUMENT_DB_NAME, "green", "NOT_FOUND");
               return resolve(undefined);
             } else {
+              debug(DOCUMENT_DB_NAME, "red", err);
               return reject(err);
             }
           }
 
-          return resolve(this.process(doc, entity, options && options.metadata) as any);
+          const result = this.process(doc, entity, options && options.metadata) as any;
+          if (debugEnabled) {
+            debug(DOCUMENT_DB_NAME, "green", result);
+            this.debugHeaders(headers);
+          }
+
+          return resolve(result);
         });
     });
   }
@@ -195,6 +223,8 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
       feedOptions.continuation = continuation;
     }
 
+    const debugEnabled = await this.options.debug;
+
     return new Promise<ContinuationArray<any>>((resolve, reject) => {
       const queryResult = client.queryDocuments(
         collectionUri,
@@ -202,7 +232,14 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
         feedOptions);
 
       queryResult.executeNext((err, docs, responseHeaders) => {
+        if (debugEnabled) {
+          debug(DOCUMENT_DB_NAME, "cyan", documentQuery);
+        }
+
         if (err) {
+          if (debugEnabled) {
+            debug(DOCUMENT_DB_NAME, "red", err);
+          }
           return reject(err);
         }
 
@@ -211,10 +248,17 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
           newNextToken = encodeNextToken(responseHeaders["x-ms-continuation"]);
         }
 
-        return resolve({
+        const result = {
           items: docs.map((x) => this.process(x, undefined, options && options.metadata)) as any,
           nextToken: newNextToken,
-        });
+        };
+
+        if (debugEnabled) {
+          debug(DOCUMENT_DB_NAME, "green", result);
+          this.debugHeaders(responseHeaders);
+        }
+
+        return resolve(result);
       });
     });
   }
@@ -227,6 +271,7 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
     if (this.options.defaultConsistencyLevel && !feedOptions.consistencyLevel) {
       feedOptions.consistencyLevel = this.options.defaultConsistencyLevel;
     }
+    const debugEnabled = await this.options.debug;
 
     return new Promise<any[]>((resolve, reject) => {
       const queryResult = client.queryDocuments(
@@ -234,12 +279,30 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
         documentQuery,
         feedOptions);
 
-      queryResult.toArray((err, docs) => {
+      if (debugEnabled) {
+        debug(DOCUMENT_DB_NAME, "cyan", documentQuery);
+      }
+
+      queryResult.toArray((err, docs, responseHeaders) => {
         if (err) {
+          if (debugEnabled) {
+            debug(DOCUMENT_DB_NAME, "red", err);
+          }
           return reject(err);
         }
 
-        return resolve(docs.map((x) => this.process(x, undefined, options && options.metadata)) as any);
+        const result = docs.map((x) => this.process(x, undefined, options && options.metadata)) as any;
+
+        if (debugEnabled) {
+          debug(DOCUMENT_DB_NAME, "green", result);
+          if (responseHeaders) {
+            this.debugHeaders(responseHeaders);
+          } else {
+            debug(DOCUMENT_DB_NAME, "yellow", "No response headers. Be careful to use queryAll only when appropriate.");
+          }
+        }
+
+        return resolve(result);
       });
     });
   }
@@ -259,6 +322,8 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
       ? { accessCondition: { condition: document._etag!, type: "IfMatch" } }
       : {};
 
+    const debugEnabled = await this.options.debug;
+
     return new Promise<any>((resolve, reject) => {
       const documentOptions: DocumentOptions = {
         ...etagOptions,
@@ -275,10 +340,17 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
         collectionUri,
         document,
         documentOptions,
-        (err, doc) => {
+        (err, doc, headers) => {
+          if (debugEnabled) {
+            debug(DOCUMENT_DB_NAME, "cyan", `SET ${collectionUri}/${document.id}`);
+          }
+
           if (err) {
             switch (err.code) {
               case HttpStatusCodes.PRECONDITION_FAILED:
+                if (debugEnabled) {
+                  debug(DOCUMENT_DB_NAME, "red", `PRECONDITION_FAILED`);
+                }
                 return reject(
                   conflictError(
                     `There has been a conflict while updating document ${document.id}. The ETag did not match.`,
@@ -286,14 +358,25 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
                       etag: document._etag,
                     }));
               case HttpStatusCodes.CONFLICT:
+                if (debugEnabled) {
+                  debug(DOCUMENT_DB_NAME, "red", `CONFLICT`);
+                }
                 return reject(
                   conflictError(`The document with id ${document.id} already exists.`));
               default:
+                if (debugEnabled) {
+                  debug(DOCUMENT_DB_NAME, "red", err);
+                }
                 return reject(err);
             }
           }
 
-          return resolve(this.process(doc, document._entity, options && options.metadata));
+          const result = this.process(doc, document._entity, options && options.metadata);
+          if (debugEnabled) {
+            debug(DOCUMENT_DB_NAME, "green", result);
+            this.debugHeaders(headers);
+          }
+          return resolve(result);
         });
     });
   }
@@ -303,6 +386,16 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
     const collectionId = await this.options.collectionId;
 
     return UriFactory.createDocumentCollectionUri(databaseId, collectionId);
+  }
+
+  private debugHeaders(headers: any) {
+    if (headers) {
+      debug(
+        DOCUMENT_DB_NAME,
+        "grey",
+        // tslint:disable-next-line:max-line-length
+        `RU: ${headers["x-ms-request-charge"]} / Retry count: ${headers["x-ms-throttle-retry-count"]} / Session: ${headers["x-ms-session-token"]} / Activity id: ${headers["x-ms-activity-id"]}`);
+    }
   }
 
   private async documentUri(entity: string, id: string) {
