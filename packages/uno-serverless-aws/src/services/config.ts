@@ -5,7 +5,10 @@ import { checkHealth, CheckHealth, ConfigService, configurationError } from "uno
 
 export interface SSMParameterStoreClient {
   getParametersByPath(params: SSM.Types.GetParametersByPathRequest)
-      : { promise(): Promise<PromiseResult<SSM.Types.GetParametersByPathResult, AWSError>> };
+    : { promise(): Promise<PromiseResult<SSM.Types.GetParametersByPathResult, AWSError>> };
+
+  putParameter(params: SSM.Types.PutParameterRequest)
+    : { promise(): Promise<PromiseResult<SSM.Types.PutParameterResult, AWSError>> };
 }
 
 export interface SSMParameterStoreConfigServiceOptions {
@@ -79,6 +82,15 @@ export class SSMParameterStoreConfigService implements ConfigService, CheckHealt
     }
 
     return undefined;
+  }
+
+  public async set(key: string, value: string): Promise<void> {
+    await this.ssm.putParameter({
+      Name: `${this.options.path}${key}`,
+      Overwrite: true,
+      Type: "String",
+      Value: value,
+    }).promise();
   }
 
   /** Retrieves all parameters under the key prefix. */

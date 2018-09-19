@@ -26,6 +26,15 @@ class SSMParameterStoreClientStub implements SSMParameterStoreClient {
         }),
     };
   }
+
+  public putParameter(params: SSM.Types.PutParameterRequest):
+    { promise(): Promise<PromiseResult<SSM.Types.PutParameterResult, AWSError>> } {
+      return {
+        promise: async () => ({
+          $response: {} as Response<SSM.Types.PutParameterResult, AWSError>,
+        }),
+      };
+  }
 }
 
 describe("SSMParameterStoreConfigService", () => {
