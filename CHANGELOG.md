@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - [BREAKING] Removed maxresults in Azure KeyVaultConfigService options as it is not very useful (blocked at 25 anyway)
 - Allow Azure KeyVaultConfigService to retrieve more than 25 results (Fix #73)
+- DocumentDb: queries with empty IN clause must returns empty result set (Fix #76)
 
 ## [0.50.1] - 2018-09-05
 ### Changed

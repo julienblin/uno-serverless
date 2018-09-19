@@ -135,6 +135,10 @@ describe("DocumentQueryBuilderImpl", () => {
       },
     },
     {
+      query: select().where<Order>({ name: [ Operator.In, []] }),
+      result: "SELECT * FROM root WHERE (1=0)",
+    },
+    {
       query: select().where<Order>({ name: [ Operator.Contains, "foo" ] }),
       result: {
         parameters: [

@@ -110,8 +110,8 @@ class DocumentQueryBuilderImpl implements DocumentQueryBuilder {
           case Operator.Lt:
           case Operator.Lte:
             if ((queryParts.parameterName === "id")
-             && this.sqlParameters[ENTITY_PROPERTY_PARAMETER_NAME]
-             && !queryParts.parameterValue.startsWith(this.sqlParameters[ENTITY_PROPERTY_PARAMETER_NAME])) {
+              && this.sqlParameters[ENTITY_PROPERTY_PARAMETER_NAME]
+              && !queryParts.parameterValue.startsWith(this.sqlParameters[ENTITY_PROPERTY_PARAMETER_NAME])) {
               queryParts.parameterValue =
                 // tslint:disable-next-line:max-line-length
                 `${this.sqlParameters[ENTITY_PROPERTY_PARAMETER_NAME]}${ENTITY_TYPE_SEPARATOR}${queryParts.parameterValue}`;
@@ -124,17 +124,20 @@ class DocumentQueryBuilderImpl implements DocumentQueryBuilder {
             if (!Array.isArray(queryParts.parameterValue)) {
               throw new Error("The parameter value for a IN clause must be an array.");
             }
-
-            const parameterNames = queryParts.parameterValue.map((_, i) => `@${queryParts.parameterName}${i}`);
-            this.whereConditions.push(`${queryParts.leftPath} IN (${parameterNames.join(", ")})`);
-            queryParts.parameterValue.forEach((x, i) => {
-              if ((queryParts.parameterName === "id")
-              && this.sqlParameters[ENTITY_PROPERTY_PARAMETER_NAME]
-              && !x.startsWith(this.sqlParameters[ENTITY_PROPERTY_PARAMETER_NAME])) {
-                x = `${this.sqlParameters[ENTITY_PROPERTY_PARAMETER_NAME]}${ENTITY_TYPE_SEPARATOR}${x}`;
-              }
-              this.sqlParameters[parameterNames[i]] = x;
-            });
+            if (queryParts.parameterValue.length === 0) {
+              this.where("1=0");
+            } else {
+              const parameterNames = queryParts.parameterValue.map((_, i) => `@${queryParts.parameterName}${i}`);
+              this.whereConditions.push(`${queryParts.leftPath} IN (${parameterNames.join(", ")})`);
+              queryParts.parameterValue.forEach((x, i) => {
+                if ((queryParts.parameterName === "id")
+                  && this.sqlParameters[ENTITY_PROPERTY_PARAMETER_NAME]
+                  && !x.startsWith(this.sqlParameters[ENTITY_PROPERTY_PARAMETER_NAME])) {
+                  x = `${this.sqlParameters[ENTITY_PROPERTY_PARAMETER_NAME]}${ENTITY_TYPE_SEPARATOR}${x}`;
+                }
+                this.sqlParameters[parameterNames[i]] = x;
+              });
+            }
             break;
           case Operator.Contains:
           case Operator.StartsWith:
