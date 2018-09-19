@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - SSMParameterStoreConfigService: Added set method.
 - DocumentDb: Added debug mode
 - DocumentDb: Exposed underlying client
+- DocumentDb: Allow fine-grained customization of underlying client
 
 ### Changed
 - [BREAKING] Removed maxresults in Azure KeyVaultConfigService options as it is not very useful (blocked at 25 anyway)

@@ -93,8 +93,9 @@ export interface DocumentDbImplOptions {
   collectionCreationOptions?: Partial<Collection>;
   collectionId: string | Promise<string>;
   databaseId: string | Promise<string>;
-  debug?: boolean | Promise<boolean>;
+  debug?: boolean | Promise<boolean | undefined>;
   defaultConsistencyLevel?: ConsistencyLevel;
+  documentClient?: DocumentClient | Promise<DocumentClient | undefined>;
   endpoint: string | Promise<string>;
   primaryKey: string | Promise<string>;
 }
@@ -105,6 +106,11 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
 
   private readonly lazyClient = lazyAsync(
     async () => {
+      const optionClient = await this.options.documentClient;
+      if (optionClient) {
+        return optionClient;
+      }
+
       return new DocumentClient(
         await this.options.endpoint,
         {
