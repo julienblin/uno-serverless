@@ -38,6 +38,9 @@ export interface SetOptions {
 }
 
 export interface DocumentDb {
+  /** Exposes the underlying DocumentDb Client. */
+  client(): Promise<DocumentClient>;
+
   /** Delete a document by entity type and id. */
   delete(entity: string, id: string, options?: DocumentDbRequestOptions): Promise<void>;
 
@@ -137,6 +140,10 @@ export class DocumentDbImpl implements DocumentDb, CheckHealth {
           });
         });
       });
+  }
+
+  public async client(): Promise<DocumentClient> {
+    return this.lazyClient();
   }
 
   public async delete(entity: string, id: string, options?: DocumentDbRequestOptions): Promise<void> {

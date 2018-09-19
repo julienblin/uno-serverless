@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added CompositeConfigService to allow composition of several different config sources.
 - SSMParameterStoreConfigService: Added set method.
 - DocumentDb: Added debug mode
+- DocumentDb: Exposed underlying client
 
 ### Changed
 - [BREAKING] Removed maxresults in Azure KeyVaultConfigService options as it is not very useful (blocked at 25 anyway)
