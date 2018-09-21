@@ -1,3 +1,4 @@
+export * from "./assets-repository";
 export * from "./cache";
 export * from "./config";
 export * from "./hash-service";
