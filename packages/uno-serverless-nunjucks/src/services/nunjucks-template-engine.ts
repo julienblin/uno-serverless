@@ -111,6 +111,15 @@ export class NunjucksTemplateEngine implements TemplateEngine {
       this._nunjucksEnv.addFilter(filterName, filters[filterName]);
     }
 
+    if (this.engineOpts.globals) {
+      for (const globalName in this.engineOpts.globals) {
+        if (!this.engineOpts.globals.hasOwnProperty(globalName)) {
+          continue;
+        }
+        this._nunjucksEnv.addGlobal(globalName, this.engineOpts.globals[globalName]);
+      }
+    }
+
     return this._nunjucksEnv;
   }
 }
