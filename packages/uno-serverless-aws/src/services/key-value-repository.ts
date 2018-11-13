@@ -1,7 +1,6 @@
 import { S3 } from "aws-sdk";
 import * as uno from "uno-serverless";
 import { S3Client } from "./s3-client";
-
 export interface S3KeyValueRepositoryOptions {
   /** S3 bucket name. */
   bucket: string | Promise<string>;
@@ -71,7 +70,7 @@ export class S3KeyValueRepository implements uno.KeyValueRepository, uno.CheckHe
     do {
       const allObjects = await this.options.s3.listObjectsV2({
         Bucket,
-        Prefix: await this.options.path,
+        Prefix: this.options.path,
       }).promise();
       continuationToken = allObjects.ContinuationToken;
       for (const s3Obj of allObjects.Contents || []) {
@@ -116,12 +115,13 @@ export class S3KeyValueRepository implements uno.KeyValueRepository, uno.CheckHe
     const listResult = await this.options.s3.listObjectsV2({
       Bucket: await this.options.bucket,
       ContinuationToken: options.nextToken,
-      MaxKeys: options.max,
       Prefix: `${this.options.path ? this.options.path + "/" : ""}${options.prefix ? options.prefix : ""}`,
     }).promise();
 
     const allKeys = (listResult.Contents || []).map(
-      (x) => x.Key!.startsWith(this.options.path) ? x.Key!.slice(this.options.path.length + 1) : x.Key!);
+      (x) => this.options.path && x.Key!.startsWith(this.options.path)
+        ? x.Key!.slice(this.options.path.length + 1)
+        : x.Key!);
     const allItems = await Promise.all(allKeys.map((x) => this.get<T>(x)));
 
     return {
@@ -129,7 +129,7 @@ export class S3KeyValueRepository implements uno.KeyValueRepository, uno.CheckHe
         id: x,
         item: allItems[index]!,
       })),
-      nextToken: listResult.ContinuationToken,
+      nextToken: listResult.NextContinuationToken,
     };
   }
 
