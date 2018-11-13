@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.52] - 2018-11-13
 ### Added
 - AWS Kinesis: Implemented event publisher & handler
 - Added uno-serverless-nunjuck for Nunjuck Template engine implementation
