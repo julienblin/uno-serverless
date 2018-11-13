@@ -9,12 +9,14 @@ export type AuthorizerBearerFunc<TServices> =
     bearerToken: string,
     event: awsLambda.CustomAuthorizerEvent & UnoEvent,
     services: TServices,
-   }) => Promise<awsLambda.CustomAuthorizerResult>;
+  }) => Promise<awsLambda.CustomAuthorizerResult>;
 
-export const authorizerBearer = <TServices = any>(func: AuthorizerBearerFunc<TServices>)
+export const authorizerBearer = <TServices = any>(
+  func: AuthorizerBearerFunc<TServices>,
+  onError?: (error) => any)
   : FunctionExecution<awsLambda.CustomAuthorizerEvent & UnoEvent, TServices> => {
-    return async (arg: FunctionArg<awsLambda.CustomAuthorizerEvent & UnoEvent, TServices>) => {
-
+  return async (arg: FunctionArg<awsLambda.CustomAuthorizerEvent & UnoEvent, TServices>) => {
+    try {
       const bearerToken = arg.event.authorizationToken
         ? arg.event.authorizationToken.replace(/\s*bearer\s*/ig, "")
         : undefined;
@@ -32,6 +34,15 @@ export const authorizerBearer = <TServices = any>(func: AuthorizerBearerFunc<TSe
         context: arg.context,
         event: arg.event,
         services: arg.services,
-        });
-    };
+      });
+    } catch (error) {
+      if (onError) {
+        return onError(error);
+      }
+      // tslint:disable-next-line:no-console
+      console.error(error);
+      // tslint:disable-next-line:no-string-throw
+      throw "Unauthorized";
+    }
+  };
 };

@@ -44,8 +44,13 @@ describe("authorizerBearer handler", () => {
       principalId: bearerToken,
     });
 
+    let caughtError: any;
+
     const handler = uno(awsLambdaAdapter())
-      .handler(authorizerBearer(async ({ bearerToken }) => authorizerResult(bearerToken)));
+      .handler(authorizerBearer(
+        async ({ bearerToken }) => authorizerResult(bearerToken),
+        // tslint:disable-next-line:no-string-throw
+        (error) => { caughtError = error; throw "Unauthorized"; }));
 
     try {
       await handler(
@@ -58,7 +63,8 @@ describe("authorizerBearer handler", () => {
         (e, r) => { });
       expect.fail();
     } catch (error) {
-      expect(error.code).to.equal(StandardErrorCodes.Unauthorized);
+      expect(error).to.equal("Unauthorized");
+      expect(caughtError.code).to.equal(StandardErrorCodes.Unauthorized);
     }
   });
 
