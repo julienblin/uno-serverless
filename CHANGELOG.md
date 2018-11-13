@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - AWS Kinesis: Implemented event publisher & handler
 
+### Changed
+- Fixed issue in S3 KeyValueRepository list implementation not returning results (Fix #79)
+
 ## [0.51] - 2018-09-19
 ### Added
 - Added CompositeConfigService to allow composition of several different config sources.
