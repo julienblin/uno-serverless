@@ -141,3 +141,53 @@ export const debug = (service: string, color: string, content: any) => {
   const contentAsString = typeof content === "string" ? content : safeJSONStringify(content, undefined, 2);
   console.debug(chalk[color](`${new Date().toLocaleTimeString()} - ${service}: ${contentAsString}`));
 };
+
+/**
+ * Slice an array into multiple sub-arrays of equal size + remaining.
+ */
+export const slice = (array: any[], sliceSize: number): any[][] => {
+  const slices: any[][] = [];
+  while (array.length) {
+    slices.push(array.splice(0, sliceSize));
+  }
+  return slices;
+};
+
+/**
+ * Returns a Unix Epoch milliseconds in seconds.
+ */
+export const unixEpochMillisecondsInSeconds = (milliseconds: number) => {
+  return Math.round(milliseconds / 1000);
+};
+
+/**
+ * Returns a date (or current date)
+ * formatted as unix epoch in seconds.
+ */
+export const unixEpochSeconds = (date?: Date) => {
+  if (!date) {
+    date = new Date();
+  }
+
+  return unixEpochMillisecondsInSeconds(date.getTime());
+};
+
+/**
+ * Retries promise execution
+ */
+export const retry = <T>(fn: () => Promise<T>, retriesLeft = 3, interval = 1000): Promise<T> => {
+  return new Promise<T>((resolve, reject) => {
+    fn()
+      .then(resolve)
+      .catch((error) => {
+        setTimeout(() => {
+          if (retriesLeft === 1) {
+            reject(error);
+            return;
+          }
+
+          retry(fn, retriesLeft - 1, interval).then(resolve, reject);
+        }, interval);
+      });
+  });
+};

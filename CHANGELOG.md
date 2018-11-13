@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - AWS Kinesis: Implemented event publisher & handler
 - Added uno-serverless-nunjuck for Nunjuck Template engine implementation
+- Added multiple utility functions: slice, unixEpochSeconds, retry
 
 ### Changed
 - Fixed issue in S3 KeyValueRepository list implementation not returning results (Fix #79)
