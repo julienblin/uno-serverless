@@ -1,0 +1,12 @@
+{
+  "extends": [
+    "tslint:recommended",
+    "tslint-no-unused-expression-chai"
+  ],
+  "rules": {
+    "interface-name": false,
+    "no-empty": false,
+    "no-empty-interface": false,
+    "max-classes-per-file": false
+  }
+}
