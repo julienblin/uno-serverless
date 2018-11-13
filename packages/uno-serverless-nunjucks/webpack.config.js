@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 
 const distFolder = path.join(__dirname, 'dist');
@@ -27,11 +28,12 @@ module.exports = {
     ],
   },
   plugins: [
-    new CleanWebpackPlugin([distFolder]),
+    new CleanWebpackPlugin([distFolder])
   ],
   externals: {
     'accounting': 'accounting',
     'currency-formatter': 'currency-formatter',
+    'nunjucks': 'nunjucks',
     'handlebars': 'handlebars',
     'handlebars-dateformat': 'handlebars-dateformat',
     'pluralize': 'pluralize',
