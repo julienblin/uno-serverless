@@ -31,6 +31,8 @@ export const createAPIGatewayProxyEvent =
       headers: args.headers ? args.headers : {},
       httpMethod: args.method ? args.method : "GET",
       isBase64Encoded: false,
+      multiValueHeaders: {},
+      multiValueQueryStringParameters: {},
       path: args.path || "/unit-tests",
       pathParameters: args.pathParameters ? args.pathParameters : null,
       queryStringParameters: args.queryStringParameters ? args.queryStringParameters : null,
