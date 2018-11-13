@@ -1,7 +1,7 @@
 {
   "name": "uno-serverless-cli",
   "description": "Command line utility for uno-serverless",
-  "version": "0.51.0",
+  "version": "0.52.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "sideEffects": false,

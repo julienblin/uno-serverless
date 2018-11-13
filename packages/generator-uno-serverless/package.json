@@ -1,6 +1,6 @@
 {
   "name": "generator-uno-serverless",
-  "version": "0.51.0",
+  "version": "0.52.0",
   "description": "A Yeoman generator for uno-serverless projects.",
   "files": [
     "generators"

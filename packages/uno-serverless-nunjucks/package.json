@@ -1,7 +1,7 @@
 {
   "name": "uno-serverless-nunjucks",
   "description": "Template engine implementation for uno-serverless using Mozilla's nunjucks",
-  "version": "0.51.0",
+  "version": "0.52.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "sideEffects": false,
@@ -55,7 +55,7 @@
     "handlebars-dateformat": "^1.1.1",
     "nunjucks": "^3.1.4",
     "pluralize": "^7.0.0",
-    "uno-serverless": "^0.51.0"
+    "uno-serverless": "^0.52.0"
   },
   "nyc": {
     "extension": [
