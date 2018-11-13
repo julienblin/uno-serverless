@@ -23,7 +23,15 @@ module.exports = {
   },
   module: {
     rules: [
-      { test: /\.ts(x?)$/, loader: 'ts-loader' },
+      {
+        test: /\.ts(x?)$/,
+        loader: 'ts-loader',
+        options: {
+          compilerOptions: {
+            outDir: distFolder
+          }
+        }
+      },
     ],
   },
   plugins: [

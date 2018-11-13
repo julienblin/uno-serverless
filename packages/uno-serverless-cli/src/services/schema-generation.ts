@@ -152,8 +152,9 @@ export class SchemaGeneration {
 
     switch (typeof value) {
       case "string":
-      case "symbol":
         return `"${value.replace(/\r?\n|\r/g, " ")}"`;
+      case "symbol":
+        return `"${value.toString().replace(/\r?\n|\r/g, " ")}"`;
       case "number":
       case "boolean":
         return value.toString();
