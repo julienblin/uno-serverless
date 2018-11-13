@@ -3,7 +3,7 @@ import { describe, it } from "mocha";
 import {
   convertHrtimeToMs, createConfidentialityReplacer,
   DEFAULT_CONFIDENTIALITY_REPLACE_BY, duration, lazyAsync,
-  memoize, randomStr, safeJSONStringify, toRecord } from "../../../src/core/utils";
+  memoize, randomStr, retry, safeJSONStringify, slice, toRecord } from "../../../src/core/utils";
 
 describe("convertHrtimeToMs", () => {
 
@@ -188,6 +188,69 @@ describe("toRecord", () => {
     const result = toRecord(test, (x) => x.id, (x) => x.name);
     expect(result[test[0].name]).to.equal(test[0].id);
     expect(result[test[1].name]).to.equal(test[1].id);
+  });
+
+});
+
+describe("slice", () => {
+
+  [
+    { in: [], sliceSize: 1, expected: [] },
+    { in: [1, 2, 3], sliceSize: 1, expected: [ [1], [2], [3] ] },
+    { in: [1, 2, 3], sliceSize: 2, expected: [ [1, 2], [3] ] },
+    { in: [1, 2, 3], sliceSize: 3, expected: [ [1, 2, 3] ] },
+  ].forEach((x, index) => {
+    it(`should slice - ${index}`, () => {
+      const result = slice(x.in, x.sliceSize);
+      expect(result).to.deep.equal(x.expected);
+    });
+  });
+
+});
+
+describe("retry", () => {
+
+  it("should not retry if execution is a success", async () => {
+    let executionNumbers = 0;
+    const result = await retry(async () => {
+      ++executionNumbers;
+
+      return "hello";
+    });
+
+    expect(result).to.equal("hello");
+    expect(executionNumbers).to.equal(1);
+  });
+
+  it("should retry on errors", async () => {
+    let executionNumbers = 0;
+    const result = await retry(async () => {
+      ++executionNumbers;
+
+      if (executionNumbers < 2) {
+        throw new Error("Transient error");
+      }
+
+      return "hello";
+    }, 3, 1);
+
+    expect(result).to.equal("hello");
+    expect(executionNumbers).to.equal(2);
+  });
+
+  it("should give up retry after number of retries expired", async () => {
+    let executionNumbers = 0;
+    try {
+      await retry(async () => {
+        ++executionNumbers;
+
+        throw new Error("Constant error");
+      }, 3, 1);
+      expect.fail();
+    } catch (error) {
+      expect(error.message).to.equal("Constant error");
+      expect(executionNumbers).to.equal(3);
+    }
   });
 
 });
