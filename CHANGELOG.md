@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - AWS Kinesis: Implemented event publisher & handler
+- Added uno-serverless-nunjuck for Nunjuck Template engine implementation
 
 ## [0.51] - 2018-09-19
 ### Added
