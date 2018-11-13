@@ -1,13 +1,6 @@
-import { aggregateError, Event, FunctionArg, FunctionExecution, UnoContext, UnoEvent } from "uno-serverless";
-
-export interface EventFunctionArg<TEvent, TServices> {
-  event: TEvent;
-  context: UnoContext;
-  lambdaEvent: UnoEvent;
-  services: TServices;
-}
-
-export type EventFunction<TEvent, TServices = any> = (arg: EventFunctionArg<TEvent, TServices>) => Promise<any>;
+import {
+  aggregateError, Event, EventFunction, FunctionArg, FunctionExecution, UnoContext, UnoEvent,
+} from "uno-serverless";
 
 /**
  * Specialized handler for AWS SQS Lambda events.
@@ -30,7 +23,7 @@ export const SQSEvent = <TEvent extends Event, TServices = any>(
     const errors: Array<{ error: Error, eventId: string, messageId: string }> = [];
     for (const record of allRecords) {
       try {
-        await func({ event: record.body, context: arg.context, lambdaEvent: arg.event, services: arg.services });
+        await func({ event: record.body, context: arg.context, unoEvent: arg.event, services: arg.services });
       } catch (error) {
         errors.push({
           error,
